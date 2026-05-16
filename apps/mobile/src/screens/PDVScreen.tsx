@@ -125,7 +125,6 @@ export function PDVScreen() {
         }
       } else {
         // Save locally for later sync
-        const { getDatabase, saveLocalOrder } = require('../db/localDatabase');
         const db = await getDatabase();
         await saveLocalOrder(db, orderData.localId, orderData);
 
