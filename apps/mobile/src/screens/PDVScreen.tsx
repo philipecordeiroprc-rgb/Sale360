@@ -1,13 +1,14 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, FlatList, TextInput,
-  StyleSheet, Alert, Modal, ActivityIndicator,
+  StyleSheet, Alert, Modal,
 } from 'react-native';
 import { useStore, type Product } from '../stores/useStore';
 import { BarcodeScanner } from '../components/pdv/BarcodeScanner';
 import { CartDrawer } from '../components/pdv/CartDrawer';
 import { PaymentModal } from '../components/pdv/PaymentModal';
 import { SyncIndicator } from '../components/sync/SyncIndicator';
+import { getDatabase, saveLocalOrder } from '../db/localDatabase';
 
 type ViewMode = 'sell' | 'catalog' | 'commands' | 'customers';
 
