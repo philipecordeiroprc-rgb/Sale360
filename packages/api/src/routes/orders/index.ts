@@ -155,6 +155,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               data: {
                 tenantId: request.tenantId,
                 productId: item.productId,
+                variationId: item.variationId || null,
                 type: 'SALE_OUT',
                 quantity: -consume,
                 unitCost: batchCost,
