@@ -11,6 +11,7 @@ export interface VariationData {
   name: string;
   priceModifier: number;
   stockQty: number;
+  lowStockAt?: number;
   sku?: string;
   barcode?: string;
 }
