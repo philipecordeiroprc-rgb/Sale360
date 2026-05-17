@@ -3,6 +3,22 @@ import { PrismaClient, Plan, Status, UserRole } from '../generated/index.js';
 const prisma = new PrismaClient();
 
 async function main() {
+  // Clean existing data
+  await prisma.cashFlow.deleteMany();
+  await prisma.commandItem.deleteMany();
+  await prisma.tableCommand.deleteMany();
+  await prisma.orderItem.deleteMany();
+  await prisma.order.deleteMany();
+  await prisma.creditTransaction.deleteMany();
+  await prisma.productVariation.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.category.deleteMany();
+  await prisma.tenantUser.deleteMany();
+  await prisma.user.deleteMany();
+  await prisma.integration.deleteMany();
+  await prisma.device.deleteMany();
+  await prisma.tenant.deleteMany();
+
   // Create demo tenant
   const tenant = await prisma.tenant.upsert({
     where: { slug: 'demo' },
