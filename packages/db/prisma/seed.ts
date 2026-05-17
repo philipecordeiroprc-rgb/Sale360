@@ -110,7 +110,7 @@ async function main() {
         price: 16.0,
         costPrice: 7.0,
         stockQty: 30,
-        unit: 'UN',
+        unit: 'ML',
         isFractional: true,
       },
     }),
