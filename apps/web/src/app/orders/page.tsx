@@ -31,16 +31,16 @@ export default function OrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-white">Vendas</h2>
-          <p className="text-dark-600 mt-1">{orders.length} vendas hoje</p>
+          <p className="text-slate-400 mt-1">{orders.length} vendas hoje</p>
         </div>
         <div className="flex gap-3">
-          <div className="bg-dark-800 border border-dark-700 rounded-xl px-4 py-3">
-            <p className="text-xs text-dark-600">Faturamento Hoje</p>
-            <p className="text-xl font-bold text-success">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3">
+            <p className="text-xs text-slate-400">Faturamento Hoje</p>
+            <p className="text-xl font-bold text-emerald-400">
               R$ {totalRevenue.toFixed(2)}
             </p>
           </div>
-          <button className="flex items-center gap-2 bg-dark-800 border border-dark-700 text-white px-4 py-3 rounded-xl hover:bg-dark-700 transition-colors">
+          <button className="flex items-center gap-2 bg-slate-900 border border-slate-800 text-white px-4 py-3 rounded-xl hover:bg-slate-800 transition-colors">
             <Download size={18} />
             Exportar
           </button>
@@ -50,13 +50,13 @@ export default function OrdersPage() {
       {/* Filters */}
       <div className="flex gap-3">
         <div className="flex-1 relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-600" />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Buscar por número ou cliente..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
         {['all', 'completed', 'cancelled'].map((s) => (
@@ -65,8 +65,8 @@ export default function OrdersPage() {
             onClick={() => setStatusFilter(s)}
             className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               statusFilter === s
-                ? 'bg-accent text-white'
-                : 'bg-dark-800 border border-dark-700 text-dark-600 hover:text-white'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
             }`}
           >
             {s === 'all' ? 'Todos' : s === 'completed' ? 'Concluídos' : 'Cancelados'}
@@ -75,11 +75,11 @@ export default function OrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="bg-dark-800 border border-dark-700 rounded-2xl overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-dark-700 text-dark-600 text-xs uppercase tracking-wider">
+              <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
                 <th className="text-left p-4 font-medium">Pedido</th>
                 <th className="text-left p-4 font-medium">Cliente</th>
                 <th className="text-center p-4 font-medium">Itens</th>
@@ -92,29 +92,29 @@ export default function OrdersPage() {
             </thead>
             <tbody>
               {filtered.map((order) => (
-                <tr key={order.id} className="border-b border-dark-700/50 hover:bg-dark-700/50 transition-colors">
+                <tr key={order.id} className="border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors">
                   <td className="p-4">
-                    <span className="text-accent font-mono text-sm font-semibold">{order.id}</span>
+                    <span className="text-indigo-400 font-mono text-sm font-semibold">{order.id}</span>
                   </td>
                   <td className="p-4 text-white text-sm">{order.customer}</td>
-                  <td className="p-4 text-center text-dark-600 text-sm">{order.items}</td>
+                  <td className="p-4 text-center text-slate-400 text-sm">{order.items}</td>
                   <td className="p-4 text-right text-white font-semibold text-sm">{order.total}</td>
                   <td className="p-4 text-center">
-                    <span className="px-2 py-1 bg-dark-700 rounded-md text-xs text-white">{order.method}</span>
+                    <span className="px-2 py-1 bg-slate-800 rounded-md text-xs text-white">{order.method}</span>
                   </td>
                   <td className="p-4 text-center">
                     <span className={`px-2 py-1 rounded-md text-xs font-medium ${
                       order.status === 'completed'
-                        ? 'bg-success/20 text-success'
-                        : 'bg-danger/20 text-danger'
+                        ? 'bg-emerald-400/20 text-emerald-400'
+                        : 'bg-red-400/20 text-red-400'
                     }`}>
                       {order.status === 'completed' ? 'Concluído' : 'Cancelado'}
                     </span>
                   </td>
-                  <td className="p-4 text-right text-dark-600 text-xs">{order.date}</td>
+                  <td className="p-4 text-right text-slate-400 text-xs">{order.date}</td>
                   <td className="p-4 text-center">
-                    <button className="p-2 hover:bg-dark-600 rounded-lg transition-colors">
-                      <Eye size={16} className="text-dark-600 hover:text-white" />
+                    <button className="p-2 hover:bg-slate-600 rounded-lg transition-colors">
+                      <Eye size={16} className="text-slate-400 hover:text-white" />
                     </button>
                   </td>
                 </tr>
