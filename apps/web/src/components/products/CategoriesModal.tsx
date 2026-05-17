@@ -199,6 +199,21 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
           ))}
         </div>
 
+        {/* Template de variação */}
+        <div>
+          <label className="block text-slate-400 text-xs mb-1">Template de Variação (opcional)</label>
+          <select
+            value={newTemplateId}
+            onChange={(e) => setNewTemplateId(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+          >
+            <option value="">Sem template</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Category list */}
         <div className="border-t border-slate-800 pt-2">
           {loading ? (
