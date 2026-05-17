@@ -116,6 +116,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       data: {
         tenantId: request.tenantId,
         supplierId,
+        customerId: customerId || undefined,
         orderNumber,
         status: 'DRAFT',
         subtotal,
