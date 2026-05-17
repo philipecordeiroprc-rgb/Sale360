@@ -95,6 +95,7 @@ export default function ProductsPage() {
   // Categories modal
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [stockProduct, setStockProduct] = useState<Product | null>(null);
 
   const { toast, show } = useToast();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
