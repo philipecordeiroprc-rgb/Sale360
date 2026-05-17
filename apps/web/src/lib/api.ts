@@ -117,10 +117,10 @@ export const api = {
       return request<{ success: boolean }>(`/api/products/${id}`, { method: 'DELETE' });
     },
     // Variations
-    addVariation(productId: string, data: { name: string; priceModifier?: number; stockQty?: number; sku?: string; barcode?: string }) {
+    addVariation(productId: string, data: { name: string; priceModifier?: number; stockQty?: number; lowStockAt?: number; sku?: string; barcode?: string }) {
       return request<any>(`/api/products/${productId}/variations`, { method: 'POST', body: JSON.stringify(data) });
     },
-    updateVariation(productId: string, variationId: string, data: { name?: string; priceModifier?: number; stockQty?: number; sku?: string; barcode?: string }) {
+    updateVariation(productId: string, variationId: string, data: { name?: string; priceModifier?: number; stockQty?: number; lowStockAt?: number; sku?: string; barcode?: string }) {
       return request<any>(`/api/products/${productId}/variations/${variationId}`, { method: 'PUT', body: JSON.stringify(data) });
     },
     deleteVariation(productId: string, variationId: string) {
