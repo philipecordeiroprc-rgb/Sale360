@@ -45,6 +45,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
         where,
         include: {
           supplier: { select: { id: true, name: true } },
+          customer: { select: { id: true, name: true } },
           items: true,
           _count: { select: { items: true } },
         },
