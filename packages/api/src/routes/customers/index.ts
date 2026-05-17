@@ -98,6 +98,22 @@ export const customerRoutes: FastifyPluginAsync = async (app) => {
     return customer;
   });
 
+  // Delete
+  app.delete('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const exists = await prisma.customer.findFirst({ where: { id, tenantId: request.tenantId } });
+    if (!exists) return reply.status(404).send({ error: 'Cliente não encontrado' });
+
+    // Check for orders - only allow delete if no orders
+    const orderCount = await prisma.order.count({ where: { customerId: id } });
+    if (orderCount > 0) {
+      return reply.status(400).send({ error: 'Cliente possui pedidos e não pode ser excluído' });
+    }
+
+    await prisma.customer.delete({ where: { id } });
+    return { success: true };
+  });
+
   // Credit operations (fiado)
   app.post('/:id/credit', async (request, reply) => {
     const { id } = request.params as { id: string };
