@@ -197,6 +197,18 @@ export default function PurchasesPage() {
     return Math.round((cost + ops) / denom * 100) / 100;
   };
 
+  // Reverse: calculate margin from sale price
+  // margin = (1 - tax/100 - (cost + ops) / salePrice) * 100
+  const calcMarginFromPrice = (item: PurchaseItemData) => {
+    const cost = item.costPrice || 0;
+    const ops = item.operationalCost || 0;
+    const tax = item.taxRate || 0;
+    const price = item.salePrice || 0;
+    if (cost <= 0 || price <= 0) return null;
+    const margin = (1 - tax / 100 - (cost + ops) / price) * 100;
+    return Math.round(margin * 100) / 100;
+  };
+
   // Add current item to purchase
   const addCurrentItem = () => {
     if (!currentItem.productName.trim()) { show('Nome do produto é obrigatório', 'error'); return; }
