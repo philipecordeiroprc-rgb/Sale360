@@ -294,8 +294,6 @@ export default function PurchasesPage() {
 
   const toggleExpand = (id: string) => setExpanded(expanded === id ? null : id);
 
-  const currentItemTotal = currentItem.costPrice * effectiveQty;
-
   return (
     <div className="animate-slide-up">
       {/* Header */}
