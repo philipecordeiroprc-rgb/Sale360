@@ -65,7 +65,6 @@ export default function PurchasesPage() {
   // Product
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItemData[]>([]);
   const [currentItem, setCurrentItem] = useState<PurchaseItemData>({ ...emptyItem });
-  const [currentTemplate, setCurrentTemplate] = useState<VariationTemplate | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
 
