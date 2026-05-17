@@ -11,6 +11,7 @@ import { tenantRoutes } from './routes/tenant/index.js';
 import { syncRoutes } from './routes/sync/index.js';
 import { integrationRoutes } from './routes/integrations/index.js';
 import { categoriesRoutes } from './routes/categories/index.js';
+import { variationTemplateRoutes } from './routes/variation-templates/index.js';
 import { authMiddleware } from './middleware/auth.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
