@@ -25,9 +25,9 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-white">Clientes</h2>
-          <p className="text-dark-600 mt-1">{customers.length} clientes cadastrados</p>
+          <p className="text-slate-400 mt-1">{customers.length} clientes cadastrados</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white px-5 py-3 rounded-xl font-semibold transition-colors">
+        <button className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors">
           <Plus size={20} />
           Novo Cliente
         </button>
@@ -35,64 +35,64 @@ export default function CustomersPage() {
 
       {/* Search */}
       <div className="relative">
-        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-600" />
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           placeholder="Buscar por nome, telefone ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-indigo-500 transition-colors"
         />
       </div>
 
       {/* Customer Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((customer) => (
-          <div key={customer.id} className="bg-dark-800 border border-dark-700 rounded-2xl p-6 hover:border-dark-600 transition-all">
+          <div key={customer.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-slate-500 transition-all">
             <div className="flex items-start justify-between mb-4">
-              <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                <span className="text-lg font-bold text-accent">
+              <div className="w-12 h-12 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                <span className="text-lg font-bold text-indigo-400">
                   {customer.name.charAt(0)}
                 </span>
               </div>
               {customer.purchases > 10 && (
-                <Star size={16} className="text-warning" fill="#FBBF24" />
+                <Star size={16} className="text-amber-400" fill="#FBBF24" />
               )}
             </div>
 
             <h3 className="text-white font-semibold text-lg mb-3">{customer.name}</h3>
 
             <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-dark-600 text-sm">
+              <div className="flex items-center gap-2 text-slate-400 text-sm">
                 <Phone size={14} />
                 <span>{customer.phone}</span>
               </div>
               {customer.email && (
-                <div className="flex items-center gap-2 text-dark-600 text-sm">
+                <div className="flex items-center gap-2 text-slate-400 text-sm">
                   <Mail size={14} />
                   <span>{customer.email}</span>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-dark-700">
+            <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-800">
               <div>
-                <p className="text-xs text-dark-600">Compras</p>
+                <p className="text-xs text-slate-400">Compras</p>
                 <p className="text-white font-bold">{customer.purchases}</p>
               </div>
               <div>
-                <p className="text-xs text-dark-600">Total Gasto</p>
-                <p className="text-success font-bold">{customer.totalSpent}</p>
+                <p className="text-xs text-slate-400">Total Gasto</p>
+                <p className="text-emerald-400 font-bold">{customer.totalSpent}</p>
               </div>
               <div>
-                <p className="text-xs text-dark-600">Fiado</p>
-                <p className={`font-bold ${customer.creditBalance > 0 ? 'text-warning' : 'text-dark-600'}`}>
+                <p className="text-xs text-slate-400">Fiado</p>
+                <p className={`font-bold ${customer.creditBalance > 0 ? 'text-amber-400' : 'text-slate-400'}`}>
                   R$ {customer.creditBalance.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-dark-600">Última Compra</p>
-                <p className="text-dark-600 text-sm">{customer.lastPurchase}</p>
+                <p className="text-xs text-slate-400">Última Compra</p>
+                <p className="text-slate-400 text-sm">{customer.lastPurchase}</p>
               </div>
             </div>
           </div>
