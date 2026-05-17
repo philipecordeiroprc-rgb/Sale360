@@ -280,6 +280,7 @@ model InventoryBatch {
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   product   Product?          @relation(fields: [productId], references: [id])
   variation ProductVariation? @relation(fields: [variationId], references: [id])
+  movements InventoryMovement[]
 
   @@index([tenantId, productId, receivedAt])
   @@index([tenantId, variationId, receivedAt])
