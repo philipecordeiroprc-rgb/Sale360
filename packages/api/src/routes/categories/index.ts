@@ -26,11 +26,25 @@ export const categoriesRoutes: FastifyPluginAsync = async (app) => {
       where,
       include: {
         _count: { select: { products: true } },
+        variationTemplate: {
+          include: { dimensions: { orderBy: { orderIndex: 'asc' } } },
+        },
       },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     });
 
-    return categories;
+    return categories.map((cat) => ({
+      ...cat,
+      variationTemplate: cat.variationTemplate
+        ? {
+            ...cat.variationTemplate,
+            dimensions: cat.variationTemplate.dimensions.map((d) => ({
+              ...d,
+              options: JSON.parse(d.options) as string[],
+            })),
+          }
+        : null,
+    }));
   });
 
   // Get single category
