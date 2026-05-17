@@ -132,91 +132,23 @@ export default function ProductsPage() {
     e.preventDefault();
     setFormError('');
 
-    const price = parseFloat(formData.price);
-    const costPrice = formData.costPrice ? parseFloat(formData.costPrice) : undefined;
-    const taxRate = formData.taxRate ? parseFloat(formData.taxRate) : undefined;
-    const operationalCost = formData.operationalCost ? parseFloat(formData.operationalCost) : undefined;
-    const stockQty = parseInt(formData.stockQty) || 0;
-
     if (!formData.name.trim()) { setFormError('Nome é obrigatório'); return; }
-    if (isNaN(price) || price <= 0) { setFormError('Preço de venda deve ser maior que zero'); return; }
 
     try {
       setSaving(true);
       const payload = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
-        price,
-        costPrice,
-        taxRate,
-        operationalCost,
-        stockQty,
         barcode: formData.barcode.trim() || undefined,
         sku: formData.sku.trim() || undefined,
         categoryId: formData.categoryId || undefined,
-        unit: formData.unit,
-        hasVariations: variations.length > 0,
       };
 
-      let savedProduct: any;
-
       if (editingProduct) {
-        savedProduct = await api.products.update(editingProduct.id, payload);
-
-        // Sync variations: delete removed, update existing, create new
-        const existingVariationIds = new Set(
-          (editingProduct.variations || []).map((v: any) => v.id),
-        );
-        const keptIds = new Set(
-          variations.filter((v) => v.id).map((v) => v.id as string),
-        );
-
-        // Delete removed
-        for (const oldId of existingVariationIds) {
-          if (!keptIds.has(oldId)) {
-            await api.products.deleteVariation(editingProduct.id, oldId).catch(() => {});
-          }
-        }
-
-        // Create or update
-        for (const v of variations) {
-          if (v.id) {
-            await api.products.updateVariation(editingProduct.id, v.id, {
-              name: v.name,
-              priceModifier: v.priceModifier,
-              stockQty: v.stockQty,
-              lowStockAt: v.lowStockAt,
-              sku: v.sku || undefined,
-              barcode: v.barcode || undefined,
-            }).catch(() => {});
-          } else {
-            await api.products.addVariation(editingProduct.id, {
-              name: v.name,
-              priceModifier: v.priceModifier,
-              stockQty: v.stockQty,
-              lowStockAt: v.lowStockAt,
-              sku: v.sku || undefined,
-              barcode: v.barcode || undefined,
-            }).catch(() => {});
-          }
-        }
-
+        await api.products.update(editingProduct.id, payload);
         show('Produto atualizado!');
       } else {
-        savedProduct = await api.products.create(payload);
-
-        // Create variations for new product
-        for (const v of variations) {
-          await api.products.addVariation(savedProduct.id, {
-            name: v.name,
-            priceModifier: v.priceModifier,
-            stockQty: v.stockQty,
-            lowStockAt: v.lowStockAt,
-            sku: v.sku || undefined,
-            barcode: v.barcode || undefined,
-          }).catch(() => {});
-        }
-
+        await api.products.create(payload);
         show('Produto criado!');
       }
 
