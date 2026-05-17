@@ -266,18 +266,22 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
 
           <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
             {/* Header */}
-            <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-slate-500 border-b border-slate-800 bg-slate-900/50">
-              <div className="col-span-4">Nome</div>
-              <div className="col-span-3">Estoque</div>
-              <div className="col-span-3">Est. Mínimo</div>
+            <div className={`grid gap-2 px-3 py-2 text-xs text-slate-500 border-b border-slate-800 bg-slate-900/50 ${
+              purchaseMode ? 'grid-cols-10' : 'grid-cols-12'
+            }`}>
+              <div className={purchaseMode ? 'col-span-6' : 'col-span-4'}>Nome</div>
+              <div className="col-span-3">{purchaseMode ? 'Qtd Comprada' : 'Estoque'}</div>
+              {!purchaseMode && <div className="col-span-3">Est. Mínimo</div>}
               <div className="col-span-2"></div>
             </div>
 
             {/* Rows */}
             <div className="divide-y divide-slate-800 max-h-48 overflow-y-auto">
               {variations.map((v, i) => (
-                <div key={i} className="grid grid-cols-12 gap-2 px-3 py-2 items-center text-sm hover:bg-slate-900/30 transition-colors">
-                  <div className="col-span-4 text-white truncate" title={v.name}>
+                <div key={i} className={`grid gap-2 px-3 py-2 items-center text-sm hover:bg-slate-900/30 transition-colors ${
+                  purchaseMode ? 'grid-cols-10' : 'grid-cols-12'
+                }`}>
+                  <div className={purchaseMode ? 'col-span-6 truncate' : 'col-span-4 truncate'} title={v.name}>
                     {v.name}
                   </div>
                   <div className="col-span-3">
@@ -298,6 +302,7 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
                       className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
+                  {!purchaseMode && (
                   <div className="col-span-3">
                     <input
                       type="number"
@@ -317,6 +322,7 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
                       className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
+                  )}
                   <div className="col-span-2 flex justify-end">
                     <button
                       type="button"
