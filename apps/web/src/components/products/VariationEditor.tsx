@@ -37,6 +37,7 @@ interface VariationEditorProps {
   template: VariationTemplate | null;
   variations: VariationData[];
   onChange: (variations: VariationData[]) => void;
+  purchaseMode?: boolean; // hides lowStock column, renames "Estoque" → "Qtd Comprada"
 }
 
 export function VariationEditor({ template, variations, onChange }: VariationEditorProps) {
