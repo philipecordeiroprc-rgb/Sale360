@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
-import api, { type VariationTemplate } from '@/lib/api';
+import { type VariationData } from '@/components/products/VariationEditor';
+import api from '@/lib/api';
 
 const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
   DRAFT: { label: 'Rascunho', color: 'bg-slate-600' },
