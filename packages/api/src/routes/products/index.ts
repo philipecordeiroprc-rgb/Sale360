@@ -25,7 +25,7 @@ const updateProductSchema = createProductSchema.partial();
 export const productRoutes: FastifyPluginAsync = async (app) => {
   // List all products (with search & category filter)
   app.get('/', async (request) => {
-    const { search, categoryId, active, page = '1', limit = '50' } = request.query as Record<string, string>;
+    const { search, categoryId, active, variationType, page = '1', limit = '50' } = request.query as Record<string, string>;
 
     const where: any = { tenantId: request.tenantId };
 
@@ -39,6 +39,21 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
 
     if (categoryId) where.categoryId = categoryId;
     if (active !== undefined) where.active = active === 'true';
+
+    // Variation type filter
+    if (variationType === 'none') {
+      where.hasVariations = false;
+    } else if (variationType === 'any') {
+      where.hasVariations = true;
+    } else if (variationType) {
+      // Filter by specific dimension type (e.g. TAMANHO_LETRA, COR, etc.)
+      where.variations = { some: {} };
+      where.category = {
+        variationTemplate: {
+          dimensions: { some: { type: variationType } },
+        },
+      };
+    }
 
     const [products, total] = await Promise.all([
       prisma.product.findMany({
