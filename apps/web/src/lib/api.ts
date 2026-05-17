@@ -226,7 +226,7 @@ export const api = {
     get(id: string) {
       return request<any>(`/api/purchases/${id}`);
     },
-    create(data: { supplierId: string; items: { productId?: string; variationId?: string; productName: string; quantity: number; unitCost: number; total: number }[]; discount?: number; notes?: string }) {
+    create(data: { supplierId: string; customerId?: string; items: { productId?: string; variationId?: string; productName: string; quantity: number; unitCost: number; total: number }[]; discount?: number; notes?: string }) {
       return request<any>('/api/purchases', { method: 'POST', body: JSON.stringify(data) });
     },
     update(id: string, data: any) {
