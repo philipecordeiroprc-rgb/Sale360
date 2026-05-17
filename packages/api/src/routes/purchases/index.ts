@@ -13,6 +13,7 @@ const purchaseItemSchema = z.object({
 
 const createPurchaseSchema = z.object({
   supplierId: z.string().min(1, 'Fornecedor é obrigatório'),
+  customerId: z.string().optional(),
   items: z.array(purchaseItemSchema).min(1, 'Pelo menos 1 item é obrigatório'),
   discount: z.number().default(0),
   notes: z.string().optional(),
