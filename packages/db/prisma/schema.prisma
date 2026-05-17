@@ -338,6 +338,7 @@ model Customer {
 
   tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orders            Order[]
+  purchases         Purchase[]        // compras associadas
   creditTransactions CreditTransaction[]
 
   @@index([tenantId, phone])
