@@ -19,15 +19,13 @@ const createOrderSchema = z.object({
   total: z.number(),
   paymentMethod: z.string(),
   paymentStatus: z.enum(['PAID', 'PENDING', 'PARTIAL', 'CREDIT_STORE']).default('PAID'),
-  source: z.enum(['PDV', 'ONLINE', 'WHATSAAPP', 'DELIVERY', 'COMANDA']).default('PDV'),
+  source: z.enum(['PDV', 'ONLINE', 'WHATSAPP', 'DELIVERY', 'COMANDA']).default('PDV'),
   notes: z.string().optional(),
-  // Offline support
   localId: z.string().optional(),
-  createdAtDevice: z.string().optional(), // ISO date from device
+  createdAtDevice: z.string().optional(),
 });
 
 export const orderRoutes: FastifyPluginAsync = async (app) => {
-  // List orders (paginated)
   app.get('/', async (request) => {
     const {
       page = '1',
@@ -67,7 +65,6 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     return { orders, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
   });
 
-  // Get single order
   app.get('/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
     const order = await prisma.order.findFirst({
@@ -83,7 +80,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     return order;
   });
 
-  // Create order (supports offline sync)
+  // Create order with FIFO/PEPS consumption
   app.post('/', async (request, reply) => {
     const parsed = createOrderSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -92,7 +89,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const { items, localId, createdAtDevice, ...orderData } = parsed.data;
 
-    // Generate order number (sequential per tenant)
+    // Generate order number
     const lastOrder = await prisma.order.findFirst({
       where: { tenantId: request.tenantId },
       orderBy: { orderNumber: 'desc' },
@@ -100,8 +97,99 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     });
     const orderNumber = (lastOrder?.orderNumber || 0) + 1;
 
-    // Create order with items in transaction
+    // Pre-validate stock for all items (fail fast before transaction)
+    for (const item of items) {
+      if (item.productId) {
+        // Check product-level total stock
+        const batches = await prisma.inventoryBatch.findMany({
+          where: {
+            tenantId: request.tenantId,
+            productId: item.productId,
+            remainingQty: { gt: 0 },
+          },
+        });
+        const totalAvailable = batches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
+        if (totalAvailable < item.quantity) {
+          return reply.status(400).send({
+            error: `Estoque insuficiente para "${item.productName}". Disponível: ${totalAvailable}, Necessário: ${item.quantity}`,
+          });
+        }
+      }
+    }
+
     const order = await prisma.$transaction(async (tx) => {
+      // Create order with items (costPrice/totalCost filled after FIFO calc)
+      const itemsData = await Promise.all(items.map(async (item) => {
+        let costPrice: number | undefined;
+        let totalCost: number | undefined;
+
+        if (item.productId) {
+          // FIFO: consume from oldest batches
+          let remaining = item.quantity;
+          let totalCostAcc = 0;
+          const batches = await tx.inventoryBatch.findMany({
+            where: {
+              tenantId: request.tenantId,
+              productId: item.productId,
+              remainingQty: { gt: 0 },
+            },
+            orderBy: { receivedAt: 'asc' },
+          });
+
+          for (const batch of batches) {
+            if (remaining <= 0) break;
+            const consume = Math.min(Number(batch.remainingQty), remaining);
+            const batchCost = Number(batch.unitCost);
+
+            // Decrement batch remaining quantity
+            await tx.inventoryBatch.update({
+              where: { id: batch.id },
+              data: { remainingQty: { decrement: consume } },
+            });
+
+            // Create SALE_OUT movement
+            await tx.inventoryMovement.create({
+              data: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                type: 'SALE_OUT',
+                quantity: -consume,
+                unitCost: batchCost,
+                totalCost: -(consume * batchCost),
+                batchId: batch.id,
+                notes: `Venda #${orderNumber} - ${item.productName}`,
+              },
+            });
+
+            totalCostAcc += consume * batchCost;
+            remaining -= consume;
+          }
+
+          // Weighted average cost for this item
+          costPrice = totalCostAcc / item.quantity;
+          totalCost = totalCostAcc;
+
+          // Update product stock
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockQty: { decrement: item.quantity },
+              costPrice: Math.round(costPrice * 100) / 100,
+            },
+          });
+        }
+
+        return {
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          total: item.total,
+          costPrice: costPrice ? Math.round(costPrice * 100) / 100 : undefined,
+          totalCost: totalCost ? Math.round(totalCost * 100) / 100 : undefined,
+        };
+      }));
+
       const o = await tx.order.create({
         data: {
           ...orderData,
@@ -111,28 +199,20 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           localId,
           createdAtDevice: createdAtDevice ? new Date(createdAtDevice) : null,
           syncStatus: 'SYNCED',
-          items: {
-            create: items.map((item) => ({
-              productId: item.productId,
-              productName: item.productName,
-              quantity: item.quantity,
-              unitPrice: item.unitPrice,
-              total: item.total,
-            })),
-          },
+          items: { create: itemsData },
         },
         include: { items: true, customer: true },
       });
 
-      // Update stock
-      for (const item of items) {
-        if (item.productId) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stockQty: { decrement: item.quantity } },
-          });
-        }
-      }
+      // Update inventory movements with orderId
+      await tx.inventoryMovement.updateMany({
+        where: {
+          tenantId: request.tenantId,
+          notes: { startsWith: `Venda #${orderNumber}` },
+          orderId: undefined,
+        },
+        data: { orderId: o.id },
+      });
 
       // Update customer stats
       if (orderData.customerId) {
@@ -166,7 +246,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(order);
   });
 
-  // Cancel order
+  // Cancel order with FIFO/PEPS reversal
   app.post('/:id/cancel', async (request, reply) => {
     const { id } = request.params as { id: string };
     const order = await prisma.order.findFirst({
@@ -180,9 +260,37 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     }
 
     await prisma.$transaction(async (tx) => {
-      // Return stock
       for (const item of order.items) {
         if (item.productId) {
+          // Create SALE_CANCEL movement
+          await tx.inventoryMovement.create({
+            data: {
+              tenantId: request.tenantId,
+              productId: item.productId,
+              type: 'SALE_CANCEL',
+              quantity: item.quantity,
+              unitCost: item.costPrice ? Number(item.costPrice) : 0,
+              totalCost: item.totalCost ? Number(item.totalCost) : 0,
+              orderId: order.id,
+              notes: `Cancelamento venda #${order.orderNumber} - ${item.productName}`,
+            },
+          });
+
+          // Return stock as a new batch (preserves cost history)
+          if (item.costPrice) {
+            await tx.inventoryBatch.create({
+              data: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                quantity: item.quantity,
+                remainingQty: item.quantity,
+                unitCost: Number(item.costPrice),
+                receivedAt: new Date(),
+              },
+            });
+          }
+
+          // Update product stock
           await tx.product.update({
             where: { id: item.productId },
             data: { stockQty: { increment: item.quantity } },
@@ -214,7 +322,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     return { success: true };
   });
 
-  // Today's summary (dashboard card)
+  // Today's summary
   app.get('/today-summary', async (request) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -230,7 +338,6 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const totalSales = orders.reduce((sum, o) => sum + Number(o.total), 0);
     const count = orders.length;
-    // Group by payment method
     const byMethod = orders.reduce((acc: Record<string, { count: number; total: number }>, o) => {
       const method = o.paymentMethod || 'outro';
       if (!acc[method]) acc[method] = { count: 0, total: 0 };
