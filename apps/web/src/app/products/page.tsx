@@ -31,6 +31,7 @@ interface FormData {
   price: string;
   costPrice: string;
   taxRate: string;
+  operationalCost: string;
   stockQty: string;
   barcode: string;
   sku: string;
