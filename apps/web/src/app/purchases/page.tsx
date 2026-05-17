@@ -259,6 +259,13 @@ export default function PurchasesPage() {
         });
 
         if (item.hasVariations && item.variations.length > 0) {
+          // Load existing product variations to match by name
+          let existingVars: any[] = [];
+          try {
+            const product = await api.products.get(item.productId);
+            existingVars = product.variations || [];
+          } catch { /* ignore */ }
+
           // Create/ensure variations and add one purchase item per variation
           for (const v of item.variations) {
             const varQty = v.stockQty || 0;
@@ -266,15 +273,23 @@ export default function PurchasesPage() {
 
             let variationId = v.id;
             if (!variationId) {
-              // Create new variation
-              const created = await api.products.addVariation(item.productId, {
-                name: v.name,
-                priceModifier: v.priceModifier || 0,
-                stockQty: 0,
-                sku: v.sku,
-                barcode: v.barcode,
-              });
-              variationId = created.id;
+              // Try to find existing variation by name
+              const existing = existingVars.find((ev: any) =>
+                ev.name.toLowerCase() === v.name.toLowerCase()
+              );
+              if (existing) {
+                variationId = existing.id;
+              } else {
+                // Create new variation
+                const created = await api.products.addVariation(item.productId, {
+                  name: v.name,
+                  priceModifier: v.priceModifier || 0,
+                  stockQty: 0,
+                  sku: v.sku,
+                  barcode: v.barcode,
+                });
+                variationId = created.id;
+              }
             }
 
             purchaseItemsData.push({
