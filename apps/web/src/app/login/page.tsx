@@ -61,7 +61,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-5xl font-black text-accent tracking-tight">S360</h1>
+          <h1 className="text-5xl font-black text-indigo-400 tracking-tight">S360</h1>
           <p className="text-slate-400 mt-2 text-lg">PDV Inteligente</p>
         </div>
 
@@ -122,7 +122,7 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <button
               onClick={() => { setMode(mode === 'pin' ? 'password' : 'pin'); setError(''); }}
-              className="text-sm text-accent hover:text-accent-light transition-colors"
+              className="text-sm text-indigo-400 hover:text-indigo-400-light transition-colors"
             >
               {mode === 'pin' ? 'Usar senha' : 'Usar PIN rápido'}
             </button>
