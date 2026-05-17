@@ -1,4 +1,4 @@
-import { PrismaClient, Plan, Status, UserRole } from '../generated/index.js';
+import { PrismaClient, Plan, Status, UserRole, DimensionType } from '../generated/index.js';
 
 const prisma = new PrismaClient();
 
