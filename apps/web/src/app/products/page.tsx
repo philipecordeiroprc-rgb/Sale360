@@ -34,16 +34,6 @@ function useToast() {
   return { toast, show };
 }
 
-// Calculate profit margin
-function calcProfit(price: number, cost: number, operationalCost: number, taxRate: number): { profit: number; margin: number } {
-  if (price <= 0) return { profit: 0, margin: 0 };
-  const taxAmount = price * (taxRate / 100);
-  const totalCost = cost + operationalCost + taxAmount;
-  const profit = price - totalCost;
-  const margin = (profit / price) * 100;
-  return { profit, margin };
-}
-
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [total, setTotal] = useState(0);
