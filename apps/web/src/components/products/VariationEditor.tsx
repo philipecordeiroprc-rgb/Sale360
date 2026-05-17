@@ -236,7 +236,7 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
             <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs text-slate-500 border-b border-slate-800 bg-slate-900/50">
               <div className="col-span-4">Nome</div>
               <div className="col-span-3">Estoque</div>
-              <div className="col-span-3">Acréscimo R$</div>
+              <div className="col-span-3">Est. Mínimo</div>
               <div className="col-span-2"></div>
             </div>
 
@@ -268,19 +268,20 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
                   <div className="col-span-3">
                     <input
                       type="number"
-                      step="0.01"
-                      value={editingPrice[i] ?? String(v.priceModifier)}
-                      onChange={(e) => setEditingPrice({ ...editingPrice, [i]: e.target.value })}
+                      min="0"
+                      value={editingLowStock[i] ?? (v.lowStockAt != null ? String(v.lowStockAt) : '')}
+                      onChange={(e) => setEditingLowStock({ ...editingLowStock, [i]: e.target.value })}
                       onBlur={() => {
-                        updateVariation(i, 'priceModifier', parseFloat(editingPrice[i]) || 0);
-                        const next = { ...editingPrice };
+                        updateVariation(i, 'lowStockAt', parseFloat(editingLowStock[i]) || 0);
+                        const next = { ...editingLowStock };
                         delete next[i];
-                        setEditingPrice(next);
+                        setEditingLowStock(next);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                       }}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-white text-xs focus:outline-none focus:border-indigo-500 transition-colors"
+                      placeholder="0"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-md px-2 py-1.5 text-white text-xs placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
                   <div className="col-span-2 flex justify-end">
