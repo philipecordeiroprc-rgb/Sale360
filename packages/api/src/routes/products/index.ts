@@ -126,6 +126,18 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     return product;
   });
 
+  // Delete product
+  app.delete('/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const product = await prisma.product.findFirst({ where: { id, tenantId: request.tenantId } });
+    if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
+
+    await prisma.product.delete({ where: { id } });
+
+    return { success: true };
+  });
+
   // Bulk import (for migration / import from other systems)
   app.post('/bulk', async (request, reply) => {
     const schema = z.object({ products: z.array(createProductSchema) });
