@@ -35,18 +35,18 @@ async function buildApp() {
   await app.register(authRoutes, { prefix: '/api/auth' });
 
   // Authenticated routes
-  await app.register(async (protected) => {
+  await app.register(async (authRoutes) => {
     // Auth middleware applied to all routes below
-    protected.addHook('onRequest', authMiddleware);
+    authRoutes.addHook('onRequest', authMiddleware);
 
-    await protected.register(productRoutes, { prefix: '/api/products' });
-    await protected.register(orderRoutes, { prefix: '/api/orders' });
-    await protected.register(customerRoutes, { prefix: '/api/customers' });
-    await protected.register(commandRoutes, { prefix: '/api/commands' });
-    await protected.register(financeRoutes, { prefix: '/api/finance' });
-    await protected.register(tenantRoutes, { prefix: '/api/tenant' });
-    await protected.register(syncRoutes, { prefix: '/api/sync' });
-    await protected.register(integrationRoutes, { prefix: '/api/integrations' });
+    await authRoutes.register(productRoutes, { prefix: '/api/products' });
+    await authRoutes.register(orderRoutes, { prefix: '/api/orders' });
+    await authRoutes.register(customerRoutes, { prefix: '/api/customers' });
+    await authRoutes.register(commandRoutes, { prefix: '/api/commands' });
+    await authRoutes.register(financeRoutes, { prefix: '/api/finance' });
+    await authRoutes.register(tenantRoutes, { prefix: '/api/tenant' });
+    await authRoutes.register(syncRoutes, { prefix: '/api/sync' });
+    await authRoutes.register(integrationRoutes, { prefix: '/api/integrations' });
   });
 
   return app;
