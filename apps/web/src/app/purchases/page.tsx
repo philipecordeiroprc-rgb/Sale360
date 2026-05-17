@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Tags } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
-import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
+import api, { type VariationTemplate } from '@/lib/api';
 
 const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
   DRAFT: { label: 'Rascunho', color: 'bg-slate-600' },
@@ -13,51 +13,30 @@ const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
   CANCELLED: { label: 'Cancelado', color: 'bg-red-500' },
 };
 
-const UNITS = [
-  { id: 'UN', label: 'Unidade' }, { id: 'PC', label: 'Peça' }, { id: 'CX', label: 'Caixa' },
-  { id: 'KG', label: 'Quilo (kg)' }, { id: 'G', label: 'Grama (g)' }, { id: 'L', label: 'Litro (L)' },
-  { id: 'ML', label: 'Mililitro (ml)' }, { id: 'M', label: 'Metro (m)' }, { id: 'M2', label: 'Metro² (m²)' },
-  { id: 'PAR', label: 'Par' }, { id: 'FD', label: 'Fardo' }, { id: 'PCT', label: 'Pacote' },
-] as const;
-
 interface PurchaseItemData {
-  productId?: string;       // existing product ID (if selecting existing)
+  productId: string;
   productName: string;
-  unit: string;
-  // Pricing
   costPrice: number;
   operationalCost: number;
   taxRate: number;
   desiredMargin: number;
-  salePrice: number;        // calculated suggested price
-  // Stock
-  quantity: number;         // purchase qty
-  lowStockAt: number | undefined;
-  // Variations
+  salePrice: number;
+  quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
-  // Misc
-  barcode: string;
-  sku: string;
-  categoryId: string;
 }
 
 const emptyItem: PurchaseItemData = {
-  productId: undefined,
+  productId: '',
   productName: '',
-  unit: 'UN',
   costPrice: 0,
   operationalCost: 0,
   taxRate: 0,
   desiredMargin: 0,
   salePrice: 0,
   quantity: 1,
-  lowStockAt: undefined,
   hasVariations: false,
   variations: [],
-  barcode: '',
-  sku: '',
-  categoryId: '',
 };
 
 function useToast() {
@@ -83,17 +62,18 @@ export default function PurchasesPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
+  const [useOutroSupplier, setUseOutroSupplier] = useState(false);
+  const [outroSupplierName, setOutroSupplierName] = useState('');
   const [notes, setNotes] = useState('');
   const [discount, setDiscount] = useState('0');
   const [saving, setSaving] = useState(false);
 
-  // Product section inside modal
+  // Product
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItemData[]>([]);
   const [currentItem, setCurrentItem] = useState<PurchaseItemData>({ ...emptyItem });
   const [currentTemplate, setCurrentTemplate] = useState<VariationTemplate | null>(null);
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
-  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
@@ -125,15 +105,12 @@ export default function PurchasesPage() {
     } catch { setProductResults([]); }
   };
 
-  const loadCategories = async () => {
-    try { setCategories(await api.categories.list()); } catch { /* */ }
-  };
-
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
 
-  // Open create modal
   const openCreate = async () => {
     setSelectedSupplier('');
+    setUseOutroSupplier(false);
+    setOutroSupplierName('');
     setPurchaseItems([]);
     setCurrentItem({ ...emptyItem });
     setCurrentTemplate(null);
@@ -143,36 +120,21 @@ export default function PurchasesPage() {
     setProductResults([]);
     const sups = await loadSuppliers();
     setSuppliers(sups);
-    await loadCategories();
     setFormOpen(true);
   };
 
-  // Select existing product → autofill
-  const selectExistingProduct = async (p: any) => {
+  const selectProduct = async (p: any) => {
     setCurrentItem({
       productId: p.id,
       productName: p.name,
-      unit: p.unit || 'UN',
       costPrice: Number(p.costPrice || 0),
       operationalCost: Number(p.operationalCost || 0),
       taxRate: Number(p.taxRate || 0),
       desiredMargin: 0,
       salePrice: Number(p.price || 0),
       quantity: 1,
-      lowStockAt: p.lowStockAt != null ? Number(p.lowStockAt) : undefined,
       hasVariations: p.hasVariations || (p.variations?.length > 0),
-      variations: (p.variations || []).map((v: any) => ({
-        id: v.id,
-        name: v.name,
-        priceModifier: Number(v.priceModifier || 0),
-        stockQty: Number(v.stockQty || 0),
-        lowStockAt: v.lowStockAt != null ? Number(v.lowStockAt) : undefined,
-        sku: v.sku || '',
-        barcode: v.barcode || '',
-      })),
-      barcode: p.barcode || '',
-      sku: p.sku || '',
-      categoryId: p.categoryId || '',
+      variations: [], // start blank — admin generates combinations
     });
     if (p.categoryId) {
       try {
@@ -186,7 +148,7 @@ export default function PurchasesPage() {
     setProductResults([]);
   };
 
-  // Suggested price formula: (cost + opsCost) / (1 - tax/100 - margin/100)
+  // Bidirectional pricing: cost/ops/tax/margin → salePrice
   const calcSuggested = (item: PurchaseItemData) => {
     const cost = item.costPrice || 0;
     const ops = item.operationalCost || 0;
@@ -197,8 +159,7 @@ export default function PurchasesPage() {
     return Math.round((cost + ops) / denom * 100) / 100;
   };
 
-  // Reverse: calculate margin from sale price
-  // margin = (1 - tax/100 - (cost + ops) / salePrice) * 100
+  // Bidirectional: salePrice → margin
   const calcMarginFromPrice = (item: PurchaseItemData) => {
     const cost = item.costPrice || 0;
     const ops = item.operationalCost || 0;
@@ -209,11 +170,18 @@ export default function PurchasesPage() {
     return Math.round(margin * 100) / 100;
   };
 
-  // Add current item to purchase
+  const /** total quantity from variations or direct input */
+  effectiveQty = currentItem.hasVariations
+    ? currentItem.variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)
+    : currentItem.quantity;
+
   const addCurrentItem = () => {
-    if (!currentItem.productName.trim()) { show('Nome do produto é obrigatório', 'error'); return; }
-    if (currentItem.quantity <= 0) { show('Quantidade deve ser maior que zero', 'error'); return; }
-    setPurchaseItems([...purchaseItems, { ...currentItem }]);
+    if (!currentItem.productId) { show('Selecione um produto', 'error'); return; }
+    if (effectiveQty <= 0) { show('Quantidade deve ser maior que zero', 'error'); return; }
+    setPurchaseItems([...purchaseItems, {
+      ...currentItem,
+      quantity: effectiveQty,
+    }]);
     setCurrentItem({ ...emptyItem });
     setCurrentTemplate(null);
     setProductSearch('');
@@ -226,55 +194,39 @@ export default function PurchasesPage() {
   const itemsTotal = itemsSubtotal - (Number(discount) || 0);
 
   const handleCreate = async () => {
-    if (!selectedSupplier || purchaseItems.length === 0) return;
+    if (purchaseItems.length === 0) return;
+    if (!selectedSupplier && !(useOutroSupplier && outroSupplierName.trim())) {
+      show('Selecione ou informe o fornecedor', 'error'); return;
+    }
     setSaving(true);
     try {
-      // 1. Create/update products first
-      const createdProductIds: Record<number, string> = {};
-      for (let idx = 0; idx < purchaseItems.length; idx++) {
-        const item = purchaseItems[idx];
-        if (item.productId) {
-          // Update existing product
-          await api.products.update(item.productId, {
-            name: item.productName,
-            costPrice: item.costPrice,
-            operationalCost: item.operationalCost,
-            taxRate: item.taxRate,
-            price: item.salePrice || calcSuggested(item) || 0,
-            barcode: item.barcode || undefined,
-            sku: item.sku || undefined,
-            categoryId: item.categoryId || undefined,
-            unit: item.unit,
-            lowStockAt: item.lowStockAt,
-            hasVariations: item.hasVariations,
-          });
-          createdProductIds[idx] = item.productId;
-        } else {
-          // Create new product
-          const newProduct = await api.products.create({
-            name: item.productName,
-            price: item.salePrice || calcSuggested(item) || 0,
-            costPrice: item.costPrice,
-            operationalCost: item.operationalCost,
-            taxRate: item.taxRate,
-            stockQty: 0, // stock created on receive
-            barcode: item.barcode || undefined,
-            sku: item.sku || undefined,
-            categoryId: item.categoryId || undefined,
-            unit: item.unit,
-            lowStockAt: item.lowStockAt,
-            hasVariations: item.hasVariations,
-          });
-          createdProductIds[idx] = newProduct.id;
+      // Resolve supplier ID
+      let supplierId = selectedSupplier;
+      if (useOutroSupplier && outroSupplierName.trim()) {
+        const newSup = await api.suppliers.create({ name: outroSupplierName.trim() });
+        supplierId = newSup.id;
+      }
 
-          // Create variations if any
-          if (item.hasVariations && item.variations.length > 0) {
-            for (const v of item.variations) {
-              await api.products.addVariation(newProduct.id, {
+      // Update products + create variations if needed
+      for (const item of purchaseItems) {
+        await api.products.update(item.productId, {
+          costPrice: item.costPrice,
+          operationalCost: item.operationalCost,
+          taxRate: item.taxRate,
+          price: item.salePrice || calcSuggested(item) || 0,
+          hasVariations: item.hasVariations,
+        });
+        // Create/update variations
+        if (item.hasVariations && item.variations.length > 0) {
+          for (const v of item.variations) {
+            if (v.id) {
+              // update existing variation stock
+              // (not needed for purchase context — stock added on receive)
+            } else {
+              await api.products.addVariation(item.productId, {
                 name: v.name,
-                priceModifier: v.priceModifier,
+                priceModifier: v.priceModifier || 0,
                 stockQty: 0,
-                lowStockAt: v.lowStockAt,
                 sku: v.sku,
                 barcode: v.barcode,
               });
@@ -283,13 +235,13 @@ export default function PurchasesPage() {
         }
       }
 
-      // 2. Create purchase
+      // Create purchase
       await api.purchases.create({
-        supplierId: selectedSupplier,
+        supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
-        items: purchaseItems.map((item, idx) => ({
-          productId: createdProductIds[idx],
+        items: purchaseItems.map((item) => ({
+          productId: item.productId,
           productName: item.productName,
           quantity: item.quantity,
           unitCost: item.costPrice,
@@ -297,7 +249,7 @@ export default function PurchasesPage() {
         })),
       });
 
-      show('Compra criada com sucesso!');
+      show('Compra criada! Ao receber, o estoque será atualizado.');
       setFormOpen(false);
       loadPurchases();
     } catch (err: any) {
@@ -332,8 +284,7 @@ export default function PurchasesPage() {
 
   const toggleExpand = (id: string) => setExpanded(expanded === id ? null : id);
 
-  const suggested = calcSuggested(currentItem);
-  const currentItemTotal = currentItem.costPrice * currentItem.quantity;
+  const currentItemTotal = currentItem.costPrice * effectiveQty;
 
   return (
     <div className="animate-slide-up">
@@ -363,7 +314,7 @@ export default function PurchasesPage() {
         </div>
       </div>
 
-      {/* Content (unchanged list) */}
+      {/* Content */}
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
@@ -462,127 +413,103 @@ export default function PurchasesPage() {
 
           {total > 20 && (
             <div className="flex items-center justify-center gap-2 mt-6">
-              <button onClick={() => setPage(po => Math.max(1, po - 1))} disabled={page === 1}
+              <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="px-3 py-1.5 bg-slate-900 text-slate-400 rounded-lg text-sm disabled:opacity-40">Anterior</button>
-              <span className="text-slate-400 text-sm">Página {page}</span>
-              <button onClick={() => setPage(po => po + 1)} disabled={page * 20 >= total}
-                className="px-3 py-1.5 bg-slate-900 text-slate-400 rounded-lg text-sm disabled:opacity-40">Próxima</button>
+              <span className="text-slate-400 text-sm">Pagina {page}</span>
+              <button onClick={() => setPage(p => p + 1)} disabled={page * 20 >= total}
+                className="px-3 py-1.5 bg-slate-900 text-slate-400 rounded-lg text-sm disabled:opacity-40">Proxima</button>
             </div>
           )}
         </>
       )}
 
-      {/* ========== CREATE MODAL (redesigned) ========== */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nova Compra" size="xl">
-        <div className="space-y-6">
-          {/* ── Supplier ── */}
+      {/* ========== CREATE MODAL (simplified) ========== */}
+      <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nova Compra" size="lg">
+        <div className="space-y-5">
+          {/* ── 1. Supplier ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
               <ShoppingBag size={16} className="text-indigo-400" /> Fornecedor
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Fornecedor *</label>
-                <select value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none">
-                  <option value="">Selecionar...</option>
-                  {suppliers.map((s: any) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Desconto (R$)</label>
-                <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)}
-                  min="0" step="0.01"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+              {!useOutroSupplier ? (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Fornecedor *</label>
+                  <select value={selectedSupplier} onChange={(e) => setSelectedSupplier(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none">
+                    <option value="">Selecionar...</option>
+                    {suppliers.map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Nome do Fornecedor *</label>
+                  <input value={outroSupplierName} onChange={(e) => setOutroSupplierName(e.target.value)}
+                    placeholder="Digite o nome..."
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
+              )}
+              <div className="flex items-end gap-3">
+                <label className="flex items-center gap-2 cursor-pointer pb-2">
+                  <input type="checkbox" checked={useOutroSupplier}
+                    onChange={(e) => { setUseOutroSupplier(e.target.checked); setSelectedSupplier(''); }}
+                    className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-500 focus:ring-0" />
+                  <span className="text-sm text-slate-400">Outros</span>
+                </label>
+                <div className="flex-1">
+                  <label className="block text-xs text-slate-400 mb-1">Desconto (R$)</label>
+                  <input type="number" value={discount} onChange={(e) => setDiscount(e.target.value)}
+                    min="0" step="0.01"
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* ── Product Form ── */}
+          {/* ── 2. Product ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-              <Tags size={16} className="text-indigo-400" /> Produto
-            </h3>
+            <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
 
-            {/* Search existing product OR create new */}
+            {/* Product search (existing only) */}
             <div className="relative mb-3">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 value={productSearch}
                 onChange={(e) => searchProducts(e.target.value)}
-                placeholder="Buscar produto existente ou digite um nome para criar novo..."
+                placeholder="Buscar produto..."
                 className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
               {productResults.length > 0 && (
                 <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto z-20">
                   {productResults.map((p: any) => (
-                    <button key={p.id} onClick={() => selectExistingProduct(p)}
+                    <button key={p.id} onClick={() => selectProduct(p)}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600 flex items-center justify-between">
                       <span>{p.name}</span>
-                      <span className="text-xs text-slate-500">{p.unit} — R$ {Number(p.price).toFixed(2)}</span>
+                      <span className="text-xs text-slate-500">R$ {Number(p.price).toFixed(2)}</span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Product name (if creating new) */}
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className="col-span-2">
-                <label className="block text-xs text-slate-400 mb-1">Nome do Produto *</label>
-                <input value={currentItem.productName} onChange={(e) => setCurrentItem({ ...currentItem, productName: e.target.value })}
-                  placeholder="Nome do produto"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Categoria</label>
-                <select value={currentItem.categoryId} onChange={(e) => {
-                  setCurrentItem({ ...currentItem, categoryId: e.target.value });
-                  if (e.target.value) {
-                    const cat = categories.find(c => c.id === e.target.value);
-                    setCurrentTemplate(cat?.variationTemplate || null);
-                  } else setCurrentTemplate(null);
-                }}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none">
-                  <option value="">Sem categoria</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            {/* Selected product name */}
+            {currentItem.productId ? (
+              <p className="text-white text-sm font-medium mb-3">✓ {currentItem.productName}</p>
+            ) : (
+              <p className="text-slate-600 text-sm mb-3">Nenhum produto selecionado</p>
+            )}
 
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Unidade</label>
-                <select value={currentItem.unit} onChange={(e) => setCurrentItem({ ...currentItem, unit: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none">
-                  {UNITS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Código de Barras</label>
-                <input value={currentItem.barcode} onChange={(e) => setCurrentItem({ ...currentItem, barcode: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">SKU</label>
-                <input value={currentItem.sku} onChange={(e) => setCurrentItem({ ...currentItem, sku: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              </div>
-            </div>
-
-            {/* Pricing fields */}
+            {/* ── 3. Pricing ── */}
             <div className="bg-slate-900 rounded-lg p-3 mb-3">
-              <p className="text-xs text-slate-500 mb-2">Precificação</p>
+              <p className="text-xs text-slate-500 mb-2">Precificacao</p>
               <div className="grid grid-cols-5 gap-2">
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">Custo Unit. (R$)</label>
                   <input type="number" value={currentItem.costPrice || ''} onChange={(e) => {
                     const updated = { ...currentItem, costPrice: Number(e.target.value) };
-                    const suggested = calcSuggested(updated);
-                    if (suggested) updated.salePrice = suggested;
+                    const sug = calcSuggested(updated);
+                    if (sug) updated.salePrice = sug;
                     setCurrentItem(updated);
                   }}
                     min="0" step="0.01" placeholder="0,00"
@@ -592,8 +519,8 @@ export default function PurchasesPage() {
                   <label className="block text-[10px] text-slate-500 mb-0.5">Custo Oper. (R$)</label>
                   <input type="number" value={currentItem.operationalCost || ''} onChange={(e) => {
                     const updated = { ...currentItem, operationalCost: Number(e.target.value) };
-                    const suggested = calcSuggested(updated);
-                    if (suggested) updated.salePrice = suggested;
+                    const sug = calcSuggested(updated);
+                    if (sug) updated.salePrice = sug;
                     setCurrentItem(updated);
                   }}
                     min="0" step="0.01" placeholder="0,00"
@@ -603,8 +530,8 @@ export default function PurchasesPage() {
                   <label className="block text-[10px] text-slate-500 mb-0.5">Imposto (%)</label>
                   <input type="number" value={currentItem.taxRate || ''} onChange={(e) => {
                     const updated = { ...currentItem, taxRate: Number(e.target.value) };
-                    const suggested = calcSuggested(updated);
-                    if (suggested) updated.salePrice = suggested;
+                    const sug = calcSuggested(updated);
+                    if (sug) updated.salePrice = sug;
                     setCurrentItem(updated);
                   }}
                     min="0" max="100" step="0.01" placeholder="0"
@@ -614,15 +541,15 @@ export default function PurchasesPage() {
                   <label className="block text-[10px] text-slate-500 mb-0.5">Margem Desej. (%)</label>
                   <input type="number" value={currentItem.desiredMargin || ''} onChange={(e) => {
                     const updated = { ...currentItem, desiredMargin: Number(e.target.value) };
-                    const suggested = calcSuggested(updated);
-                    if (suggested) updated.salePrice = suggested;
+                    const sug = calcSuggested(updated);
+                    if (sug) updated.salePrice = sug;
                     setCurrentItem(updated);
                   }}
                     min="0" max="100" step="0.1" placeholder="0"
                     className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Preço Sugerido (R$)</label>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">Preco Sugerido (R$)</label>
                   <input type="number" value={currentItem.salePrice || ''} onChange={(e) => {
                     const updated = { ...currentItem, salePrice: Number(e.target.value) };
                     const margin = calcMarginFromPrice(updated);
@@ -635,57 +562,56 @@ export default function PurchasesPage() {
               </div>
             </div>
 
-            {/* Variations toggle */}
+            {/* ── 4. Variations ── */}
             <div className="mb-3">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={currentItem.hasVariations}
-                  onChange={(e) => setCurrentItem({ ...currentItem, hasVariations: e.target.checked })}
+                  onChange={(e) => setCurrentItem({ ...currentItem, hasVariations: e.target.checked, variations: [] })}
                   className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-500 focus:ring-0" />
-                <span className="text-sm text-slate-400">Possui variações (tamanho, cor, etc.)</span>
+                <span className="text-sm text-slate-400">Possui variacoes (tamanho, cor, etc.)</span>
               </label>
             </div>
 
-            {currentItem.hasVariations && (
+            {currentItem.hasVariations ? (
               <div className="mb-3 bg-slate-900 rounded-lg p-3">
                 <VariationEditor
                   template={currentTemplate}
                   variations={currentItem.variations}
                   onChange={(vars) => setCurrentItem({ ...currentItem, variations: vars })}
+                  purchaseMode
                 />
+                <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
+                  <span className="text-xs text-slate-400">
+                    Qtd total comprada: <span className="text-white font-semibold">{effectiveQty}</span>
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-3">
+                <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
+                <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                  min="0.001" step="any" placeholder="1"
+                  className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
               </div>
             )}
 
-            {/* Stock fields */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Qtd de Estoque (Compra)</label>
-                <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
-                  min="0.001" step="any" placeholder="0"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-400 mb-1">Estoque Mínimo (Alerta)</label>
-                <input type="number" value={currentItem.lowStockAt ?? ''} onChange={(e) => setCurrentItem({ ...currentItem, lowStockAt: e.target.value ? Number(e.target.value) : undefined })}
-                  min="0" step="1" placeholder="Opcional"
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
-              </div>
-            </div>
-
             {/* Add item button */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-700">
               <span className="text-xs text-slate-500">
                 Total deste item: <span className="text-white font-semibold">R$ {currentItemTotal.toFixed(2)}</span>
-                {suggested && <span className="ml-2 text-emerald-400">| Preço venda: R$ {suggested.toFixed(2)}</span>}
+                {currentItem.salePrice > 0 && (
+                  <span className="ml-2 text-emerald-400">| Venda: R$ {currentItem.salePrice.toFixed(2)}</span>
+                )}
               </span>
               <button onClick={addCurrentItem}
-                disabled={!currentItem.productName.trim() || currentItem.quantity <= 0}
+                disabled={!currentItem.productId || effectiveQty <= 0}
                 className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-                <Plus size={14} className="inline mr-1" /> Adicionar à Compra
+                <Plus size={14} className="inline mr-1" /> Adicionar a Compra
               </button>
             </div>
           </div>
 
-          {/* ── Items added ── */}
+          {/* ── 5. Items list ── */}
           {purchaseItems.length > 0 && (
             <div className="bg-slate-800/50 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white mb-3">Produtos na Compra ({purchaseItems.length})</h3>
@@ -693,10 +619,12 @@ export default function PurchasesPage() {
                 {purchaseItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{item.productName} <span className="text-xs text-slate-500">{item.unit}</span></p>
+                      <p className="text-sm text-white truncate">{item.productName}</p>
                       <p className="text-xs text-slate-500">
                         Custo R$ {item.costPrice.toFixed(2)}
-                        {item.hasVariations && <span className="ml-2 text-indigo-400">{item.variations.length} variações</span>}
+                        {item.hasVariations && (
+                          <span className="ml-2 text-indigo-400">{item.variations.length} variacoes</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -726,9 +654,9 @@ export default function PurchasesPage() {
             </div>
           )}
 
-          {/* ── Notes ── */}
+          {/* ── 6. Notes ── */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Observações</label>
+            <label className="block text-xs text-slate-400 mb-1">Observacoes</label>
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
               placeholder="Notas sobre esta compra..."
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none resize-none" />
@@ -738,7 +666,7 @@ export default function PurchasesPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => setFormOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button onClick={handleCreate}
-              disabled={saving || !selectedSupplier || purchaseItems.length === 0}
+              disabled={saving || (!selectedSupplier && !(useOutroSupplier && outroSupplierName.trim())) || purchaseItems.length === 0}
               className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Criando...' : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`}
             </button>
