@@ -42,6 +42,7 @@ export interface ProductCategory {
   id: string;
   name: string;
   color: string | null;
+  variationTemplate?: VariationTemplate | null;
 }
 
 export interface Product {
