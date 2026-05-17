@@ -742,7 +742,11 @@ export default function ProductsPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-400 text-sm mb-1">Categoria</label>
-              <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              <select value={formData.categoryId} onChange={(e) => {
+                  const catId = e.target.value;
+                  setFormData({ ...formData, categoryId: catId });
+                  loadTemplate(catId);
+                }}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
                 <option value="">Sem categoria</option>
                 {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
