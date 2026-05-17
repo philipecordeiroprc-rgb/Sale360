@@ -188,6 +188,25 @@ export const api = {
       return request<any>('/api/orders/today-summary');
     },
   },
+
+  // Variation Templates
+  variationTemplates: {
+    list() {
+      return request<VariationTemplate[]>('/api/variation-templates');
+    },
+    get(id: string) {
+      return request<VariationTemplate>(`/api/variation-templates/${id}`);
+    },
+    create(data: { name: string; dimensions: { type: DimensionType; label: string; options: string[]; orderIndex?: number }[] }) {
+      return request<VariationTemplate>('/api/variation-templates', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(id: string, data: any) {
+      return request<VariationTemplate>(`/api/variation-templates/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+    delete(id: string) {
+      return request<{ success: boolean }>(`/api/variation-templates/${id}`, { method: 'DELETE' });
+    },
+  },
 };
 
 export interface CategoryWithCount {
