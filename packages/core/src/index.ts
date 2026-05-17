@@ -135,11 +135,17 @@ export const PAYMENT_METHODS = [
 
 export const UNITS = [
   { id: 'UN', label: 'Unidade', symbol: 'un' },
+  { id: 'PC', label: 'Peça', symbol: 'pc' },
+  { id: 'CX', label: 'Caixa', symbol: 'cx' },
   { id: 'KG', label: 'Quilo', symbol: 'kg' },
   { id: 'G', label: 'Grama', symbol: 'g' },
   { id: 'L', label: 'Litro', symbol: 'l' },
   { id: 'ML', label: 'Mililitro', symbol: 'ml' },
   { id: 'M', label: 'Metro', symbol: 'm' },
+  { id: 'M2', label: 'Metro²', symbol: 'm²' },
+  { id: 'PAR', label: 'Par', symbol: 'par' },
+  { id: 'FD', label: 'Fardo', symbol: 'fd' },
+  { id: 'PCT', label: 'Pacote', symbol: 'pct' },
 ] as const;
 
 // --- Permissions ---
