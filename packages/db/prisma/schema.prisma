@@ -229,6 +229,7 @@ model Purchase {
   id             String         @id @default(cuid())
   tenantId       String
   supplierId     String
+  customerId     String?
   orderNumber    Int            // sequencial por tenant
   status         PurchaseStatus @default(DRAFT)
   notes          String?
