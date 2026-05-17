@@ -82,6 +82,7 @@ export default function ProductsPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  const [selectedVariationType, setSelectedVariationType] = useState('all');
 
   // Product form
   const [formOpen, setFormOpen] = useState(false);
