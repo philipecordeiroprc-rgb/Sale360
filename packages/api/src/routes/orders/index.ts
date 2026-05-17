@@ -19,7 +19,7 @@ const createOrderSchema = z.object({
   total: z.number(),
   paymentMethod: z.string(),
   paymentStatus: z.enum(['PAID', 'PENDING', 'PARTIAL', 'CREDIT_STORE']).default('PAID'),
-  source: z.enum(['PDV', 'ONLINE', 'WHATSAPP', 'DELIVERY', 'COMANDA']).default('PDV'),
+  source: z.enum(['PDV', 'ONLINE', 'WHATSAPP', 'DELIVERY', 'COMAND']).default('PDV'),
   notes: z.string().optional(),
   localId: z.string().optional(),
   createdAtDevice: z.string().optional(),
