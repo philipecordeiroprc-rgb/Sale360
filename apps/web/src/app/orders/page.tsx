@@ -496,16 +496,24 @@ export default function OrdersPage() {
                   <div className="mb-2">
                     <label className="block text-xs text-slate-400 mb-1">Variação</label>
                     <div className="flex flex-wrap gap-1">
-                      {selectedProduct.variations.map((v: any) => (
-                        <button key={v.id} onClick={() => setSelectedVariation(v)}
-                          className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                            selectedVariation?.id === v.id
-                              ? 'bg-indigo-500 text-white'
-                              : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                          }`}>
-                          {v.name} {v.priceModifier > 0 ? `(+R$${Number(v.priceModifier).toFixed(2)})` : ''}
-                        </button>
-                      ))}
+                      {selectedProduct.variations.map((v: any) => {
+                        const vStock = Number(v.stockQty || 0);
+                        const outOfStock = vStock <= 0;
+                        return (
+                          <button key={v.id}
+                            onClick={() => !outOfStock && setSelectedVariation(v)}
+                            disabled={outOfStock}
+                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                              selectedVariation?.id === v.id
+                                ? 'bg-indigo-500 text-white'
+                                : outOfStock
+                                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
+                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                            }`}>
+                            {v.name}{v.priceModifier > 0 ? ` (+R$${Number(v.priceModifier).toFixed(2)})` : ''} — Est: {vStock}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
