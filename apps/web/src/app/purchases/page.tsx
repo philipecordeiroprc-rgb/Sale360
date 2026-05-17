@@ -501,6 +501,36 @@ export default function PurchasesPage() {
             </div>
           </div>
 
+          {/* ── Customer (optional) ── */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-white mb-3">Cliente <span className="text-xs text-slate-500 font-normal">(opcional)</span></h3>
+            {selectedCustomer ? (
+              <div className="flex items-center gap-2">
+                <span className="text-white text-sm">{selectedCustomerName}</span>
+                <button onClick={clearCustomer} className="text-xs text-red-400 hover:text-red-300">Remover</button>
+              </div>
+            ) : (
+              <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <input
+                  value={customerSearch}
+                  onChange={(e) => searchCustomers(e.target.value)}
+                  placeholder="Buscar cliente..."
+                  className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                {customerResults.length > 0 && (
+                  <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto z-20">
+                    {customerResults.map((c: any) => (
+                      <button key={c.id} onClick={() => selectCustomer(c)}
+                        className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600">
+                        {c.name} {c.phone ? `— ${c.phone}` : ''}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* ── 2. Product ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
