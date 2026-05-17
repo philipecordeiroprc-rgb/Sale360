@@ -160,7 +160,7 @@ export default function PurchasesPage() {
       }
       combos = next;
     }
-    return combos.map((parts) => parts.join(' '));
+    return combos.map((parts: string[]) => parts.join(' '));
   };
 
   const selectProduct = (p: any) => {
