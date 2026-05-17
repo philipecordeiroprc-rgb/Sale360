@@ -150,11 +150,13 @@ export default function PurchasesPage() {
   // Generate cartesian product of dimension options
   const generateCombos = (dimensions: any[]): string[] => {
     if (dimensions.length === 0) return [];
-    let combos = dimensions[0].options.map((o: string) => [o]);
+    const parseOptions = (opts: any): string[] =>
+      Array.isArray(opts) ? opts : (typeof opts === 'string' ? JSON.parse(opts) : []);
+    let combos = parseOptions(dimensions[0].options).map((o: string) => [o]);
     for (let i = 1; i < dimensions.length; i++) {
       const next: string[][] = [];
       for (const combo of combos) {
-        for (const opt of dimensions[i].options) {
+        for (const opt of parseOptions(dimensions[i].options)) {
           next.push([...combo, opt]);
         }
       }
