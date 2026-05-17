@@ -848,6 +848,57 @@ export default function ProductsPage() {
         onClose={() => setCategoriesOpen(false)}
         onChanged={() => { loadCategories(); loadProducts(); }}
       />
+
+      {/* Stock Detail Modal */}
+      {stockProduct && (
+        <Modal
+          open={!!stockProduct}
+          onClose={() => setStockProduct(null)}
+          title={`Estoque - ${stockProduct.name}`}
+          size="sm"
+        >
+          <div className="space-y-3">
+            {stockProduct.hasVariations && stockProduct.variations?.length > 0 ? (
+              <>
+                <div className="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800 overflow-hidden">
+                  <div className="grid grid-cols-3 gap-2 px-4 py-2 text-xs text-slate-500 bg-slate-900/50">
+                    <span>Variação</span>
+                    <span className="text-center">Estoque</span>
+                    <span className="text-right">Acréscimo</span>
+                  </div>
+                  {stockProduct.variations.map((v: any) => {
+                    const vStock = Number(v.stockQty);
+                    const vPrice = Number(v.priceModifier);
+                    return (
+                      <div key={v.id || v.name} className="grid grid-cols-3 gap-2 px-4 py-2.5 items-center text-sm">
+                        <span className="text-white truncate">{v.name}</span>
+                        <span className={`text-center font-medium ${
+                          vStock > 10 ? 'text-white' : vStock > 0 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {vStock}
+                        </span>
+                        <span className="text-right text-slate-400">
+                          {vPrice > 0 ? `+R$ ${vPrice.toFixed(2)}` : vPrice < 0 ? `-R$ ${Math.abs(vPrice).toFixed(2)}` : '-'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between px-1 text-sm">
+                  <span className="text-slate-400">Total</span>
+                  <span className="text-white font-semibold">
+                    {stockProduct.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)} un
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-slate-400 py-4">
+                Produto sem variações. Estoque: {Number(stockProduct.stockQty)} un
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
