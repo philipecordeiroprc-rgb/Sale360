@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 const orderItemSchema = z.object({
   productId: z.string().optional(),
+  variationId: z.string().optional(),
   productName: z.string(),
   quantity: z.number().positive(),
   unitPrice: z.number(),
