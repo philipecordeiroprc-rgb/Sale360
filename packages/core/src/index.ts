@@ -138,6 +138,7 @@ export const UNITS = [
   { id: 'KG', label: 'Quilo', symbol: 'kg' },
   { id: 'G', label: 'Grama', symbol: 'g' },
   { id: 'L', label: 'Litro', symbol: 'l' },
+  { id: 'ML', label: 'Mililitro', symbol: 'ml' },
   { id: 'M', label: 'Metro', symbol: 'm' },
 ] as const;
 
