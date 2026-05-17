@@ -63,10 +63,11 @@ function useToast() {
 }
 
 // Calculate profit margin
-function calcProfit(price: number, cost: number, taxRate: number): { profit: number; margin: number } {
+function calcProfit(price: number, cost: number, operationalCost: number, taxRate: number): { profit: number; margin: number } {
   if (price <= 0) return { profit: 0, margin: 0 };
   const taxAmount = price * (taxRate / 100);
-  const profit = price - cost - taxAmount;
+  const totalCost = cost + operationalCost + taxAmount;
+  const profit = price - totalCost;
   const margin = (profit / price) * 100;
   return { profit, margin };
 }
