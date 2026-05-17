@@ -17,6 +17,7 @@ const createProductSchema = z.object({
   hasVariations: z.boolean().default(false),
   imageUrl: z.string().optional(),
   taxRate: z.number().min(0).max(100).optional(),
+  operationalCost: z.number().min(0).optional(),
 });
 
 const updateProductSchema = createProductSchema.partial();
