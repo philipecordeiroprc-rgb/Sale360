@@ -173,7 +173,13 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           costPrice = totalCostAcc / item.quantity;
           totalCost = totalCostAcc;
 
-          // Update product stock
+          // Update product/variation stock
+          if (item.variationId) {
+            await tx.productVariation.update({
+              where: { id: item.variationId },
+              data: { stockQty: { decrement: item.quantity } },
+            });
+          }
           await tx.product.update({
             where: { id: item.productId },
             data: {
@@ -185,6 +191,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
         return {
           productId: item.productId,
+          variationId: item.variationId || null,
           productName: item.productName,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
