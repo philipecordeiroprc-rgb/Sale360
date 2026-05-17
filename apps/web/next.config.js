@@ -2,7 +2,9 @@
 const nextConfig = {
   transpilePackages: ['@sale360/core'],
   experimental: {
-    serverActions: true,
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
   },
 };
 
