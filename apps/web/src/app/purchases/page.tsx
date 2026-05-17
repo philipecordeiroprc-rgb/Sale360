@@ -666,7 +666,7 @@ export default function PurchasesPage() {
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-sm text-white">{item.quantity}</p>
-                      <p className="text-xs text-slate-500">R$ {item.currentItemTotal?.toFixed(2) || (item.costPrice * item.quantity).toFixed(2)}</p>
+                      <p className="text-xs text-slate-500">R$ {(item.costPrice * item.quantity).toFixed(2)}</p>
                     </div>
                     <button onClick={() => removeItem(idx)} className="p-1 text-slate-500 hover:text-red-400 ml-1">
                       <X size={14} />
