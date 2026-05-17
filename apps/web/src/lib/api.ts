@@ -192,7 +192,7 @@ export const api = {
     },
     create(data: {
       customerId?: string;
-      items: { productId?: string; variationId?: string; productName: string; quantity: number; unitPrice: number; total: number; variationId?: string }[];
+      items: { productId?: string; variationId?: string; productName: string; quantity: number; unitPrice: number; total: number }[];
       subtotal: number;
       discount?: number;
       total: number;
