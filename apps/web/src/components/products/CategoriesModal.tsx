@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import api, { type CategoryWithCount } from '@/lib/api';
+import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 const PRESET_COLORS = [
   '#6366F1', // indigo
