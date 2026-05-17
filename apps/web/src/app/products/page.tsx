@@ -850,7 +850,7 @@ export default function ProductsPage() {
           </div>
 
           {showVariations && (
-            <VariationEditor variations={variations} onChange={setVariations} />
+            <VariationEditor template={currentTemplate} variations={variations} onChange={setVariations} />
           )}
 
           {/* Actions */}
