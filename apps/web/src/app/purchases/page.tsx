@@ -16,11 +16,8 @@ const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
 interface PurchaseItemData {
   productId: string;
   productName: string;
-  costPrice: number;
-  operationalCost: number;
-  taxRate: number;
-  desiredMargin: number;
-  salePrice: number;
+  costPrice: number;   // unit cost (lote PEPS)
+  salePrice: number;    // optional: update product selling price
   quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
@@ -30,9 +27,6 @@ const emptyItem: PurchaseItemData = {
   productId: '',
   productName: '',
   costPrice: 0,
-  operationalCost: 0,
-  taxRate: 0,
-  desiredMargin: 0,
   salePrice: 0,
   quantity: 1,
   hasVariations: false,
