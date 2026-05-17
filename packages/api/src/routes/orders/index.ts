@@ -278,6 +278,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             data: {
               tenantId: request.tenantId,
               productId: item.productId,
+              variationId: (item as any).variationId || null,
               type: 'SALE_CANCEL',
               quantity: item.quantity,
               unitCost: item.costPrice ? Number(item.costPrice) : 0,
@@ -293,6 +294,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               data: {
                 tenantId: request.tenantId,
                 productId: item.productId,
+                variationId: (item as any).variationId || null,
                 quantity: item.quantity,
                 remainingQty: item.quantity,
                 unitCost: Number(item.costPrice),
@@ -301,7 +303,13 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             });
           }
 
-          // Update product stock
+          // Update product/variation stock
+          if ((item as any).variationId) {
+            await tx.productVariation.update({
+              where: { id: (item as any).variationId },
+              data: { stockQty: { increment: item.quantity } },
+            });
+          }
           await tx.product.update({
             where: { id: item.productId },
             data: { stockQty: { increment: item.quantity } },
