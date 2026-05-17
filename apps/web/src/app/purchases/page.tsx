@@ -174,28 +174,6 @@ export default function PurchasesPage() {
     setProductResults([]);
   };
 
-  // Bidirectional pricing: cost/ops/tax/margin → salePrice
-  const calcSuggested = (item: PurchaseItemData) => {
-    const cost = item.costPrice || 0;
-    const ops = item.operationalCost || 0;
-    const tax = item.taxRate || 0;
-    const margin = item.desiredMargin || 0;
-    const denom = 1 - tax / 100 - margin / 100;
-    if (cost <= 0 || margin <= 0 || denom <= 0) return null;
-    return Math.round((cost + ops) / denom * 100) / 100;
-  };
-
-  // Bidirectional: salePrice → margin
-  const calcMarginFromPrice = (item: PurchaseItemData) => {
-    const cost = item.costPrice || 0;
-    const ops = item.operationalCost || 0;
-    const tax = item.taxRate || 0;
-    const price = item.salePrice || 0;
-    if (cost <= 0 || price <= 0) return null;
-    const margin = (1 - tax / 100 - (cost + ops) / price) * 100;
-    return Math.round(margin * 100) / 100;
-  };
-
   const /** total quantity from variations or direct input */
   effectiveQty = currentItem.hasVariations
     ? currentItem.variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)
