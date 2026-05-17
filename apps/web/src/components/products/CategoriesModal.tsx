@@ -74,9 +74,14 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
     if (!newName.trim()) return;
     try {
       setAdding(true);
-      await api.categories.create({ name: newName.trim(), color: newColor });
+      await api.categories.create({
+        name: newName.trim(),
+        color: newColor,
+        variationTemplateId: newTemplateId || undefined,
+      });
       setNewName('');
       setNewColor(PRESET_COLORS[0]);
+      setNewTemplateId('');
       await loadCategories();
       onChanged();
     } catch (err: any) {
