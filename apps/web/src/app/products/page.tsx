@@ -49,25 +49,8 @@ export default function ProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyForm });
-  const [variations, setVariations] = useState<VariationData[]>([]);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
-  const [showVariations, setShowVariations] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState<VariationTemplate | null>(null);
-
-  // Load variation template for a given category
-  const loadTemplate = useCallback(async (categoryId: string) => {
-    if (!categoryId) {
-      setCurrentTemplate(null);
-      return;
-    }
-    try {
-      const cat = await api.categories.get(categoryId);
-      setCurrentTemplate(cat.variationTemplate || null);
-    } catch {
-      setCurrentTemplate(null);
-    }
-  }, []);
 
   // Categories modal
   const [categoriesOpen, setCategoriesOpen] = useState(false);
