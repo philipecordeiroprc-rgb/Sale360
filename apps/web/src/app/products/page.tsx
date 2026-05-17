@@ -168,6 +168,7 @@ export default function ProductsPage() {
         name: v.name,
         priceModifier: Number(v.priceModifier),
         stockQty: Number(v.stockQty),
+        lowStockAt: v.lowStockAt != null ? Number(v.lowStockAt) : undefined,
         sku: v.sku || '',
         barcode: v.barcode || '',
       })) || [],
