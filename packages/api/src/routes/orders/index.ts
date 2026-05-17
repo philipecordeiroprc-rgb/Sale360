@@ -133,6 +133,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             where: {
               tenantId: request.tenantId,
               productId: item.productId,
+              variationId: item.variationId || null,
               remainingQty: { gt: 0 },
             },
             orderBy: { receivedAt: 'asc' },
