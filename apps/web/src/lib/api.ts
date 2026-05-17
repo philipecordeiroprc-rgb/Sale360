@@ -190,6 +190,26 @@ export const api = {
     todaySummary() {
       return request<any>('/api/orders/today-summary');
     },
+    create(data: {
+      customerId?: string;
+      items: { productId?: string; variationId?: string; productName: string; quantity: number; unitPrice: number; total: number }[];
+      subtotal: number;
+      discount?: number;
+      total: number;
+      paymentMethod: string;
+      paymentStatus?: string;
+      notes?: string;
+    }) {
+      // Generate localId for offline support
+      const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      return request<any>('/api/orders', {
+        method: 'POST',
+        body: JSON.stringify({ ...data, localId, paymentStatus: data.paymentStatus || 'PAID' }),
+      });
+    },
+    cancel(id: string) {
+      return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
+    },
   },
 
   // Suppliers
