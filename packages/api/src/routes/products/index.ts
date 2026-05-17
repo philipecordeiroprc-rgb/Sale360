@@ -25,7 +25,7 @@ const updateProductSchema = createProductSchema.partial();
 export const productRoutes: FastifyPluginAsync = async (app) => {
   // List all products (with search & category filter)
   app.get('/', async (request) => {
-    const { search, categoryId, active, variationType, page = '1', limit = '50' } = request.query as Record<string, string>;
+    const { search, categoryId, active, variationName, page = '1', limit = '50' } = request.query as Record<string, string>;
 
     const where: any = { tenantId: request.tenantId };
 
@@ -34,25 +34,17 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
         { name: { contains: search, mode: 'insensitive' } },
         { barcode: { contains: search } },
         { sku: { contains: search } },
+        // Also search in variation names
+        { variations: { some: { name: { contains: search, mode: 'insensitive' } } } },
       ];
     }
 
     if (categoryId) where.categoryId = categoryId;
     if (active !== undefined) where.active = active === 'true';
 
-    // Variation type filter
-    if (variationType === 'none') {
-      where.hasVariations = false;
-    } else if (variationType === 'any') {
-      where.hasVariations = true;
-    } else if (variationType) {
-      // Filter by specific dimension type (e.g. TAMANHO_LETRA, COR, etc.)
-      where.variations = { some: {} };
-      where.category = {
-        variationTemplate: {
-          dimensions: { some: { type: variationType } },
-        },
-      };
+    // Filter by specific variation name (e.g., "Preto", "2", "GG")
+    if (variationName) {
+      where.variations = { some: { name: { equals: variationName, mode: 'insensitive' } } };
     }
 
     const [products, total] = await Promise.all([
