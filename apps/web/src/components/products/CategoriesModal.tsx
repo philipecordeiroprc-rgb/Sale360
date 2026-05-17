@@ -102,7 +102,11 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
     if (!editName.trim() || !editingId) return;
     try {
       setSaving(true);
-      await api.categories.update(editingId, { name: editName.trim(), color: editColor });
+      await api.categories.update(editingId, {
+        name: editName.trim(),
+        color: editColor,
+        variationTemplateId: editTemplateId || null,
+      });
       setEditingId(null);
       await loadCategories();
       onChanged();
