@@ -8,7 +8,7 @@ import {
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
-import api, { type Product, type CategoryWithCount } from '@/lib/api';
+import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 const UNITS = [
   { id: 'UN', label: 'Unidade' },
