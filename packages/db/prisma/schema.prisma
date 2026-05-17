@@ -96,7 +96,7 @@ model Product {
   description String?   // IA pode gerar
   sku         String?
   barcode     String?
-  price       Decimal   @db.Decimal(10, 2)
+  price       Decimal   @default(0) @db.Decimal(10, 2)
   costPrice   Decimal?  @db.Decimal(10, 2)
   unit        Unit      @default(UN)
   stockQty    Decimal   @default(0) @db.Decimal(10, 3)
