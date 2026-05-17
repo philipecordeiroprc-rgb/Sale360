@@ -298,6 +298,17 @@ export const api = {
     },
   },
 
+  // Reports
+  reports: {
+    financial(params?: { startDate?: string; endDate?: string }) {
+      const sp = new URLSearchParams();
+      if (params?.startDate) sp.set('startDate', params.startDate);
+      if (params?.endDate) sp.set('endDate', params.endDate);
+      const qs = sp.toString();
+      return request<any>(`/api/reports/financial${qs ? `?${qs}` : ''}`);
+    },
+  },
+
   // Dashboard
   dashboard: {
     summary() {
