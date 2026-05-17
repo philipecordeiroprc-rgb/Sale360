@@ -149,27 +149,25 @@ export default function PurchasesPage() {
     setFormOpen(true);
   };
 
-  const selectProduct = async (p: any) => {
+  const selectProduct = (p: any) => {
+    const hasVars = p.hasVariations || (p.variations?.length > 0);
     setCurrentItem({
       productId: p.id,
       productName: p.name,
-      costPrice: Number(p.costPrice || 0),
-      operationalCost: Number(p.operationalCost || 0),
-      taxRate: Number(p.taxRate || 0),
-      desiredMargin: 0,
+      costPrice: 0,
       salePrice: Number(p.price || 0),
-      quantity: 1,
-      hasVariations: p.hasVariations || (p.variations?.length > 0),
-      variations: [], // start blank — admin generates combinations
+      quantity: hasVars ? 0 : 1,
+      hasVariations: hasVars,
+      variations: hasVars
+        ? (p.variations || []).map((v: any) => ({
+            id: v.id,
+            name: v.name,
+            priceModifier: Number(v.priceModifier || 0),
+            stockQty: 0, // purchase qty starts at 0
+            lowStockAt: undefined,
+          }))
+        : [],
     });
-    if (p.categoryId) {
-      try {
-        const cat = await api.categories.get(p.categoryId);
-        setCurrentTemplate(cat.variationTemplate || null);
-      } catch { setCurrentTemplate(null); }
-    } else {
-      setCurrentTemplate(null);
-    }
     setProductSearch('');
     setProductResults([]);
   };
