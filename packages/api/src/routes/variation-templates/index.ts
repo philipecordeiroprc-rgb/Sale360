@@ -65,8 +65,32 @@ const createTemplateSchema = z.object({
 const updateTemplateSchema = createTemplateSchema.partial();
 
 export const variationTemplateRoutes: FastifyPluginAsync = async (app) => {
+  // Seed global templates if none exist
+  async function ensureGlobalDefaults() {
+    const existing = await prisma.variationTemplate.count({ where: { tenantId: null } });
+    if (existing > 0) return;
+
+    for (const t of DEFAULT_TEMPLATES) {
+      await prisma.variationTemplate.create({
+        data: {
+          name: t.name,
+          tenantId: null,
+          dimensions: {
+            create: t.dimensions.map((d) => ({
+              type: d.type,
+              label: d.label,
+              options: JSON.stringify(d.options),
+              orderIndex: d.orderIndex,
+            })),
+          },
+        },
+      });
+    }
+  }
+
   // List all templates (global + tenant-specific)
   app.get('/', async (request) => {
+    await ensureGlobalDefaults();
     const templates = await prisma.variationTemplate.findMany({
       where: {
         OR: [
