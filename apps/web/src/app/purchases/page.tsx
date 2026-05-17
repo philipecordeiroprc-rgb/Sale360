@@ -146,6 +146,10 @@ export default function PurchasesPage() {
     setDiscount('0');
     setProductSearch('');
     setProductResults([]);
+    setCustomerSearch('');
+    setCustomerResults([]);
+    setSelectedCustomer('');
+    setSelectedCustomerName('');
     const sups = await loadSuppliers();
     setSuppliers(sups);
     setFormOpen(true);
