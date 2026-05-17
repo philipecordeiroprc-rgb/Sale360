@@ -612,9 +612,11 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Financial: Cost + Tax + Price */}
+          {/* Financial: Cost + Operational Cost + Tax + Margin + Price */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
             <h4 className="text-sm font-medium text-slate-300">Precificação</h4>
+
+            {/* Row 1: Cost Price + Operational Cost (fixed R$) */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 text-xs mb-1">Preço de Custo (R$)</label>
@@ -624,10 +626,28 @@ export default function ProductsPage() {
                   className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
               </div>
               <div>
-                <label className="block text-slate-400 text-xs mb-1">Taxa Operacional (%)</label>
+                <label className="block text-slate-400 text-xs mb-1">Custo Operacional (R$)</label>
+                <input type="number" step="0.01" min="0" value={formData.operationalCost}
+                  onChange={(e) => setFormData({ ...formData, operationalCost: e.target.value })}
+                  placeholder="Embalagem, frete, etc."
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+              </div>
+            </div>
+
+            {/* Row 2: Tax Rate (%) + Desired Margin (%) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">Taxa (%)</label>
                 <input type="number" step="0.01" min="0" max="100" value={formData.taxRate}
                   onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
-                  placeholder="Ex: 12"
+                  placeholder="Ex: 12% cartão"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-xs mb-1">Margem de Lucro (%)</label>
+                <input type="number" step="0.01" min="0" value={formData.desiredMargin}
+                  onChange={(e) => setFormData({ ...formData, desiredMargin: e.target.value })}
+                  placeholder="Ex: 100%"
                   className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
               </div>
             </div>
@@ -636,7 +656,7 @@ export default function ProductsPage() {
             {suggestedPrice && (
               <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-3 py-2 text-xs">
                 <span className="text-indigo-400">
-                  Preço sugerido (30% margem): <strong>R$ {suggestedPrice.value.toFixed(2)}</strong>
+                  Preço sugerido ({suggestedPrice.margin}% margem): <strong>R$ {suggestedPrice.value.toFixed(2)}</strong>
                 </span>
                 <button type="button" onClick={() => setFormData({ ...formData, price: suggestedPrice.value.toFixed(2) })}
                   className="ml-2 text-indigo-400 hover:text-indigo-300 underline">
@@ -650,6 +670,7 @@ export default function ProductsPage() {
               </div>
             )}
 
+            {/* Row 3: Sale Price + Stock */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-400 text-xs mb-1">Preço de Venda (R$) *</label>
