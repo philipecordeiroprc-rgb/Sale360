@@ -143,7 +143,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedCategory, selectedVariationType]);
+  }, [search, selectedCategory, variationName]);
 
   // Load categories
   const loadCategories = useCallback(async () => {
