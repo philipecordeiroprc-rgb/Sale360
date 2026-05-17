@@ -198,6 +198,7 @@ export default function ProductsPage() {
     const price = parseFloat(formData.price);
     const costPrice = formData.costPrice ? parseFloat(formData.costPrice) : undefined;
     const taxRate = formData.taxRate ? parseFloat(formData.taxRate) : undefined;
+    const operationalCost = formData.operationalCost ? parseFloat(formData.operationalCost) : undefined;
     const stockQty = parseInt(formData.stockQty) || 0;
 
     if (!formData.name.trim()) { setFormError('Nome é obrigatório'); return; }
