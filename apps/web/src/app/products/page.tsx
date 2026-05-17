@@ -407,31 +407,34 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Loading */}
+      {/* Products Table */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 animate-pulse">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-14 h-14 rounded-xl bg-slate-800" />
-                <div className="flex gap-1">
-                  <div className="w-8 h-8 rounded-lg bg-slate-800" />
-                  <div className="w-8 h-8 rounded-lg bg-slate-800" />
-                  <div className="w-8 h-8 rounded-lg bg-slate-800" />
-                </div>
-              </div>
-              <div className="h-6 bg-slate-800 rounded w-3/4 mb-3" />
-              <div className="h-4 bg-slate-800 rounded w-1/4 mb-4" />
-              <div className="flex justify-between">
-                <div className="h-8 bg-slate-800 rounded w-24" />
-                <div className="h-4 bg-slate-800 rounded w-16" />
-              </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden animate-pulse">
+          <div className="p-4 border-b border-slate-800 grid grid-cols-12 gap-3 text-xs text-slate-500">
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-2 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-2 h-4 bg-slate-800 rounded" />
+            <div className="col-span-2 h-4 bg-slate-800 rounded" />
+            <div className="col-span-2 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+          </div>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="px-4 py-3 border-b border-slate-800/50 grid grid-cols-12 gap-3 items-center">
+              <div className="col-span-1 h-10 w-10 bg-slate-800 rounded-lg" />
+              <div className="col-span-2 h-5 bg-slate-800 rounded" />
+              <div className="col-span-1 h-4 bg-slate-800 rounded" />
+              <div className="col-span-1 h-4 bg-slate-800 rounded" />
+              <div className="col-span-2 h-5 bg-slate-800 rounded" />
+              <div className="col-span-2 h-5 bg-slate-800 rounded" />
+              <div className="col-span-2 h-4 bg-slate-800 rounded" />
+              <div className="col-span-1 h-8 bg-slate-800 rounded" />
             </div>
           ))}
         </div>
       )}
 
-      {/* Empty */}
       {!loading && !error && products.length === 0 && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
           <div className="text-5xl mb-4">📦</div>
@@ -453,105 +456,234 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Product Grid */}
       {!loading && !error && products.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {products.map((product) => {
-            const cost = Number(product.costPrice) || 0;
-            const price = Number(product.price);
-            const opsCost = Number(product.operationalCost) || 0;
-            const tax = Number(product.taxRate) || 0;
-            const { profit, margin } = calcProfit(price, cost, opsCost, tax);
-            const hasCost = cost > 0;
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-800 text-xs text-slate-500 uppercase tracking-wider">
+                  <th className="text-left px-4 py-3 font-medium w-14">Foto</th>
+                  <th className="text-left px-4 py-3 font-medium">Produto</th>
+                  <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Cód/SKU</th>
+                  <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Categoria</th>
+                  <th className="text-right px-4 py-3 font-medium">Preço</th>
+                  <th className="text-right px-4 py-3 font-medium hidden sm:table-cell">Margem</th>
+                  <th className="text-left px-4 py-3 font-medium">Estoque</th>
+                  <th className="text-right px-4 py-3 font-medium w-28">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/50">
+                {products.map((product) => {
+                  const cost = Number(product.costPrice) || 0;
+                  const price = Number(product.price);
+                  const opsCost = Number(product.operationalCost) || 0;
+                  const tax = Number(product.taxRate) || 0;
+                  const { profit, margin } = calcProfit(price, cost, opsCost, tax);
+                  const hasCost = cost > 0;
+                  const hasVariations = product.hasVariations && product.variations?.length > 0;
+                  const totalStock = hasVariations
+                    ? product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)
+                    : Number(product.stockQty);
+                  const inactive = !product.active;
 
-            return (
-              <div
-                key={product.id}
-                className={`bg-slate-900 border rounded-2xl p-5 transition-all hover:border-slate-500 ${
-                  product.active ? 'border-slate-800' : 'border-slate-800/50 opacity-60'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-                    style={{ backgroundColor: (product.category?.color || '#6366F1') + '20' }}
-                  >
-                    📦
-                  </div>
-                  <div className="flex gap-1">
-                    <button onClick={() => handleEdit(product)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors" title="Editar">
-                      <Edit2 size={16} className="text-slate-400" />
-                    </button>
-                    <button onClick={() => handleToggle(product)} className="p-2 hover:bg-slate-800 rounded-lg transition-colors" title={product.active ? 'Desativar' : 'Ativar'}>
-                      {product.active ? <ToggleRight size={16} className="text-emerald-400" /> : <ToggleLeft size={16} className="text-slate-400" />}
-                    </button>
-                    <button onClick={() => handleDelete(product)} disabled={deletingId === product.id} className="p-2 hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50" title="Excluir">
-                      <Trash2 size={16} className="text-slate-400 hover:text-red-400" />
-                    </button>
-                  </div>
-                </div>
+                  return (
+                    <tr
+                      key={product.id}
+                      className={`transition-colors hover:bg-slate-800/30 ${
+                        inactive ? 'opacity-50' : ''
+                      }`}
+                    >
+                      {/* Photo */}
+                      <td className="px-4 py-3">
+                        <div className="relative group w-10 h-10">
+                          {product.imageUrl ? (
+                            <img
+                              src={product.imageUrl}
+                              alt={product.name}
+                              className="w-10 h-10 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <button
+                              onClick={() => {
+                                const input = document.createElement('input');
+                                input.type = 'file';
+                                input.accept = 'image/*';
+                                input.onchange = async (ev: any) => {
+                                  const file = ev.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = async () => {
+                                    try {
+                                      await api.products.update(product.id, { imageUrl: reader.result as string });
+                                      show('Foto atualizada!');
+                                      await loadProducts();
+                                    } catch { show('Erro ao salvar foto', 'error'); }
+                                  };
+                                  reader.readAsDataURL(file);
+                                };
+                                input.click();
+                              }}
+                              className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors"
+                              title="Upload foto"
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
 
-                <h3 className="text-white font-semibold text-lg mb-1">{product.name}</h3>
+                      {/* Product name + details */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium truncate max-w-[200px]">
+                            {product.name}
+                          </span>
+                          {hasVariations && (
+                            <span className="text-xs text-slate-500 flex items-center gap-0.5" title={`${product.variations.length} variações`}>
+                              <Layers size={11} />
+                              {product.variations.length}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 mt-0.5 hidden sm:block">
+                          {product.description || <span className="italic">Sem descrição</span>}
+                        </div>
+                      </td>
 
-                <div className="flex items-center gap-2 mb-3">
-                  {product.category && (
-                    <span className="px-2 py-0.5 rounded-md text-xs text-white" style={{ backgroundColor: (product.category.color || '#6366F1') + '30' }}>
-                      {product.category.name}
-                    </span>
-                  )}
-                  {product.hasVariations && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Layers size={12} />
-                      {product.variations?.length || 0} variações
-                    </span>
-                  )}
-                  {product.barcode && (
-                    <span className="flex items-center gap-1 text-xs text-slate-400">
-                      <Barcode size={12} />
-                      {product.barcode}
-                    </span>
-                  )}
-                </div>
+                      {/* SKU / Barcode */}
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <div className="text-sm text-slate-300 font-mono">
+                          {product.sku && <div>{product.sku}</div>}
+                          {product.barcode && (
+                            <div className="flex items-center gap-1 text-xs text-slate-500">
+                              <Barcode size={12} />
+                              {product.barcode}
+                            </div>
+                          )}
+                          {!product.sku && !product.barcode && <span className="text-slate-600">-</span>}
+                        </div>
+                      </td>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-emerald-400">
-                      R$ {price.toFixed(2)}
-                    </span>
-                    {hasCost && (
-                      <span className={`text-xs font-medium ${margin >= 0 ? 'text-emerald-400/70' : 'text-red-400'}`}>
-                        {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                  {(() => {
-                    const totalStock = product.hasVariations && product.variations?.length
-                      ? product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)
-                      : Number(product.stockQty);
-                    return (
-                      <span className={`text-sm ${
-                        totalStock > 10 ? 'text-slate-400' : totalStock > 0 ? 'text-amber-400' : 'text-red-400'
-                      }`}>
-                        {totalStock > 0 ? `${totalStock} un` : 'Sem estoque'}
-                      </span>
-                    );
-                  })()}
-                </div>
+                      {/* Category */}
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        {product.category ? (
+                          <span
+                            className="px-2 py-0.5 rounded-md text-xs text-white whitespace-nowrap"
+                            style={{ backgroundColor: (product.category.color || '#6366F1') + '50' }}
+                          >
+                            {product.category.name}
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 text-xs">-</span>
+                        )}
+                      </td>
 
-                {/* Profit detail */}
-                {hasCost && profit !== 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-800 flex gap-3 text-xs text-slate-400 flex-wrap">
-                    <span>Custo: R$ {cost.toFixed(2)}</span>
-                    {opsCost > 0 && <span>Custo Op.: R$ {opsCost.toFixed(2)}</span>}
-                    {tax > 0 && <span>Taxa: {tax}%</span>}
-                    <span className={profit > 0 ? 'text-emerald-400' : 'text-red-400'}>
-                      Lucro: R$ {profit.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                      {/* Price */}
+                      <td className="px-4 py-3 text-right">
+                        <div className="text-white font-semibold">
+                          R$ {price.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          / {product.unit.toLowerCase()}
+                        </div>
+                      </td>
+
+                      {/* Margin / Profit */}
+                      <td className="px-4 py-3 text-right hidden sm:table-cell">
+                        {hasCost ? (
+                          <div>
+                            <div className={`text-sm font-medium ${margin >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                              {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
+                            </div>
+                            <div className={`text-xs ${profit > 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
+                              R$ {profit.toFixed(2)}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-slate-600 text-xs">-</span>
+                        )}
+                      </td>
+
+                      {/* Stock */}
+                      <td className="px-4 py-3">
+                        {hasVariations ? (
+                          <div className="space-y-0.5 max-w-[160px]">
+                            {product.variations.map((v: any) => {
+                              const vStock = Number(v.stockQty);
+                              return (
+                                <div key={v.id || v.name} className="flex items-center justify-between text-xs">
+                                  <span className="text-slate-400 truncate mr-1" title={v.name}>
+                                    {v.name}
+                                  </span>
+                                  <span className={`font-medium ml-1 whitespace-nowrap ${
+                                    vStock > 10 ? 'text-slate-300' : vStock > 0 ? 'text-amber-400' : 'text-red-400'
+                                  }`}>
+                                    {vStock}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                            <div className="flex items-center justify-between text-xs pt-0.5 border-t border-slate-800 mt-0.5">
+                              <span className="text-slate-500">Total</span>
+                              <span className={`font-semibold ${
+                                totalStock > 10 ? 'text-white' : totalStock > 0 ? 'text-amber-400' : 'text-red-400'
+                              }`}>
+                                {totalStock} un
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className={`text-sm font-semibold ${
+                              totalStock > 0 ? 'text-white' : 'text-red-400'
+                            }`}>
+                              {totalStock > 0 ? `${totalStock}` : '0'}
+                            </span>
+                            <span className="text-xs text-slate-500 ml-0.5">un</span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Edit2 size={15} className="text-slate-400 hover:text-white" />
+                          </button>
+                          <button
+                            onClick={() => handleToggle(product)}
+                            className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                            title={product.active ? 'Desativar' : 'Ativar'}
+                          >
+                            {product.active ? (
+                              <ToggleRight size={15} className="text-emerald-400" />
+                            ) : (
+                              <ToggleLeft size={15} className="text-slate-500" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product)}
+                            disabled={deletingId === product.id}
+                            className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
+                            title="Excluir"
+                          >
+                            <Trash2 size={15} className="text-slate-400 hover:text-red-400" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
