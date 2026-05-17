@@ -86,7 +86,7 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
     onChange(variations.filter((_, i) => i !== index));
   };
 
-  const updateVariation = (index: number, field: 'stockQty' | 'priceModifier', value: number) => {
+  const updateVariation = (index: number, field: 'stockQty' | 'lowStockAt' | 'priceModifier', value: number) => {
     const updated = [...variations];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
