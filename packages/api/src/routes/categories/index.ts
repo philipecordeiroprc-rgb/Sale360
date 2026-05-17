@@ -6,6 +6,7 @@ const createCategorySchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   color: z.string().optional(),
   sortOrder: z.number().int().default(0),
+  variationTemplateId: z.string().optional(),
 });
 
 const updateCategorySchema = createCategorySchema.partial();
