@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               />
             </div>
@@ -96,14 +96,14 @@ export default function LoginPage() {
                 onChange={(e) => mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value)}
                 maxLength={mode === 'pin' ? 4 : undefined}
                 placeholder={mode === 'pin' ? '1234' : '••••••'}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               />
             </div>
 
             {/* Error */}
             {error && (
-              <div className="bg-red-400/10 border border-danger/30 rounded-xl px-4 py-3 text-red-400 text-sm">
+              <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-3 text-red-400 text-sm">
                 {error}
               </div>
             )}
@@ -122,7 +122,7 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <button
               onClick={() => { setMode(mode === 'pin' ? 'password' : 'pin'); setError(''); }}
-              className="text-sm text-indigo-400 hover:text-indigo-400-light transition-colors"
+              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
             >
               {mode === 'pin' ? 'Usar senha' : 'Usar PIN rápido'}
             </button>
