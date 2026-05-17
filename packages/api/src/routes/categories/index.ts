@@ -54,10 +54,24 @@ export const categoriesRoutes: FastifyPluginAsync = async (app) => {
       where: { id, tenantId: request.tenantId },
       include: {
         _count: { select: { products: true } },
+        variationTemplate: {
+          include: { dimensions: { orderBy: { orderIndex: 'asc' } } },
+        },
       },
     });
     if (!category) return reply.status(404).send({ error: 'Categoria não encontrada' });
-    return category;
+    return {
+      ...category,
+      variationTemplate: category.variationTemplate
+        ? {
+            ...category.variationTemplate,
+            dimensions: category.variationTemplate.dimensions.map((d) => ({
+              ...d,
+              options: JSON.parse(d.options) as string[],
+            })),
+          }
+        : null,
+    };
   });
 
   // Create category
