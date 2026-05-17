@@ -459,8 +459,9 @@ export default function ProductsPage() {
           {products.map((product) => {
             const cost = Number(product.costPrice) || 0;
             const price = Number(product.price);
+            const opsCost = Number(product.operationalCost) || 0;
             const tax = Number(product.taxRate) || 0;
-            const { profit, margin } = calcProfit(price, cost, tax);
+            const { profit, margin } = calcProfit(price, cost, opsCost, tax);
             const hasCost = cost > 0;
 
             return (
@@ -532,8 +533,9 @@ export default function ProductsPage() {
 
                 {/* Profit detail */}
                 {hasCost && profit !== 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-800 flex gap-3 text-xs text-slate-400">
+                  <div className="mt-2 pt-2 border-t border-slate-800 flex gap-3 text-xs text-slate-400 flex-wrap">
                     <span>Custo: R$ {cost.toFixed(2)}</span>
+                    {opsCost > 0 && <span>Custo Op.: R$ {opsCost.toFixed(2)}</span>}
                     {tax > 0 && <span>Taxa: {tax}%</span>}
                     <span className={profit > 0 ? 'text-emerald-400' : 'text-red-400'}>
                       Lucro: R$ {profit.toFixed(2)}
