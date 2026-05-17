@@ -40,7 +40,7 @@ interface VariationEditorProps {
   purchaseMode?: boolean; // hides lowStock column, renames "Estoque" → "Qtd Comprada"
 }
 
-export function VariationEditor({ template, variations, onChange }: VariationEditorProps) {
+export function VariationEditor({ template, variations, onChange, purchaseMode }: VariationEditorProps) {
   // Per-dimension selected options: Map<dimensionIndex, Set<selectedOption>>
   const [selected, setSelected] = useState<Record<number, Set<string>>>({});
   // Custom option input per dimension
