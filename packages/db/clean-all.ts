@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@sale360/db';
 
 async function cleanAll() {
   console.log('🧹 Limpando todos os dados...\n');
