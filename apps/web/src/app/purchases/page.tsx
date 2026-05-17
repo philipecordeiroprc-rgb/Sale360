@@ -239,7 +239,16 @@ export default function PurchasesPage() {
         supplierId = newSup.id;
       }
 
-      // Update products + create variations if needed
+      // Update products + create variations and build purchase items
+      const purchaseItemsData: {
+        productId: string;
+        variationId?: string;
+        productName: string;
+        quantity: number;
+        unitCost: number;
+        total: number;
+      }[] = [];
+
       for (const item of purchaseItems) {
         await api.products.update(item.productId, {
           costPrice: item.costPrice,
@@ -248,23 +257,50 @@ export default function PurchasesPage() {
           price: item.salePrice || calcSuggested(item) || 0,
           hasVariations: item.hasVariations,
         });
-        // Create/update variations
+
         if (item.hasVariations && item.variations.length > 0) {
+          // Create/ensure variations and add one purchase item per variation
           for (const v of item.variations) {
-            if (v.id) {
-              // update existing variation stock
-              // (not needed for purchase context — stock added on receive)
-            } else {
-              await api.products.addVariation(item.productId, {
+            const varQty = v.stockQty || 0;
+            if (varQty <= 0) continue; // skip variations with no quantity
+
+            let variationId = v.id;
+            if (!variationId) {
+              // Create new variation
+              const created = await api.products.addVariation(item.productId, {
                 name: v.name,
                 priceModifier: v.priceModifier || 0,
                 stockQty: 0,
                 sku: v.sku,
                 barcode: v.barcode,
               });
+              variationId = created.id;
             }
+
+            purchaseItemsData.push({
+              productId: item.productId,
+              variationId,
+              productName: `${item.productName} - ${v.name}`,
+              quantity: varQty,
+              unitCost: item.costPrice,
+              total: item.costPrice * varQty,
+            });
           }
+        } else {
+          purchaseItemsData.push({
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitCost: item.costPrice,
+            total: item.costPrice * item.quantity,
+          });
         }
+      }
+
+      if (purchaseItemsData.length === 0) {
+        show('Adicione pelo menos um item com quantidade > 0', 'error');
+        setSaving(false);
+        return;
       }
 
       // Create purchase
@@ -273,13 +309,7 @@ export default function PurchasesPage() {
         customerId: selectedCustomer || undefined,
         discount: Number(discount) || 0,
         notes: notes || undefined,
-        items: purchaseItems.map((item) => ({
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          unitCost: item.costPrice,
-          total: item.costPrice * item.quantity,
-        })),
+        items: purchaseItemsData,
       });
 
       show('Compra criada! Ao receber, o estoque será atualizado.');
