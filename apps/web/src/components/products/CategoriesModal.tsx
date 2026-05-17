@@ -95,6 +95,7 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
     setEditingId(cat.id);
     setEditName(cat.name);
     setEditColor(cat.color || PRESET_COLORS[0]);
+    setEditTemplateId(cat.variationTemplateId || '');
   };
 
   const handleSaveEdit = async () => {
