@@ -270,6 +270,7 @@ export default function PurchasesPage() {
       // Create purchase
       await api.purchases.create({
         supplierId,
+        customerId: selectedCustomer || undefined,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItems.map((item) => ({
