@@ -147,25 +147,74 @@ export default function PurchasesPage() {
     setFormOpen(true);
   };
 
+  // Generate cartesian product of dimension options
+  const generateCombos = (dimensions: any[]): string[] => {
+    if (dimensions.length === 0) return [];
+    let combos = dimensions[0].options.map((o: string) => [o]);
+    for (let i = 1; i < dimensions.length; i++) {
+      const next: string[][] = [];
+      for (const combo of combos) {
+        for (const opt of dimensions[i].options) {
+          next.push([...combo, opt]);
+        }
+      }
+      combos = next;
+    }
+    return combos.map((parts) => parts.join(' '));
+  };
+
   const selectProduct = (p: any) => {
-    const hasVars = p.hasVariations || (p.variations?.length > 0);
-    setCurrentItem({
-      productId: p.id,
-      productName: p.name,
-      costPrice: 0,
-      salePrice: Number(p.price || 0),
-      quantity: hasVars ? 0 : 1,
-      hasVariations: hasVars,
-      variations: hasVars
-        ? (p.variations || []).map((v: any) => ({
-            id: v.id,
-            name: v.name,
-            priceModifier: Number(v.priceModifier || 0),
-            stockQty: 0, // purchase qty starts at 0
-            lowStockAt: undefined,
-          }))
-        : [],
-    });
+    const hasExistingVars = p.hasVariations || (p.variations?.length > 0);
+    const template = p.category?.variationTemplate;
+    const hasTemplate = template?.dimensions?.length > 0;
+
+    if (hasExistingVars) {
+      // Use existing variations
+      setCurrentItem({
+        productId: p.id,
+        productName: p.name,
+        costPrice: 0,
+        salePrice: Number(p.price || 0),
+        quantity: 0,
+        hasVariations: true,
+        variations: (p.variations || []).map((v: any) => ({
+          id: v.id,
+          name: v.name,
+          priceModifier: Number(v.priceModifier || 0),
+          stockQty: 0,
+          lowStockAt: undefined,
+        })),
+      });
+    } else if (hasTemplate) {
+      // Generate variation combos from template
+      const combos = generateCombos(template.dimensions);
+      setCurrentItem({
+        productId: p.id,
+        productName: p.name,
+        costPrice: 0,
+        salePrice: Number(p.price || 0),
+        quantity: 0,
+        hasVariations: true,
+        variations: combos.map((name: string) => ({
+          id: undefined,
+          name,
+          priceModifier: 0,
+          stockQty: 0,
+          lowStockAt: undefined,
+        })),
+      });
+    } else {
+      // Simple product, no variations
+      setCurrentItem({
+        productId: p.id,
+        productName: p.name,
+        costPrice: 0,
+        salePrice: Number(p.price || 0),
+        quantity: 1,
+        hasVariations: false,
+        variations: [],
+      });
+    }
     setProductSearch('');
     setProductResults([]);
   };
