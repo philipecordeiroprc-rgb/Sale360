@@ -40,7 +40,7 @@ async function main() {
     create: {
       email: 'admin@sale360.app',
       name: 'Admin Demo',
-      password: '$2b$10$...', // bcrypt hash for "admin123"
+      password: '$2b$10$W19Ukgb092gf/xoZa83B9.bcRLR1b3eEGHXNls4o3DZEhZLcMoZ0i', // admin123
     },
   });
 
