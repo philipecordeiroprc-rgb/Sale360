@@ -135,17 +135,49 @@ model ProductVariation {
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  tenantId String
-  name     String
-  color    String?    // #hex para UI
-  sortOrder Int      @default(0)
+  id                   String    @id @default(cuid())
+  tenantId             String
+  name                 String
+  color                String?    // #hex para UI
+  sortOrder            Int       @default(0)
+  variationTemplateId  String?
 
-  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products Product[]
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  variationTemplate VariationTemplate? @relation(fields: [variationTemplateId], references: [id], onDelete: SetNull)
+  products          Product[]
 
   @@unique([tenantId, name])
   @@map("categories")
+}
+
+// ============================================================
+// VARIAÇÕES - TEMPLATES POR CATEGORIA
+// ============================================================
+
+model VariationTemplate {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String   // "Vestuário Adulto", "Volume (Líquidos)", "Peso (Granel)"
+  createdAt DateTime @default(now())
+
+  tenant     Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dimensions VariationDimension[]
+  categories Category[]
+
+  @@map("variation_templates")
+}
+
+model VariationDimension {
+  id         String        @id @default(cuid())
+  templateId String
+  type       DimensionType
+  label      String        // "Tamanho", "Cor", "Volume", "Peso"
+  options    String        @db.Text  // JSON array: ["PP","P","M","G","GG"], ["Vermelho","Azul"], ["200ml","350ml","1L"]
+  orderIndex Int          @default(0)
+
+  template VariationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("variation_dimensions")
 }
 
 // ============================================================
