@@ -254,6 +254,7 @@ export default function ProductsPage() {
               name: v.name,
               priceModifier: v.priceModifier,
               stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
               sku: v.sku || undefined,
               barcode: v.barcode || undefined,
             }).catch(() => {});
@@ -262,6 +263,7 @@ export default function ProductsPage() {
               name: v.name,
               priceModifier: v.priceModifier,
               stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
               sku: v.sku || undefined,
               barcode: v.barcode || undefined,
             }).catch(() => {});
@@ -278,6 +280,7 @@ export default function ProductsPage() {
             name: v.name,
             priceModifier: v.priceModifier,
             stockQty: v.stockQty,
+            lowStockAt: v.lowStockAt,
             sku: v.sku || undefined,
             barcode: v.barcode || undefined,
           }).catch(() => {});
