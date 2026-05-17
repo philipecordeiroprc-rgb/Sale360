@@ -124,6 +124,7 @@ export default function ProductsPage() {
       const params: any = {};
       if (search) params.search = search;
       if (selectedCategory !== 'all') params.categoryId = selectedCategory;
+      if (selectedVariationType !== 'all') params.variationType = selectedVariationType;
 
       const data = await api.products.list(params);
       setProducts(data.products);
@@ -133,7 +134,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, selectedVariationType]);
 
   // Load categories
   const loadCategories = useCallback(async () => {
