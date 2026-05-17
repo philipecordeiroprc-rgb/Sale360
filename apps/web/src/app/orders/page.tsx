@@ -525,9 +525,13 @@ export default function OrdersPage() {
                     <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
                       min="0.001" step="any"
                       className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Disp: {getAvailableStock() - getCartQty()}
+                    </p>
                   </div>
                   <button onClick={addToCart}
-                    className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-sm font-medium transition-colors">
+                    disabled={getAvailableStock() <= 0}
+                    className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors">
                     <Plus size={14} className="inline mr-1" /> Adicionar
                   </button>
                 </div>
