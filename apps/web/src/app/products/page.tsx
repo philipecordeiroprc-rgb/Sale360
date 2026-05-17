@@ -9,49 +9,20 @@ import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
-const UNITS = [
-  { id: 'UN', label: 'Unidade' },
-  { id: 'PC', label: 'Peça' },
-  { id: 'CX', label: 'Caixa' },
-  { id: 'KG', label: 'Quilo (kg)' },
-  { id: 'G', label: 'Grama (g)' },
-  { id: 'L', label: 'Litro (L)' },
-  { id: 'ML', label: 'Mililitro (ml)' },
-  { id: 'M', label: 'Metro (m)' },
-  { id: 'M2', label: 'Metro² (m²)' },
-  { id: 'PAR', label: 'Par' },
-  { id: 'FD', label: 'Fardo' },
-  { id: 'PCT', label: 'Pacote' },
-] as const;
-
 interface FormData {
   name: string;
   description: string;
-  price: string;
-  costPrice: string;
-  taxRate: string;
-  operationalCost: string;
-  desiredMargin: string;
-  stockQty: string;
-  barcode: string;
   sku: string;
+  barcode: string;
   categoryId: string;
-  unit: string;
 }
 
 const emptyForm: FormData = {
   name: '',
   description: '',
-  price: '',
-  costPrice: '',
-  taxRate: '',
-  operationalCost: '',
-  desiredMargin: '',
-  stockQty: '0',
-  barcode: '',
   sku: '',
+  barcode: '',
   categoryId: '',
-  unit: 'UN',
 };
 
 function useToast() {
