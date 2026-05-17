@@ -400,6 +400,12 @@ enum Unit {
   L    // litro
   ML   // mililitro
   M    // metro
+  PC   // peça
+  CX   // caixa
+  PAR  // par
+  FD   // fardo
+  PCT  // pacote
+  M2   // metro quadrado
 }
 
 enum OrderStatus {
