@@ -68,12 +68,6 @@ export default function PurchasesPage() {
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
 
-  // Customer (optional)
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [customerResults, setCustomerResults] = useState<any[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState('');
-  const [selectedCustomerName, setSelectedCustomerName] = useState('');
-
   const loadPurchases = useCallback(async () => {
     setLoading(true);
     setError('');
