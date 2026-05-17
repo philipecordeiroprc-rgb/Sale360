@@ -102,6 +102,7 @@ model Product {
   hasVariations Boolean @default(false)
   categoryId  String?
   aiGenerated Boolean   @default(false) // descrição gerada por IA
+  taxRate     Decimal?  @db.Decimal(5, 2) // percentual de imposto/taxa
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
