@@ -127,26 +127,6 @@ export default function ProductsPage() {
     setFormOpen(true);
   };
 
-  // Calculate suggested price: (cost + opsCost) / (1 - tax/100 - margin/100)
-  // Tax (e.g. ICMS) is applied on the sale price, not on the cost base
-  const suggestedPrice = (() => {
-    const cost = parseFloat(formData.costPrice) || 0;
-    const opsCost = parseFloat(formData.operationalCost) || 0;
-    const margin = parseFloat(formData.desiredMargin) || 0;
-    const tax = parseFloat(formData.taxRate) || 0;
-    const price = parseFloat(formData.price) || 0;
-    if (cost <= 0 || margin <= 0) return null;
-    const totalCost = cost + opsCost;
-    const denominator = 1 - tax / 100 - margin / 100;
-    if (denominator <= 0) return null; // tax + margin >= 100%, infinite price
-    const suggestedValue = totalCost / denominator;
-    return {
-      value: Math.round(suggestedValue * 100) / 100,
-      margin,
-      currentProfit: price > 0 ? calcProfit(price, cost, opsCost, tax) : null,
-    };
-  })();
-
   // Save product
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
