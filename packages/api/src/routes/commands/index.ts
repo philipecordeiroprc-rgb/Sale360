@@ -153,7 +153,7 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
           tenantId: request.tenantId,
           userId: request.userId,
           orderNumber,
-          source: 'COMANDA',
+          source: 'COMAND',
           subtotal: command.subtotal,
           discount: parsed.data.discount,
           total,
