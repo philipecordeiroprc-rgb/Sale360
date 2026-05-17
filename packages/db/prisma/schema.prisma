@@ -125,6 +125,7 @@ model ProductVariation {
   name        String  // "Tamanho P", "Cor Azul"
   priceModifier Decimal @default(0) @db.Decimal(10, 2)
   stockQty    Decimal @default(0) @db.Decimal(10, 3)
+  lowStockAt  Decimal? @db.Decimal(10, 3)
   sku         String?
   barcode     String?
 
