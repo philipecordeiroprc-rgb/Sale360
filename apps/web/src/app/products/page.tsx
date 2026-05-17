@@ -27,9 +27,9 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold text-white">Produtos</h2>
-          <p className="text-dark-600 mt-1">{sampleProducts.length} produtos no catálogo</p>
+          <p className="text-slate-400 mt-1">{sampleProducts.length} produtos no catálogo</p>
         </div>
-        <button className="flex items-center gap-2 bg-accent hover:bg-accent-light text-white px-5 py-3 rounded-xl font-semibold transition-colors">
+        <button className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors">
           <Plus size={20} />
           Novo Produto
         </button>
@@ -38,13 +38,13 @@ export default function ProductsPage() {
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
         <div className="flex-1 min-w-[200px] relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-600" />
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Buscar por nome ou código de barras..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-dark-800 border border-dark-700 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
         {['all', 'Bebidas', 'Lanches', 'Sobremesas'].map((cat) => (
@@ -53,8 +53,8 @@ export default function ProductsPage() {
             onClick={() => setSelectedCategory(cat)}
             className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
               selectedCategory === cat
-                ? 'bg-accent text-white'
-                : 'bg-dark-800 border border-dark-700 text-dark-600 hover:text-white'
+                ? 'bg-indigo-500 text-white'
+                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
             }`}
           >
             {cat === 'all' ? 'Todas' : cat}
@@ -67,8 +67,8 @@ export default function ProductsPage() {
         {filtered.map((product) => (
           <div
             key={product.id}
-            className={`bg-dark-800 border rounded-2xl p-5 transition-all hover:border-dark-600 ${
-              product.active ? 'border-dark-700' : 'border-dark-700/50 opacity-60'
+            className={`bg-slate-900 border rounded-2xl p-5 transition-all hover:border-slate-500 ${
+              product.active ? 'border-slate-800' : 'border-slate-800/50 opacity-60'
             }`}
           >
             <div className="flex items-start justify-between mb-3">
@@ -79,13 +79,13 @@ export default function ProductsPage() {
                 📦
               </div>
               <div className="flex gap-1">
-                <button className="p-2 hover:bg-dark-700 rounded-lg transition-colors">
-                  <Edit2 size={16} className="text-dark-600" />
+                <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
+                  <Edit2 size={16} className="text-slate-400" />
                 </button>
-                <button className="p-2 hover:bg-dark-700 rounded-lg transition-colors">
+                <button className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
                   {product.active
-                    ? <ToggleRight size={16} className="text-success" />
-                    : <ToggleLeft size={16} className="text-dark-600" />
+                    ? <ToggleRight size={16} className="text-emerald-400" />
+                    : <ToggleLeft size={16} className="text-slate-400" />
                   }
                 </button>
               </div>
@@ -94,9 +94,9 @@ export default function ProductsPage() {
             <h3 className="text-white font-semibold text-lg mb-1">{product.name}</h3>
 
             <div className="flex items-center gap-2 mb-3">
-              <span className="px-2 py-0.5 bg-dark-700 rounded-md text-xs text-dark-600">{product.category}</span>
+              <span className="px-2 py-0.5 bg-slate-800 rounded-md text-xs text-slate-400">{product.category}</span>
               {product.barcode && (
-                <span className="flex items-center gap-1 text-xs text-dark-600">
+                <span className="flex items-center gap-1 text-xs text-slate-400">
                   <Barcode size={12} />
                   {product.barcode}
                 </span>
@@ -104,10 +104,10 @@ export default function ProductsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-success">
+              <span className="text-2xl font-bold text-emerald-400">
                 R$ {product.price.toFixed(2)}
               </span>
-              <span className={`text-sm ${product.stock > 10 ? 'text-dark-600' : product.stock > 0 ? 'text-warning' : 'text-danger'}`}>
+              <span className={`text-sm ${product.stock > 10 ? 'text-slate-400' : product.stock > 0 ? 'text-amber-400' : 'text-red-400'}`}>
                 {product.stock > 0 ? `${product.stock} un` : 'Sem estoque'}
               </span>
             </div>
