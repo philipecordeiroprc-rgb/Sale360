@@ -58,6 +58,7 @@ async function buildApp() {
     await api.register(supplierRoutes, { prefix: '/api/suppliers' });
     await api.register(purchaseRoutes, { prefix: '/api/purchases' });
     await api.register(inventoryRoutes, { prefix: '/api/inventory' });
+    await api.register(reportRoutes, { prefix: '/api/reports' });
   });
 
   return app;
