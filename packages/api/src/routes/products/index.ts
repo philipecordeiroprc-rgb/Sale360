@@ -127,6 +127,88 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     return product;
   });
 
+  // --- Variation CRUD ---
+
+  const variationSchema = z.object({
+    name: z.string().min(1, 'Nome da variação é obrigatório'),
+    priceModifier: z.number().default(0),
+    stockQty: z.number().default(0),
+    sku: z.string().optional(),
+    barcode: z.string().optional(),
+  });
+
+  // Add variation to product
+  app.post('/:id/variations', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const product = await prisma.product.findFirst({ where: { id, tenantId: request.tenantId } });
+    if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
+
+    const parsed = variationSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const variation = await prisma.productVariation.create({
+      data: { ...parsed.data, productId: id },
+    });
+
+    // Auto-set hasVariations flag
+    if (!product.hasVariations) {
+      await prisma.product.update({ where: { id }, data: { hasVariations: true } });
+    }
+
+    return reply.status(201).send(variation);
+  });
+
+  // Update variation
+  app.put('/:id/variations/:variationId', async (request, reply) => {
+    const { id, variationId } = request.params as { id: string; variationId: string };
+
+    const product = await prisma.product.findFirst({ where: { id, tenantId: request.tenantId } });
+    if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
+
+    const existing = await prisma.productVariation.findFirst({
+      where: { id: variationId, productId: id },
+    });
+    if (!existing) return reply.status(404).send({ error: 'Variação não encontrada' });
+
+    const parsed = variationSchema.partial().safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos' });
+    }
+
+    const variation = await prisma.productVariation.update({
+      where: { id: variationId },
+      data: parsed.data,
+    });
+
+    return variation;
+  });
+
+  // Delete variation
+  app.delete('/:id/variations/:variationId', async (request, reply) => {
+    const { id, variationId } = request.params as { id: string; variationId: string };
+
+    const product = await prisma.product.findFirst({ where: { id, tenantId: request.tenantId } });
+    if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
+
+    const existing = await prisma.productVariation.findFirst({
+      where: { id: variationId, productId: id },
+    });
+    if (!existing) return reply.status(404).send({ error: 'Variação não encontrada' });
+
+    await prisma.productVariation.delete({ where: { id: variationId } });
+
+    // Check if any variations remain, otherwise unset flag
+    const remaining = await prisma.productVariation.count({ where: { productId: id } });
+    if (remaining === 0) {
+      await prisma.product.update({ where: { id }, data: { hasVariations: false } });
+    }
+
+    return { success: true };
+  });
+
   // Delete product
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
