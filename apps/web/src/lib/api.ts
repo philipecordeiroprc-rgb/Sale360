@@ -84,6 +84,7 @@ export interface CreateProductInput {
   costPrice?: number;
   unit?: string;
   stockQty?: number;
+  lowStockAt?: number;
   categoryId?: string;
   isFractional?: boolean;
   taxRate?: number;
