@@ -125,11 +125,19 @@ export default function ProductsPage() {
       const params: any = {};
       if (search) params.search = search;
       if (selectedCategory !== 'all') params.categoryId = selectedCategory;
-      if (selectedVariationType !== 'all') params.variationType = selectedVariationType;
+      if (variationName) params.variationName = variationName;
 
       const data = await api.products.list(params);
       setProducts(data.products);
       setTotal(data.total);
+      // Collect unique variation names from all products (for filter dropdown)
+      if (!search && !variationName && selectedCategory === 'all') {
+        const names = new Set<string>();
+        data.products.forEach((p: any) => {
+          (p.variations || []).forEach((v: any) => names.add(v.name));
+        });
+        setVariationNames(Array.from(names).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })));
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
