@@ -185,6 +185,91 @@ export const api = {
     },
   },
 
+  // Suppliers
+  suppliers: {
+    list(params?: { search?: string; active?: boolean; page?: number }) {
+      const sp = new URLSearchParams();
+      if (params?.search) sp.set('search', params.search);
+      if (params?.active !== undefined) sp.set('active', String(params.active));
+      if (params?.page) sp.set('page', String(params.page));
+      const qs = sp.toString();
+      return request<any>(`/api/suppliers${qs ? `?${qs}` : ''}`);
+    },
+    get(id: string) {
+      return request<any>(`/api/suppliers/${id}`);
+    },
+    create(data: any) {
+      return request<any>('/api/suppliers', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(id: string, data: any) {
+      return request<any>(`/api/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+    toggle(id: string) {
+      return request<any>(`/api/suppliers/${id}/toggle`, { method: 'PATCH' });
+    },
+    delete(id: string) {
+      return request<{ success: boolean }>(`/api/suppliers/${id}`, { method: 'DELETE' });
+    },
+  },
+
+  // Purchases
+  purchases: {
+    list(params?: { status?: string; supplierId?: string; page?: number }) {
+      const sp = new URLSearchParams();
+      if (params?.status) sp.set('status', params.status);
+      if (params?.supplierId) sp.set('supplierId', params.supplierId);
+      if (params?.page) sp.set('page', String(params.page));
+      const qs = sp.toString();
+      return request<any>(`/api/purchases${qs ? `?${qs}` : ''}`);
+    },
+    get(id: string) {
+      return request<any>(`/api/purchases/${id}`);
+    },
+    create(data: { supplierId: string; items: { productId?: string; variationId?: string; productName: string; quantity: number; unitCost: number; total: number }[]; discount?: number; notes?: string }) {
+      return request<any>('/api/purchases', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(id: string, data: any) {
+      return request<any>(`/api/purchases/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+    receive(id: string) {
+      return request<any>(`/api/purchases/${id}/receive`, { method: 'POST' });
+    },
+    cancel(id: string) {
+      return request<any>(`/api/purchases/${id}/cancel`, { method: 'POST' });
+    },
+    delete(id: string) {
+      return request<{ success: boolean }>(`/api/purchases/${id}`, { method: 'DELETE' });
+    },
+  },
+
+  // Inventory
+  inventory: {
+    batches(params?: { productId?: string; variationId?: string; page?: number }) {
+      const sp = new URLSearchParams();
+      if (params?.productId) sp.set('productId', params.productId);
+      if (params?.variationId) sp.set('variationId', params.variationId);
+      if (params?.page) sp.set('page', String(params.page));
+      const qs = sp.toString();
+      return request<any>(`/api/inventory/batches${qs ? `?${qs}` : ''}`);
+    },
+    batchesByProduct(productId: string) {
+      return request<any>(`/api/inventory/batches/${productId}`);
+    },
+    movements(params?: { productId?: string; type?: string; startDate?: string; endDate?: string; page?: number }) {
+      const sp = new URLSearchParams();
+      if (params?.productId) sp.set('productId', params.productId);
+      if (params?.type) sp.set('type', params.type);
+      if (params?.startDate) sp.set('startDate', params.startDate);
+      if (params?.endDate) sp.set('endDate', params.endDate);
+      if (params?.page) sp.set('page', String(params.page));
+      const qs = sp.toString();
+      return request<any>(`/api/inventory/movements${qs ? `?${qs}` : ''}`);
+    },
+    adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; notes?: string }) {
+      return request<any>('/api/inventory/adjust', { method: 'POST', body: JSON.stringify(data) });
+    },
+  },
+
   // Dashboard
   dashboard: {
     summary() {
