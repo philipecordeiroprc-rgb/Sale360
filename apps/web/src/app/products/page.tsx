@@ -524,11 +524,18 @@ export default function ProductsPage() {
                       </span>
                     )}
                   </div>
-                  <span className={`text-sm ${
-                    Number(product.stockQty) > 10 ? 'text-slate-400' : Number(product.stockQty) > 0 ? 'text-amber-400' : 'text-red-400'
-                  }`}>
-                    {Number(product.stockQty) > 0 ? `${Number(product.stockQty)} un` : 'Sem estoque'}
-                  </span>
+                  {(() => {
+                    const totalStock = product.hasVariations && product.variations?.length
+                      ? product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)
+                      : Number(product.stockQty);
+                    return (
+                      <span className={`text-sm ${
+                        totalStock > 10 ? 'text-slate-400' : totalStock > 0 ? 'text-amber-400' : 'text-red-400'
+                      }`}>
+                        {totalStock > 0 ? `${totalStock} un` : 'Sem estoque'}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 {/* Profit detail */}
