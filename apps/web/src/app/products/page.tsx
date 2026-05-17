@@ -610,47 +610,29 @@ export default function ProductsPage() {
 
                       {/* Stock */}
                       <td className="px-4 py-3">
-                        {hasVariations ? (
-                          <div className="space-y-0.5 max-w-[160px]">
-                            {product.variations.map((v: any) => {
-                              const vStock = Number(v.stockQty);
-                              return (
-                                <div key={v.id || v.name} className="flex items-center justify-between text-xs">
-                                  <span className="text-slate-400 truncate mr-1" title={v.name}>
-                                    {v.name}
-                                  </span>
-                                  <span className={`font-medium ml-1 whitespace-nowrap ${
-                                    vStock > 10 ? 'text-slate-300' : vStock > 0 ? 'text-amber-400' : 'text-red-400'
-                                  }`}>
-                                    {vStock}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                            <div className="flex items-center justify-between text-xs pt-0.5 border-t border-slate-800 mt-0.5">
-                              <span className="text-slate-500">Total</span>
-                              <span className={`font-semibold ${
-                                totalStock > 10 ? 'text-white' : totalStock > 0 ? 'text-amber-400' : 'text-red-400'
-                              }`}>
-                                {totalStock} un
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <span className={`text-sm font-semibold ${
-                              totalStock > 0 ? 'text-white' : 'text-red-400'
-                            }`}>
-                              {totalStock > 0 ? `${totalStock}` : '0'}
-                            </span>
-                            <span className="text-xs text-slate-500 ml-0.5">un</span>
-                          </div>
-                        )}
+                        <span className={`text-sm font-semibold ${
+                          totalStock > 10 ? 'text-white' : totalStock > 0 ? 'text-amber-400' : 'text-red-400'
+                        }`}>
+                          {totalStock > 0 ? `${totalStock}` : '0'}
+                        </span>
+                        <span className="text-xs text-slate-500 ml-0.5">un</span>
                       </td>
 
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-0.5">
+                          {hasVariations && (
+                            <button
+                              onClick={() => setStockProduct(product)}
+                              className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                              title="Ver estoque por variação"
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hover:text-white">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                              </svg>
+                            </button>
+                          )}
                           <button
                             onClick={() => handleEdit(product)}
                             className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
