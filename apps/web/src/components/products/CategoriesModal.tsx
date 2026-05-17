@@ -58,9 +58,17 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   useEffect(() => {
     if (open) {
       loadCategories();
+      loadTemplates();
       setError('');
     }
   }, [open]);
+
+  const loadTemplates = async () => {
+    try {
+      const data = await api.variationTemplates.list();
+      setTemplates(data);
+    } catch { /* silently fail */ }
+  };
 
   const handleAdd = async () => {
     if (!newName.trim()) return;
