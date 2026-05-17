@@ -212,6 +212,7 @@ export default function ProductsPage() {
         price,
         costPrice,
         taxRate,
+        operationalCost,
         stockQty,
         barcode: formData.barcode.trim() || undefined,
         sku: formData.sku.trim() || undefined,
