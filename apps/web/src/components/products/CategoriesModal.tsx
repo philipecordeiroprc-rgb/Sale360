@@ -38,7 +38,10 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState('');
+  const [editTemplateId, setEditTemplateId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [newTemplateId, setNewTemplateId] = useState('');
+  const [templates, setTemplates] = useState<VariationTemplate[]>([]);
 
   const loadCategories = async () => {
     try {
