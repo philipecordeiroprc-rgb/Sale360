@@ -278,11 +278,50 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           }
         }
 
-        // Update variation stock
+        // Update or create variation stock
         if (item.variationId) {
-          await tx.productVariation.update({
-            where: { id: item.variationId },
-            data: { stockQty: { increment: item.quantity } },
+          const existingVar = await tx.productVariation.findUnique({ where: { id: item.variationId } });
+          if (existingVar) {
+            await tx.productVariation.update({
+              where: { id: item.variationId },
+              data: { stockQty: { increment: item.quantity } },
+            });
+          } else {
+            // Variation was deleted, recreate it from the product name
+            const varName = item.productName.includes(' - ')
+              ? item.productName.split(' - ')[1]
+              : item.productName;
+            const newVar = await tx.productVariation.create({
+              data: {
+                productId: item.productId!,
+                name: varName,
+                stockQty: item.quantity,
+              },
+            });
+            // Re-link the purchase item to the new variation
+            await tx.purchaseItem.update({
+              where: { id: item.id },
+              data: { variationId: newVar.id },
+            });
+          }
+        } else if (item.productId && item.productName.includes(' - ')) {
+          // Variation from template — create it
+          const varName = item.productName.split(' - ')[1];
+          const newVar = await tx.productVariation.create({
+            data: {
+              productId: item.productId,
+              name: varName,
+              stockQty: item.quantity,
+            },
+          });
+          await tx.purchaseItem.update({
+            where: { id: item.id },
+            data: { variationId: newVar.id },
+          });
+          // Mark product as having variations
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { hasVariations: true },
           });
         }
       }
