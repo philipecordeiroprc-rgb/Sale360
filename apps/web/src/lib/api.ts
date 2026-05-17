@@ -82,6 +82,7 @@ export interface CreateProductInput {
   stockQty?: number;
   categoryId?: string;
   isFractional?: boolean;
+  taxRate?: number;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {}
