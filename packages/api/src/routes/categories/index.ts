@@ -9,7 +9,9 @@ const createCategorySchema = z.object({
   variationTemplateId: z.string().optional(),
 });
 
-const updateCategorySchema = createCategorySchema.partial();
+const updateCategorySchema = createCategorySchema.extend({
+  variationTemplateId: z.string().nullable().optional(),
+}).partial();
 
 export const categoriesRoutes: FastifyPluginAsync = async (app) => {
   // List all categories
