@@ -169,6 +169,12 @@ export const api = {
     update(id: string, data: any) {
       return request<any>(`/api/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     },
+    delete(id: string) {
+      return request<{ success: boolean }>(`/api/customers/${id}`, { method: 'DELETE' });
+    },
+    get(id: string) {
+      return request<any>(`/api/customers/${id}`);
+    },
   },
 
   // Orders
