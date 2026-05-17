@@ -32,6 +32,10 @@ model Tenant {
   categories   Category[]
   variationTemplates VariationTemplate[]
   commands     TableCommand[]
+  suppliers    Supplier[]
+  purchases    Purchase[]
+  inventoryBatches  InventoryBatch[]
+  inventoryMovements  InventoryMovement[]
 
   @@map("tenants")
 }
