@@ -565,122 +565,85 @@ export default function PurchasesPage() {
               )}
             </div>
 
-            {/* Selected product name */}
+            {/* Selected product info */}
             {currentItem.productId ? (
-              <p className="text-white text-sm font-medium mb-3">✓ {currentItem.productName}</p>
-            ) : (
-              <p className="text-slate-600 text-sm mb-3">Nenhum produto selecionado</p>
-            )}
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-white text-sm font-medium">✓ {currentItem.productName}</p>
+                  {currentItem.hasVariations && (
+                    <span className="text-[11px] text-indigo-400">{currentItem.variations.length} variacoes</span>
+                  )}
+                </div>
 
-            {/* ── 3. Pricing ── */}
-            <div className="bg-slate-900 rounded-lg p-3 mb-3">
-              <p className="text-xs text-slate-500 mb-2">Precificacao</p>
-              <div className="grid grid-cols-5 gap-2">
-                <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Custo Unit. (R$)</label>
-                  <input type="number" value={currentItem.costPrice || ''} onChange={(e) => {
-                    const updated = { ...currentItem, costPrice: Number(e.target.value) };
-                    const sug = calcSuggested(updated);
-                    if (sug) updated.salePrice = sug;
-                    setCurrentItem(updated);
-                  }}
-                    min="0" step="0.01" placeholder="0,00"
-                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                {/* Pricing: 2 fields */}
+                <div className="bg-slate-900 rounded-lg p-3 mb-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Custo Unitario (R$) *</label>
+                      <input type="number" value={currentItem.costPrice || ''} onChange={(e) => setCurrentItem({ ...currentItem, costPrice: Number(e.target.value) })}
+                        min="0" step="0.01" placeholder="0,00"
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Preco de Venda (R$) <span className="text-slate-600">opcional</span></label>
+                      <input type="number" value={currentItem.salePrice || ''} onChange={(e) => setCurrentItem({ ...currentItem, salePrice: Number(e.target.value) })}
+                        min="0" step="0.01" placeholder="Mantem atual"
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Custo Oper. (R$)</label>
-                  <input type="number" value={currentItem.operationalCost || ''} onChange={(e) => {
-                    const updated = { ...currentItem, operationalCost: Number(e.target.value) };
-                    const sug = calcSuggested(updated);
-                    if (sug) updated.salePrice = sug;
-                    setCurrentItem(updated);
-                  }}
-                    min="0" step="0.01" placeholder="0,00"
-                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Imposto (%)</label>
-                  <input type="number" value={currentItem.taxRate || ''} onChange={(e) => {
-                    const updated = { ...currentItem, taxRate: Number(e.target.value) };
-                    const sug = calcSuggested(updated);
-                    if (sug) updated.salePrice = sug;
-                    setCurrentItem(updated);
-                  }}
-                    min="0" max="100" step="0.01" placeholder="0"
-                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Margem Desej. (%)</label>
-                  <input type="number" value={currentItem.desiredMargin || ''} onChange={(e) => {
-                    const updated = { ...currentItem, desiredMargin: Number(e.target.value) };
-                    const sug = calcSuggested(updated);
-                    if (sug) updated.salePrice = sug;
-                    setCurrentItem(updated);
-                  }}
-                    min="0" max="100" step="0.1" placeholder="0"
-                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Preco Sugerido (R$)</label>
-                  <input type="number" value={currentItem.salePrice || ''} onChange={(e) => {
-                    const updated = { ...currentItem, salePrice: Number(e.target.value) };
-                    const margin = calcMarginFromPrice(updated);
-                    if (margin !== null && margin >= 0) updated.desiredMargin = margin;
-                    setCurrentItem(updated);
-                  }}
-                    min="0" step="0.01" placeholder="0,00"
-                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                </div>
-              </div>
-            </div>
 
-            {/* ── 4. Variations ── */}
-            <div className="mb-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={currentItem.hasVariations}
-                  onChange={(e) => setCurrentItem({ ...currentItem, hasVariations: e.target.checked, variations: [] })}
-                  className="w-4 h-4 rounded bg-slate-800 border-slate-700 text-indigo-500 focus:ring-0" />
-                <span className="text-sm text-slate-400">Possui variacoes (tamanho, cor, etc.)</span>
-              </label>
-            </div>
-
-            {currentItem.hasVariations ? (
-              <div className="mb-3 bg-slate-900 rounded-lg p-3">
-                <VariationEditor
-                  template={currentTemplate}
-                  variations={currentItem.variations}
-                  onChange={(vars) => setCurrentItem({ ...currentItem, variations: vars })}
-                  purchaseMode
-                />
-                <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
-                  <span className="text-xs text-slate-400">
-                    Qtd total comprada: <span className="text-white font-semibold">{effectiveQty}</span>
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="mb-3">
-                <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
-                <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
-                  min="0.001" step="any" placeholder="1"
-                  className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
-              </div>
-            )}
-
-            {/* Add item button */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-700">
-              <span className="text-xs text-slate-500">
-                Total deste item: <span className="text-white font-semibold">R$ {currentItemTotal.toFixed(2)}</span>
-                {currentItem.salePrice > 0 && (
-                  <span className="ml-2 text-emerald-400">| Venda: R$ {currentItem.salePrice.toFixed(2)}</span>
+                {/* Variations */}
+                {currentItem.hasVariations ? (
+                  <div className="mb-3 bg-slate-900 rounded-lg p-3">
+                    <p className="text-xs text-slate-400 mb-2">Qtd comprada por variacao</p>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {currentItem.variations.map((v, vi) => (
+                        <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
+                          <span className="text-sm text-white flex-1 truncate">{v.name}</span>
+                          <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                            const updated = [...currentItem.variations];
+                            updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                            setCurrentItem({ ...currentItem, variations: updated });
+                          }}
+                            min="0" step="1" placeholder="0"
+                            className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
+                      <span className="text-xs text-slate-400">
+                        Qtd total: <span className="text-white font-semibold">{effectiveQty}</span>
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-3">
+                    <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
+                    <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                      min="0.001" step="any" placeholder="1"
+                      className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                  </div>
                 )}
-              </span>
-              <button onClick={addCurrentItem}
-                disabled={!currentItem.productId || effectiveQty <= 0}
-                className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-                <Plus size={14} className="inline mr-1" /> Adicionar a Compra
-              </button>
-            </div>
+
+                {/* Add item button */}
+                <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <span className="text-xs text-slate-500">
+                    Total: <span className="text-white font-semibold">R$ {(currentItem.costPrice * effectiveQty).toFixed(2)}</span>
+                    {currentItem.salePrice > 0 && (
+                      <span className="ml-2 text-emerald-400">| Venda: R$ {currentItem.salePrice.toFixed(2)}</span>
+                    )}
+                  </span>
+                  <button onClick={addCurrentItem}
+                    disabled={!currentItem.productId || effectiveQty <= 0}
+                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
+                    <Plus size={14} className="inline mr-1" /> Adicionar a Compra
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-slate-600 text-sm">Busque e selecione um produto acima</p>
+            )}
           </div>
 
           {/* ── 5. Items list ── */}
