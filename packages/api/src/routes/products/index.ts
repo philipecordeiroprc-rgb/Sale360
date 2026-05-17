@@ -9,13 +9,14 @@ const createProductSchema = z.object({
   barcode: z.string().optional(),
   price: z.number().positive(),
   costPrice: z.number().optional(),
-  unit: z.enum(['UN', 'KG', 'G', 'L', 'M']).default('UN'),
+  unit: z.enum(['UN', 'KG', 'G', 'L', 'ML', 'M', 'PC', 'CX', 'PAR', 'FD', 'PCT', 'M2']).default('UN'),
   stockQty: z.number().default(0),
   lowStockAt: z.number().optional(),
   categoryId: z.string().optional(),
   isFractional: z.boolean().default(false),
   hasVariations: z.boolean().default(false),
   imageUrl: z.string().optional(),
+  taxRate: z.number().min(0).max(100).optional(),
 });
 
 const updateProductSchema = createProductSchema.partial();
