@@ -197,7 +197,8 @@ export default function ProductsPage() {
     setFormOpen(true);
   };
 
-  // Calculate suggested price: (cost + opsCost) * (1 + tax/100) * (1 + margin/100)
+  // Calculate suggested price: (cost + opsCost) / (1 - tax/100 - margin/100)
+  // Tax (e.g. ICMS) is applied on the sale price, not on the cost base
   const suggestedPrice = (() => {
     const cost = parseFloat(formData.costPrice) || 0;
     const opsCost = parseFloat(formData.operationalCost) || 0;
@@ -206,10 +207,11 @@ export default function ProductsPage() {
     const price = parseFloat(formData.price) || 0;
     if (cost <= 0 || margin <= 0) return null;
     const totalCost = cost + opsCost;
-    const withTax = totalCost * (1 + tax / 100);
-    const withMargin = withTax * (1 + margin / 100);
+    const denominator = 1 - tax / 100 - margin / 100;
+    if (denominator <= 0) return null; // tax + margin >= 100%, infinite price
+    const suggestedValue = totalCost / denominator;
     return {
-      value: Math.round(withMargin * 100) / 100,
+      value: Math.round(suggestedValue * 100) / 100,
       margin,
       currentProfit: price > 0 ? calcProfit(price, cost, opsCost, tax) : null,
     };
