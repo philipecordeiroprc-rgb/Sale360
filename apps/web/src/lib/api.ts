@@ -215,6 +215,26 @@ export interface CategoryWithCount {
   color: string | null;
   sortOrder: number;
   _count: { products: number };
+  variationTemplateId?: string | null;
+  variationTemplate?: VariationTemplate | null;
+}
+
+// Variation Template types
+export type DimensionType = 'TAMANHO_LETRA' | 'TAMANHO_NUMERO' | 'COR' | 'VOLUME' | 'PESO' | 'PERSONALIZADO';
+
+export interface VariationDimension {
+  id: string;
+  type: DimensionType;
+  label: string;
+  options: string[];
+  orderIndex: number;
+}
+
+export interface VariationTemplate {
+  id: string;
+  name: string;
+  tenantId?: string | null;
+  dimensions: VariationDimension[];
 }
 
 export default api;
