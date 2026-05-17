@@ -134,7 +134,6 @@ export default function PurchasesPage() {
     setOutroSupplierName('');
     setPurchaseItems([]);
     setCurrentItem({ ...emptyItem });
-    setCurrentTemplate(null);
     setNotes('');
     setDiscount('0');
     setProductSearch('');
