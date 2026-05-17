@@ -98,28 +98,6 @@ export default function PurchasesPage() {
     } catch { setProductResults([]); }
   };
 
-  const searchCustomers = async (q: string) => {
-    setCustomerSearch(q);
-    if (q.length < 1) { setCustomerResults([]); return; }
-    try {
-      const data = await api.customers.list({ search: q });
-      setCustomerResults(data.customers || []);
-    } catch { setCustomerResults([]); }
-  };
-
-  const selectCustomer = (c: any) => {
-    setSelectedCustomer(c.id);
-    setSelectedCustomerName(c.name);
-    setCustomerSearch('');
-    setCustomerResults([]);
-  };
-
-  const clearCustomer = () => {
-    setSelectedCustomer('');
-    setSelectedCustomerName('');
-    setCustomerSearch('');
-  };
-
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
 
   const openCreate = async () => {
