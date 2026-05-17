@@ -283,7 +283,14 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
                     </div>
                   ) : (
                     <>
-                      <span className="flex-1 text-white text-sm">{cat.name}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-white text-sm block truncate">{cat.name}</span>
+                        {cat.variationTemplate && (
+                          <span className="text-[10px] text-slate-500 truncate block">
+                            {cat.variationTemplate.name}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-xs text-slate-400">{cat._count.products} produtos</span>
                       <button
                         onClick={() => handleEdit(cat)}
