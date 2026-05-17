@@ -47,6 +47,7 @@ async function buildApp() {
     await api.register(financeRoutes, { prefix: '/api/finance' });
     await api.register(tenantRoutes, { prefix: '/api/tenant' });
     await api.register(syncRoutes, { prefix: '/api/sync' });
+    await api.register(categoriesRoutes, { prefix: '/api/categories' });
     await api.register(integrationRoutes, { prefix: '/api/integrations' });
   });
 
