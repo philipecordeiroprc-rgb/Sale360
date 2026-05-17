@@ -508,3 +508,12 @@ enum Provider {
   FACEBOOK
   CORREIOS
 }
+
+enum DimensionType {
+  TAMANHO_LETRA    // PP, P, M, G, GG, XG, XGG
+  TAMANHO_NUMERO   // 2, 4, 6, 8... 34, 35, 36... 46
+  COR              // Vermelho, Azul, Preto, Branco...
+  VOLUME           // 200ml, 350ml, 1L, 2L...
+  PESO             // 50g, 100g, 500g, 1kg...
+  PERSONALIZADO    // Livre - definido pelo lojista
+}
