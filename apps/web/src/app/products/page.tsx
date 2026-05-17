@@ -366,12 +366,7 @@ export default function ProductsPage() {
               </thead>
               <tbody className="divide-y divide-slate-800/50">
                 {products.map((product) => {
-                  const cost = Number(product.costPrice) || 0;
                   const price = Number(product.price);
-                  const opsCost = Number(product.operationalCost) || 0;
-                  const tax = Number(product.taxRate) || 0;
-                  const { profit, margin } = calcProfit(price, cost, opsCost, tax);
-                  const hasCost = cost > 0;
                   const hasVariations = product.hasVariations && product.variations?.length > 0;
                   const totalStock = hasVariations
                     ? product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)
