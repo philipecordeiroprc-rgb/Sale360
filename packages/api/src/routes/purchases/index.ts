@@ -134,7 +134,11 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           })),
         },
       },
-      include: { items: true, supplier: { select: { id: true, name: true } } },
+      include: {
+        items: true,
+        supplier: { select: { id: true, name: true } },
+        customer: { select: { id: true, name: true } },
+      },
     });
 
     return reply.status(201).send(purchase);
