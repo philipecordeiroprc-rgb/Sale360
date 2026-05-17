@@ -439,6 +439,8 @@ model OrderItem {
   quantity    Decimal @db.Decimal(10, 3)
   unitPrice   Decimal @db.Decimal(10, 2)
   total       Decimal @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2) // custo unitário na venda (PEPS)
+  totalCost   Decimal? @db.Decimal(10, 2) // quantity * costPrice (CMV)
 
   order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product Product? @relation(fields: [productId], references: [id])
