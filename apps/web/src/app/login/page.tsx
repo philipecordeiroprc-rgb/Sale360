@@ -66,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-slate-900 border border-dark-700 rounded-2xl p-8">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
           <h2 className="text-xl font-bold text-white text-center mb-6">
             {mode === 'pin' ? 'Login Rápido (PIN)' : 'Entrar'}
           </h2>
@@ -80,7 +80,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full bg-slate-950 border border-dark-700 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
                 required
               />
             </div>
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 onChange={(e) => mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value)}
                 maxLength={mode === 'pin' ? 4 : undefined}
                 placeholder={mode === 'pin' ? '1234' : '••••••'}
-                className="w-full bg-slate-950 border border-dark-700 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-accent transition-colors"
                 required
               />
             </div>
@@ -129,7 +129,7 @@ export default function LoginPage() {
           </div>
 
           {/* Credentials hint */}
-          <div className="mt-6 pt-4 border-t border-dark-700">
+          <div className="mt-6 pt-4 border-t border-slate-800">
             <p className="text-xs text-slate-400 text-center">
               Demo: admin@sale360.app / admin123
             </p>
