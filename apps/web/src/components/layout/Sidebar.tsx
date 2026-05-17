@@ -5,12 +5,16 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   ClipboardList, DollarSign, Settings, LogOut,
+  Truck, ShoppingBag, Layers,
 } from 'lucide-react';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/orders', label: 'Vendas', icon: ShoppingCart },
   { href: '/products', label: 'Produtos', icon: Package },
+  { href: '/inventory', label: 'Estoque', icon: Layers },
+  { href: '/purchases', label: 'Compras', icon: ShoppingBag },
+  { href: '/suppliers', label: 'Fornecedores', icon: Truck },
   { href: '/customers', label: 'Clientes', icon: Users },
   { href: '/commands', label: 'Comandas', icon: ClipboardList },
   { href: '/finance', label: 'Financeiro', icon: DollarSign },
