@@ -242,6 +242,7 @@ model Purchase {
 
   tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   supplier Supplier       @relation(fields: [supplierId], references: [id])
+  customer Customer?      @relation(fields: [customerId], references: [id])
   items    PurchaseItem[]
 
   @@index([tenantId, status])
