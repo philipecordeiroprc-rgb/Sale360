@@ -826,7 +826,19 @@ export default function ProductsPage() {
               <div>
                 <label className="block text-slate-400 text-xs mb-1">Preço de Venda (R$) *</label>
                 <input type="number" step="0.01" min="0.01" value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  onChange={(e) => {
+                    const newPrice = e.target.value;
+                    const cost = parseFloat(formData.costPrice) || 0;
+                    const opsCost = parseFloat(formData.operationalCost) || 0;
+                    const tax = parseFloat(formData.taxRate) || 0;
+                    const priceNum = parseFloat(newPrice);
+                    const updates: Partial<FormData> = { price: newPrice };
+                    if (priceNum > 0 && cost > 0) {
+                      const { margin } = calcProfit(priceNum, cost, opsCost, tax);
+                      updates.desiredMargin = margin.toFixed(2);
+                    }
+                    setFormData({ ...formData, ...updates });
+                  }}
                   placeholder="0,00"
                   className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" required />
               </div>
