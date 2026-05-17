@@ -29,6 +29,8 @@ model Tenant {
   orders       Order[]
   cashFlows    CashFlow[]
   integrations Integration[]
+  categories   Category[]
+  commands     TableCommand[]
 
   @@map("tenants")
 }
