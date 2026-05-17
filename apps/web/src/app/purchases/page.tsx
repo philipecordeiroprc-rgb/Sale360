@@ -579,35 +579,58 @@ export default function PurchasesPage() {
               <div className="grid grid-cols-5 gap-2">
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">Custo Unit. (R$)</label>
-                  <input type="number" value={currentItem.costPrice || ''} onChange={(e) => setCurrentItem({ ...currentItem, costPrice: Number(e.target.value) })}
+                  <input type="number" value={currentItem.costPrice || ''} onChange={(e) => {
+                    const updated = { ...currentItem, costPrice: Number(e.target.value) };
+                    const suggested = calcSuggested(updated);
+                    if (suggested) updated.salePrice = suggested;
+                    setCurrentItem(updated);
+                  }}
                     min="0" step="0.01" placeholder="0,00"
                     className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">Custo Oper. (R$)</label>
-                  <input type="number" value={currentItem.operationalCost || ''} onChange={(e) => setCurrentItem({ ...currentItem, operationalCost: Number(e.target.value) })}
+                  <input type="number" value={currentItem.operationalCost || ''} onChange={(e) => {
+                    const updated = { ...currentItem, operationalCost: Number(e.target.value) };
+                    const suggested = calcSuggested(updated);
+                    if (suggested) updated.salePrice = suggested;
+                    setCurrentItem(updated);
+                  }}
                     min="0" step="0.01" placeholder="0,00"
                     className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">Imposto (%)</label>
-                  <input type="number" value={currentItem.taxRate || ''} onChange={(e) => setCurrentItem({ ...currentItem, taxRate: Number(e.target.value) })}
+                  <input type="number" value={currentItem.taxRate || ''} onChange={(e) => {
+                    const updated = { ...currentItem, taxRate: Number(e.target.value) };
+                    const suggested = calcSuggested(updated);
+                    if (suggested) updated.salePrice = suggested;
+                    setCurrentItem(updated);
+                  }}
                     min="0" max="100" step="0.01" placeholder="0"
                     className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
                 <div>
                   <label className="block text-[10px] text-slate-500 mb-0.5">Margem Desej. (%)</label>
-                  <input type="number" value={currentItem.desiredMargin || ''} onChange={(e) => setCurrentItem({ ...currentItem, desiredMargin: Number(e.target.value) })}
+                  <input type="number" value={currentItem.desiredMargin || ''} onChange={(e) => {
+                    const updated = { ...currentItem, desiredMargin: Number(e.target.value) };
+                    const suggested = calcSuggested(updated);
+                    if (suggested) updated.salePrice = suggested;
+                    setCurrentItem(updated);
+                  }}
                     min="0" max="100" step="0.1" placeholder="0"
                     className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-500 mb-0.5">Preço Sugerido</label>
-                  <div className={`w-full px-2 py-1.5 rounded text-sm text-center font-mono font-semibold ${
-                    suggested ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 border border-slate-700 text-slate-600'
-                  }`}>
-                    {suggested ? `R$ ${suggested.toFixed(2)}` : '—'}
-                  </div>
+                  <label className="block text-[10px] text-slate-500 mb-0.5">Preço Sugerido (R$)</label>
+                  <input type="number" value={currentItem.salePrice || ''} onChange={(e) => {
+                    const updated = { ...currentItem, salePrice: Number(e.target.value) };
+                    const margin = calcMarginFromPrice(updated);
+                    if (margin !== null && margin >= 0) updated.desiredMargin = margin;
+                    setCurrentItem(updated);
+                  }}
+                    min="0" step="0.01" placeholder="0,00"
+                    className="w-full px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                 </div>
               </div>
             </div>
