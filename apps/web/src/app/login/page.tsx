@@ -66,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-dark-800 border border-dark-700 rounded-2xl p-8">
+        <div className="bg-slate-900 border border-dark-700 rounded-2xl p-8">
           <h2 className="text-xl font-bold text-white text-center mb-6">
             {mode === 'pin' ? 'Login Rápido (PIN)' : 'Entrar'}
           </h2>
