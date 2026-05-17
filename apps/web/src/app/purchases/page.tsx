@@ -618,25 +618,32 @@ export default function PurchasesPage() {
           {purchaseItems.length > 0 && (
             <div className="bg-slate-800/50 rounded-xl p-4">
               <h3 className="text-sm font-semibold text-white mb-3">Produtos na Compra ({purchaseItems.length})</h3>
-              <div className="bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-48 overflow-y-auto">
+              <div className="bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-52 overflow-y-auto">
                 {purchaseItems.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{item.productName}</p>
-                      <p className="text-xs text-slate-500">
-                        Custo R$ {item.costPrice.toFixed(2)}
-                        {item.hasVariations && (
-                          <span className="ml-2 text-indigo-400">{item.variations.length} variacoes</span>
-                        )}
-                      </p>
+                  <div key={idx} className="px-3 py-2.5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-white truncate">{item.productName}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm text-white font-medium">{item.quantity}</p>
+                        <p className="text-xs text-slate-500">R$ {(item.costPrice * item.quantity).toFixed(2)}</p>
+                      </div>
+                      <button onClick={() => removeItem(idx)} className="p-1 text-slate-500 hover:text-red-400">
+                        <X size={14} />
+                      </button>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-sm text-white">{item.quantity}</p>
-                      <p className="text-xs text-slate-500">R$ {(item.costPrice * item.quantity).toFixed(2)}</p>
-                    </div>
-                    <button onClick={() => removeItem(idx)} className="p-1 text-slate-500 hover:text-red-400 ml-1">
-                      <X size={14} />
-                    </button>
+                    {/* Variation breakdown */}
+                    {item.hasVariations && item.variations.filter((v: any) => (v.stockQty || 0) > 0).length > 0 && (
+                      <div className="mt-1 ml-2 pl-2 border-l-2 border-slate-700 space-y-0.5">
+                        {item.variations.filter((v: any) => (v.stockQty || 0) > 0).map((v: any) => (
+                          <div key={v.id || v.name} className="flex justify-between text-xs">
+                            <span className="text-slate-400">{v.name}</span>
+                            <span className="text-slate-500">{v.stockQty} un. — R$ {(item.costPrice * v.stockQty).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
