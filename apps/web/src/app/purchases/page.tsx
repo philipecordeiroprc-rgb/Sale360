@@ -178,12 +178,8 @@ export default function PurchasesPage() {
   const addCurrentItem = () => {
     if (!currentItem.productId) { show('Selecione um produto', 'error'); return; }
     if (effectiveQty <= 0) { show('Quantidade deve ser maior que zero', 'error'); return; }
-    setPurchaseItems([...purchaseItems, {
-      ...currentItem,
-      quantity: effectiveQty,
-    }]);
+    setPurchaseItems([...purchaseItems, { ...currentItem, quantity: effectiveQty }]);
     setCurrentItem({ ...emptyItem });
-    setCurrentTemplate(null);
     setProductSearch('');
     setProductResults([]);
   };
