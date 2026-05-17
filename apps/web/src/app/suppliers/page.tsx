@@ -45,7 +45,7 @@ export default function SuppliersPage() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const searchTimer = useRef<NodeJS.Timeout>();
+  const searchTimer = useRef<NodeJS.Timeout>(undefined);
 
   // Form
   const [formOpen, setFormOpen] = useState(false);
