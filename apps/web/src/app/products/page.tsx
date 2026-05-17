@@ -434,59 +434,29 @@ export default function ProductsPage() {
         ))}
 
         {/* Separator */}
-        <div className="w-px h-10 bg-slate-800 self-center mx-1" />
-
-        {/* Variation type filter */}
-        <button
-          onClick={() => setSelectedVariationType('all')}
-          className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-            selectedVariationType === 'all'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-          }`}
-        >
-          Todas variações
-        </button>
-        <button
-          onClick={() => setSelectedVariationType('none')}
-          className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-            selectedVariationType === 'none'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-          }`}
-        >
-          Sem variação
-        </button>
-        <button
-          onClick={() => setSelectedVariationType('any')}
-          className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-            selectedVariationType === 'any'
-              ? 'bg-emerald-500 text-white'
-              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-          }`}
-        >
-          Com variação
-        </button>
-        {[
-          { id: 'TAMANHO_LETRA', label: 'Tam. Letra' },
-          { id: 'TAMANHO_NUMERO', label: 'Tam. Número' },
-          { id: 'COR', label: 'Cor' },
-          { id: 'VOLUME', label: 'Volume' },
-          { id: 'PESO', label: 'Peso' },
-          { id: 'PERSONALIZADO', label: 'Personalizado' },
-        ].map((vt) => (
-          <button
-            key={vt.id}
-            onClick={() => setSelectedVariationType(vt.id)}
-            className={`px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-              selectedVariationType === vt.id
-                ? 'bg-emerald-500 text-white'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-            }`}
-          >
-            {vt.label}
-          </button>
-        ))}
+        {variationNames.length > 0 && (
+          <>
+            <div className="w-px h-10 bg-slate-800 self-center mx-1" />
+            <select
+              value={variationName}
+              onChange={(e) => setVariationName(e.target.value)}
+              className="px-3 py-2 rounded-lg text-xs font-medium bg-slate-900 border border-slate-800 text-slate-400 hover:text-white focus:border-indigo-500 outline-none cursor-pointer"
+            >
+              <option value="">Todas variações</option>
+              {variationNames.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+            {variationName && (
+              <button
+                onClick={() => setVariationName('')}
+                className="p-1 text-slate-500 hover:text-red-400"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Error */}
