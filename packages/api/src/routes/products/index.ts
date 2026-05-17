@@ -134,6 +134,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     name: z.string().min(1, 'Nome da variação é obrigatório'),
     priceModifier: z.number().default(0),
     stockQty: z.number().default(0),
+    lowStockAt: z.number().optional(),
     sku: z.string().optional(),
     barcode: z.string().optional(),
   });
