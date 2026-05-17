@@ -30,6 +30,7 @@ model Tenant {
   cashFlows    CashFlow[]
   integrations Integration[]
   categories   Category[]
+  variationTemplates VariationTemplate[]
   commands     TableCommand[]
 
   @@map("tenants")
