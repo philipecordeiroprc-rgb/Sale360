@@ -156,6 +156,7 @@ export default function ProductsPage() {
       costPrice: product.costPrice != null ? String(product.costPrice) : '',
       taxRate: product.taxRate != null ? String(product.taxRate) : '',
       operationalCost: product.operationalCost != null ? String(product.operationalCost) : '',
+      desiredMargin: '',
       stockQty: String(product.stockQty),
       barcode: product.barcode || '',
       sku: product.sku || '',
