@@ -865,21 +865,22 @@ export default function ProductsPage() {
                   <div className="grid grid-cols-3 gap-2 px-4 py-2 text-xs text-slate-500 bg-slate-900/50">
                     <span>Variação</span>
                     <span className="text-center">Estoque</span>
-                    <span className="text-right">Acréscimo</span>
+                    <span className="text-center">Est. Mínimo</span>
                   </div>
                   {stockProduct.variations.map((v: any) => {
                     const vStock = Number(v.stockQty);
-                    const vPrice = Number(v.priceModifier);
+                    const vLow = v.lowStockAt != null ? Number(v.lowStockAt) : null;
+                    const low = vLow != null && vStock <= vLow;
                     return (
                       <div key={v.id || v.name} className="grid grid-cols-3 gap-2 px-4 py-2.5 items-center text-sm">
                         <span className="text-white truncate">{v.name}</span>
                         <span className={`text-center font-medium ${
-                          vStock > 10 ? 'text-white' : vStock > 0 ? 'text-amber-400' : 'text-red-400'
+                          low ? 'text-red-400' : vStock > 0 ? 'text-white' : 'text-slate-500'
                         }`}>
                           {vStock}
                         </span>
-                        <span className="text-right text-slate-400">
-                          {vPrice > 0 ? `+R$ ${vPrice.toFixed(2)}` : vPrice < 0 ? `-R$ ${Math.abs(vPrice).toFixed(2)}` : '-'}
+                        <span className="text-center text-slate-400">
+                          {vLow != null ? vLow : '-'}
                         </span>
                       </div>
                     );
