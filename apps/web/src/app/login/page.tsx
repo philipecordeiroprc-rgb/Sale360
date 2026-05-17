@@ -62,7 +62,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <h1 className="text-5xl font-black text-accent tracking-tight">S360</h1>
-          <p className="text-dark-600 mt-2 text-lg">PDV Inteligente</p>
+          <p className="text-slate-400 mt-2 text-lg">PDV Inteligente</p>
         </div>
 
         {/* Form Card */}
@@ -74,7 +74,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-dark-600 text-sm mb-1">Email</label>
+              <label className="block text-slate-400 text-sm mb-1">Email</label>
               <input
                 type="email"
                 value={email}
@@ -87,7 +87,7 @@ export default function LoginPage() {
 
             {/* Password or PIN */}
             <div>
-              <label className="block text-dark-600 text-sm mb-1">
+              <label className="block text-slate-400 text-sm mb-1">
                 {mode === 'pin' ? 'PIN (4 dígitos)' : 'Senha'}
               </label>
               <input
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
           {/* Credentials hint */}
           <div className="mt-6 pt-4 border-t border-dark-700">
-            <p className="text-xs text-dark-600 text-center">
+            <p className="text-xs text-slate-400 text-center">
               Demo: admin@sale360.app / admin123
             </p>
           </div>
