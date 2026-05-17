@@ -1,10 +1,27 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Plus, X, RefreshCw } from 'lucide-react';
+import type { VariationTemplate, VariationDimension, DimensionType } from '@/lib/api';
 
-const SIZE_OPTIONS = ['P', 'M', 'G', 'GG', 'XG', 'Único', '32', '34', '36', '38', '40', '42', '44', '46'];
-const COLOR_OPTIONS = ['Vermelho', 'Azul', 'Verde', 'Preto', 'Branco', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Laranja', 'Roxo', 'Bege'];
+// Presets de opções por tipo de dimensão (usados como sugestão além do template)
+const TYPE_PRESETS: Record<DimensionType, string[]> = {
+  TAMANHO_LETRA: ['PP', 'P', 'M', 'G', 'GG', 'XG', 'XGG', 'Único'],
+  TAMANHO_NUMERO: ['2', '4', '6', '8', '10', '12', '14', '16', '18', '20', '22', '24', '26', '28', '30', '32', '33', '34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45', '46'],
+  COR: ['Vermelho', 'Azul', 'Verde', 'Preto', 'Branco', 'Amarelo', 'Rosa', 'Cinza', 'Marrom', 'Laranja', 'Roxo', 'Bege', 'Bordô', 'Turquesa', 'Dourado', 'Prateado'],
+  VOLUME: ['50ml', '100ml', '200ml', '250ml', '300ml', '350ml', '500ml', '600ml', '750ml', '1L', '1.5L', '2L', '5L', '10L', '20L'],
+  PESO: ['50g', '100g', '200g', '250g', '500g', '750g', '1kg', '2kg', '5kg', '10kg', '20kg', '50kg'],
+  PERSONALIZADO: [],
+};
+
+const TYPE_LABEL: Record<DimensionType, string> = {
+  TAMANHO_LETRA: 'Tam. Letra',
+  TAMANHO_NUMERO: 'Tam. Número',
+  COR: 'Cor',
+  VOLUME: 'Volume',
+  PESO: 'Peso',
+  PERSONALIZADO: 'Livre',
+};
 
 export interface VariationData {
   id?: string;
@@ -17,69 +34,74 @@ export interface VariationData {
 }
 
 interface VariationEditorProps {
+  template: VariationTemplate | null;
   variations: VariationData[];
   onChange: (variations: VariationData[]) => void;
 }
 
-export function VariationEditor({ variations, onChange }: VariationEditorProps) {
-  // Combination mode state
-  const [dim1Selected, setDim1Selected] = useState<Set<string>>(new Set());
-  const [dim2Selected, setDim2Selected] = useState<Set<string>>(new Set());
-  const [dim2Enabled, setDim2Enabled] = useState(false);
+export function VariationEditor({ template, variations, onChange }: VariationEditorProps) {
+  // Per-dimension selected options: Map<dimensionIndex, Set<selectedOption>>
+  const [selected, setSelected] = useState<Record<number, Set<string>>>({});
+  // Custom option input per dimension
+  const [customInput, setCustomInput] = useState<Record<number, string>>({});
 
-  // Inline edit state
-  const [editingStock, setEditingStock] = useState<Record<number, string>>({});
-  const [editingLowStock, setEditingLowStock] = useState<Record<number, string>>({});
-  const [editingPrice, setEditingPrice] = useState<Record<number, string>>({});
+  const dimensions = template?.dimensions || [];
 
-  const toggleDim1 = (val: string) => {
-    setDim1Selected((prev) => {
-      const next = new Set(prev);
-      next.has(val) ? next.delete(val) : next.add(val);
+  const toggleOption = (dimIndex: number, option: string) => {
+    setSelected((prev) => {
+      const next = { ...prev };
+      const current = new Set(next[dimIndex] || []);
+      current.has(option) ? current.delete(option) : current.add(option);
+      next[dimIndex] = current;
       return next;
     });
   };
 
-  const toggleDim2 = (val: string) => {
-    setDim2Selected((prev) => {
-      const next = new Set(prev);
-      next.has(val) ? next.delete(val) : next.add(val);
-      return next;
-    });
+  const addCustomOption = (dimIndex: number) => {
+    const val = (customInput[dimIndex] || '').trim();
+    if (!val || !dimensions[dimIndex]) return;
+    toggleOption(dimIndex, val);
+    setCustomInput((prev) => ({ ...prev, [dimIndex]: '' }));
   };
 
-  const hasSelection = dim1Selected.size > 0;
+  const hasSelection = dimensions.some((_, i) => (selected[i]?.size || 0) > 0);
 
   const handleGenerate = () => {
     if (!hasSelection) return;
-    const dim1 = Array.from(dim1Selected);
-    const dim2 = dim2Enabled ? Array.from(dim2Selected) : [];
 
-    if (dim2.length === 0) {
-      // Single dimension: just add each size/option as a variation
-      const existingNames = new Set(variations.map((v) => v.name));
-      const newVars = dim1
-        .filter((d) => !existingNames.has(d))
-        .map((name) => ({ name, priceModifier: 0, stockQty: 0 }));
-      if (newVars.length > 0) {
-        onChange([...variations, ...newVars]);
-      }
-    } else {
-      // Two dimensions: generate all combinations
-      const existingNames = new Set(variations.map((v) => v.name));
-      const newVars: VariationData[] = [];
-      for (const d1 of dim1) {
-        for (const d2 of dim2) {
-          const name = `${d1} / ${d2}`;
-          if (!existingNames.has(name)) {
-            newVars.push({ name, priceModifier: 0, stockQty: 0 });
-          }
-        }
-      }
-      if (newVars.length > 0) {
-        onChange([...variations, ...newVars]);
-      }
+    // Collect selected options per dimension
+    const dimOptions: string[][] = [];
+    for (let i = 0; i < dimensions.length; i++) {
+      const opts = Array.from(selected[i] || []);
+      if (opts.length > 0) dimOptions.push(opts);
     }
+
+    if (dimOptions.length === 0) return;
+
+    // Generate cross-product
+    const combinations = cartesianProduct(dimOptions);
+    const names = combinations.map((combo) => combo.join(' / '));
+
+    const existingNames = new Set(variations.map((v) => v.name));
+    const newVars = names
+      .filter((name) => !existingNames.has(name))
+      .map((name) => ({ name, priceModifier: 0, stockQty: 0 }));
+
+    if (newVars.length > 0) {
+      onChange([...variations, ...newVars]);
+    }
+  };
+
+  // Get combined options for a dimension (template options + presets for this type)
+  const getOptions = (dim: VariationDimension): string[] => {
+    const templateOptions = dim.options || [];
+    const presetOptions = TYPE_PRESETS[dim.type] || [];
+    // Merge deduped: template first, then presets
+    const merged = [...templateOptions];
+    for (const opt of presetOptions) {
+      if (!merged.includes(opt)) merged.push(opt);
+    }
+    return merged;
   };
 
   const handleRemove = (index: number) => {
@@ -92,118 +114,128 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
     onChange(updated);
   };
 
-  // Bulk set stock for all variations
   const setAllStock = (qty: number) => {
     onChange(variations.map((v) => ({ ...v, stockQty: qty })));
   };
 
-  // Bulk set price modifier for all variations
-  const setAllPriceModifier = (mod: number) => {
-    onChange(variations.map((v) => ({ ...v, priceModifier: mod })));
+  // Count new combinations
+  const countNew = (): number => {
+    if (!hasSelection) return 0;
+    const dimOptions: string[][] = [];
+    for (let i = 0; i < dimensions.length; i++) {
+      const opts = Array.from(selected[i] || []);
+      if (opts.length > 0) dimOptions.push(opts);
+    }
+    if (dimOptions.length === 0) return 0;
+    const combinations = cartesianProduct(dimOptions);
+    const names = new Set(variations.map((v) => v.name));
+    return combinations.filter((combo) => !names.has(combo.join(' / '))).length;
   };
+
+  const totalCombos = (() => {
+    let total = 1;
+    for (let i = 0; i < dimensions.length; i++) {
+      const n = selected[i]?.size || 0;
+      if (n > 0) total *= n;
+    }
+    return dimensions.some((_, i) => (selected[i]?.size || 0) > 0) ? total : 0;
+  })();
+
+  // Inline edit state
+  const [editingStock, setEditingStock] = useState<Record<number, string>>({});
+  const [editingLowStock, setEditingLowStock] = useState<Record<number, string>>({});
 
   return (
     <div className="space-y-4">
-      {/* Combination Generator */}
-      <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-        <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-          <RefreshCw size={14} />
-          Gerar Combinações
-        </h4>
-        <p className="text-xs text-slate-500">
-          Selecione as opções abaixo e clique em Gerar para criar todas as combinações de variações.
-        </p>
+      {/* Dimension Selector */}
+      {dimensions.length > 0 ? (
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-4">
+          <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
+            <RefreshCw size={14} />
+            Gerar Combinações
+          </h4>
 
-        {/* Dimension 1: Size */}
-        <div>
-          <label className="block text-slate-400 text-xs mb-1.5">Tamanhos / Opções *</label>
-          <div className="flex gap-1 flex-wrap">
-            {SIZE_OPTIONS.map((opt) => (
+          {dimensions.map((dim, dimIndex) => {
+            const options = getOptions(dim);
+            const typeLabel = TYPE_LABEL[dim.type] || dim.type;
+            const sel = selected[dimIndex] || new Set<string>();
+
+            return (
+              <div key={dim.id || dimIndex}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-slate-400 text-xs font-medium">{dim.label}</span>
+                  <span className="text-[10px] text-slate-500 bg-slate-800 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                    {typeLabel}
+                  </span>
+                </div>
+                <div className="flex gap-1 flex-wrap">
+                  {options.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => toggleOption(dimIndex, opt)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        sel.has(opt)
+                          ? 'bg-indigo-500 text-white'
+                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                  {/* Custom option input */}
+                  <div className="flex gap-1 items-center">
+                    <input
+                      type="text"
+                      value={customInput[dimIndex] || ''}
+                      onChange={(e) => setCustomInput({ ...customInput, [dimIndex]: e.target.value })}
+                      onKeyDown={(e) => { if (e.key === 'Enter') addCustomOption(dimIndex); }}
+                      placeholder="+"
+                      className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => addCustomOption(dimIndex)}
+                      disabled={!customInput[dimIndex]?.trim()}
+                      className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-md text-slate-400 hover:text-white transition-colors"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Preview */}
+          {hasSelection && (
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-slate-400">
+                {totalCombos} combinações ({countNew()} novas)
+              </span>
               <button
-                key={opt}
                 type="button"
-                onClick={() => toggleDim1(opt)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  dim1Selected.has(opt)
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                }`}
+                onClick={handleGenerate}
+                disabled={countNew() === 0}
+                className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
-                {opt}
+                <RefreshCw size={14} />
+                Gerar Combinações
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Dimension 2 toggle + Colors */}
-        <div>
-          <label className="flex items-center gap-2 cursor-pointer mb-1.5">
-            <input
-              type="checkbox"
-              checked={dim2Enabled}
-              onChange={(e) => {
-                setDim2Enabled(e.target.checked);
-                if (!e.target.checked) setDim2Selected(new Set());
-              }}
-              className="rounded"
-            />
-            <span className="text-slate-400 text-xs">Adicionar segunda dimensão (ex: Cor)</span>
-          </label>
-          {dim2Enabled && (
-            <div className="flex gap-1 flex-wrap mt-1.5">
-              {COLOR_OPTIONS.map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => toggleDim2(opt)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    dim2Selected.has(opt)
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
             </div>
           )}
         </div>
-
-        {/* Preview of combinations */}
-        {hasSelection && (
-          <div className="text-xs text-slate-400">
-            {(() => {
-              const d1 = Array.from(dim1Selected);
-              const d2 = dim2Enabled ? Array.from(dim2Selected) : [];
-              const total = d2.length > 0 ? d1.length * d2.length : d1.length;
-              const existingNames = new Set(variations.map((v) => v.name));
-              const newCount = d2.length > 0
-                ? d1.reduce((acc, a) => acc + d2.filter((b) => !existingNames.has(`${a} / ${b}`)).length, 0)
-                : d1.filter((a) => !existingNames.has(a)).length;
-              return (
-                <span>
-                  {total} combinações possíveis ({newCount} novas)
-                </span>
-              );
-            })()}
-          </div>
-        )}
-
-        {/* Generate + Bulk actions */}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={!hasSelection}
-            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <RefreshCw size={14} />
-            Gerar Combinações
-          </button>
+      ) : (
+        <div className="bg-slate-950 border border-slate-800 rounded-xl p-4">
+          <p className="text-xs text-slate-400 text-center">
+            {template === null
+              ? 'Selecione uma categoria para carregar as dimensões de variação.'
+              : 'O template desta categoria não possui dimensões configuradas.'}
+          </p>
         </div>
-      </div>
+      )}
 
-      {/* Variations list with inline edit */}
+      {/* Variations list */}
       {variations.length > 0 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -300,17 +332,31 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
         </div>
       )}
 
-      {/* Manual add (for edge cases) */}
-      <details className="group">
-        <summary className="text-xs text-slate-500 hover:text-slate-400 cursor-pointer transition-colors">
-          Ou adicionar variação manualmente...
-        </summary>
-        <ManualAddForm
-          onAdd={(v) => onChange([...variations, v])}
-          existingNames={new Set(variations.map((x) => x.name))}
-        />
-      </details>
+      {/* Manual add */}
+      {dimensions.length === 0 && (
+        <details className="group">
+          <summary className="text-xs text-slate-500 hover:text-slate-400 cursor-pointer transition-colors">
+            Ou adicionar variação manualmente...
+          </summary>
+          <ManualAddForm
+            onAdd={(v) => onChange([...variations, v])}
+            existingNames={new Set(variations.map((x) => x.name))}
+          />
+        </details>
+      )}
     </div>
+  );
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+function cartesianProduct(arrays: string[][]): string[][] {
+  if (arrays.length === 0) return [];
+  return arrays.reduce<string[][]>(
+    (acc, curr) => acc.flatMap((a) => curr.map((b) => [...a, b])),
+    [[]],
   );
 }
 
@@ -322,8 +368,8 @@ function ManualAddForm({
   existingNames: Set<string>;
 }) {
   const [name, setName] = useState('');
-  const [price, setPrice] = useState('0');
   const [stock, setStock] = useState('0');
+  const [price, setPrice] = useState('0');
 
   const handleAdd = () => {
     if (!name.trim() || existingNames.has(name.trim())) return;
