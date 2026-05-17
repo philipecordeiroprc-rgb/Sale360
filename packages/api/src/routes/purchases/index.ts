@@ -84,13 +84,21 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { items, supplierId, discount, notes } = parsed.data;
+    const { items, supplierId, customerId, discount, notes } = parsed.data;
 
     // Validate supplier belongs to tenant
     const supplier = await prisma.supplier.findFirst({
       where: { id: supplierId, tenantId: request.tenantId },
     });
     if (!supplier) return reply.status(404).send({ error: 'Fornecedor não encontrado' });
+
+    // Validate customer if provided
+    if (customerId) {
+      const customer = await prisma.customer.findFirst({
+        where: { id: customerId, tenantId: request.tenantId },
+      });
+      if (!customer) return reply.status(404).send({ error: 'Cliente não encontrado' });
+    }
 
     // Calculate totals
     const subtotal = items.reduce((sum, i) => sum + i.total, 0);
