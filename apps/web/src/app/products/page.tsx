@@ -583,132 +583,15 @@ export default function ProductsPage() {
             </div>
           </div>
 
-          {/* Category + Unit */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">Categoria</label>
-              <select value={formData.categoryId} onChange={(e) => {
-                  const catId = e.target.value;
-                  setFormData({ ...formData, categoryId: catId });
-                  loadTemplate(catId);
-                }}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
-                <option value="">Sem categoria</option>
-                {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">Unidade</label>
-              <select value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
-                {UNITS.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
-              </select>
-            </div>
+          {/* Category */}
+          <div>
+            <label className="block text-slate-400 text-sm mb-1">Categoria</label>
+            <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
+              <option value="">Sem categoria</option>
+              {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+            </select>
           </div>
-
-          {/* Financial: Cost + Operational Cost + Tax + Margin + Price */}
-          <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-            <h4 className="text-sm font-medium text-slate-300">Precificação</h4>
-
-            {/* Row 1: Cost Price + Operational Cost (fixed R$) */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Preço de Custo (R$)</label>
-                <input type="number" step="0.01" min="0" value={formData.costPrice}
-                  onChange={(e) => setFormData({ ...formData, costPrice: e.target.value })}
-                  placeholder="0,00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Custo Operacional (R$)</label>
-                <input type="number" step="0.01" min="0" value={formData.operationalCost}
-                  onChange={(e) => setFormData({ ...formData, operationalCost: e.target.value })}
-                  placeholder="Embalagem, frete, etc."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
-              </div>
-            </div>
-
-            {/* Row 2: Tax Rate (%) + Desired Margin (%) */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Taxa (%)</label>
-                <input type="number" step="0.01" min="0" max="100" value={formData.taxRate}
-                  onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
-                  placeholder="Ex: 12% cartão"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Margem de Lucro (%)</label>
-                <input type="number" step="0.01" min="0" value={formData.desiredMargin}
-                  onChange={(e) => setFormData({ ...formData, desiredMargin: e.target.value })}
-                  placeholder="Ex: 100%"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
-              </div>
-            </div>
-
-            {/* Suggested price */}
-            {suggestedPrice && (
-              <div className="bg-indigo-500/10 border border-indigo-500/30 rounded-lg px-3 py-2 text-xs">
-                <span className="text-indigo-400">
-                  Preço sugerido ({suggestedPrice.margin}% margem): <strong>R$ {suggestedPrice.value.toFixed(2)}</strong>
-                </span>
-                <button type="button" onClick={() => setFormData({ ...formData, price: suggestedPrice.value.toFixed(2) })}
-                  className="ml-2 text-indigo-400 hover:text-indigo-300 underline">
-                  Usar
-                </button>
-                {suggestedPrice.currentProfit && (
-                  <span className="ml-2 text-slate-400">
-                    (atual: {suggestedPrice.currentProfit.margin >= 0 ? '+' : ''}{suggestedPrice.currentProfit.margin.toFixed(0)}% margem)
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Row 3: Sale Price + Stock */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Preço de Venda (R$) *</label>
-                <input type="number" step="0.01" min="0.01" value={formData.price}
-                  onChange={(e) => {
-                    const newPrice = e.target.value;
-                    const cost = parseFloat(formData.costPrice) || 0;
-                    const opsCost = parseFloat(formData.operationalCost) || 0;
-                    const tax = parseFloat(formData.taxRate) || 0;
-                    const priceNum = parseFloat(newPrice);
-                    const updates: Partial<FormData> = { price: newPrice };
-                    if (priceNum > 0 && cost > 0) {
-                      const { margin } = calcProfit(priceNum, cost, opsCost, tax);
-                      updates.desiredMargin = margin.toFixed(2);
-                    }
-                    setFormData({ ...formData, ...updates });
-                  }}
-                  placeholder="0,00"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" required />
-              </div>
-              <div>
-                <label className="block text-slate-400 text-xs mb-1">Estoque Inicial</label>
-                <input type="number" min="0" value={formData.stockQty}
-                  onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
-              </div>
-            </div>
-          </div>
-
-          {/* Variations toggle */}
-          <div className="flex items-center gap-2">
-            <button type="button"
-              onClick={() => { setShowVariations(!showVariations); if (!showVariations && variations.length === 0) { setVariations([{ name: '', priceModifier: 0, stockQty: 0 }]); } }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showVariations ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
-              }`}>
-              <Layers size={16} />
-              {showVariations ? 'Variações ativadas' : 'Adicionar Variações (Cor, Tamanho, etc.)'}
-            </button>
-          </div>
-
-          {showVariations && (
-            <VariationEditor template={currentTemplate} variations={variations} onChange={setVariations} />
-          )}
 
           {/* Actions */}
           <div className="flex gap-3 pt-2 sticky bottom-0 bg-slate-900 py-3 border-t border-slate-800">
