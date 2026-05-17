@@ -226,14 +226,47 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
         data: { status: 'RECEIVED', receivedAt },
       });
 
-      // For each item, create inventory batch and movement
+      // For each item, resolve variations first, then create batches
       for (const item of purchase.items) {
-        // Create batch
+        let variationId = item.variationId || undefined;
+
+        // If no variationId but product name has " - " (template-generated variation), create it
+        if (!variationId && item.productId && item.productName.includes(' - ')) {
+          const varName = item.productName.split(' - ')[1];
+          const newVar = await tx.productVariation.create({
+            data: {
+              productId: item.productId,
+              name: varName,
+              stockQty: 0,
+            },
+          });
+          variationId = newVar.id;
+          // Link the purchase item
+          await tx.purchaseItem.update({
+            where: { id: item.id },
+            data: { variationId: newVar.id },
+          });
+          // Mark product as having variations
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { hasVariations: true },
+          });
+        }
+
+        // Update variation stock
+        if (variationId) {
+          await tx.productVariation.update({
+            where: { id: variationId },
+            data: { stockQty: { increment: item.quantity } },
+          });
+        }
+
+        // Create batch with correct variationId
         await tx.inventoryBatch.create({
           data: {
             tenantId: request.tenantId,
             productId: item.productId || undefined,
-            variationId: item.variationId || undefined,
+            variationId,
             purchaseItemId: item.id,
             quantity: item.quantity,
             remainingQty: item.quantity,
@@ -242,12 +275,12 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           },
         });
 
-        // Create movement
+        // Create movement with correct variationId
         await tx.inventoryMovement.create({
           data: {
             tenantId: request.tenantId,
             productId: item.productId || undefined,
-            variationId: item.variationId || undefined,
+            variationId,
             type: 'PURCHASE_IN',
             quantity: item.quantity,
             unitCost: item.unitCost,
@@ -276,53 +309,6 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
               },
             });
           }
-        }
-
-        // Update or create variation stock
-        if (item.variationId) {
-          const existingVar = await tx.productVariation.findUnique({ where: { id: item.variationId } });
-          if (existingVar) {
-            await tx.productVariation.update({
-              where: { id: item.variationId },
-              data: { stockQty: { increment: item.quantity } },
-            });
-          } else {
-            // Variation was deleted, recreate it from the product name
-            const varName = item.productName.includes(' - ')
-              ? item.productName.split(' - ')[1]
-              : item.productName;
-            const newVar = await tx.productVariation.create({
-              data: {
-                productId: item.productId!,
-                name: varName,
-                stockQty: item.quantity,
-              },
-            });
-            // Re-link the purchase item to the new variation
-            await tx.purchaseItem.update({
-              where: { id: item.id },
-              data: { variationId: newVar.id },
-            });
-          }
-        } else if (item.productId && item.productName.includes(' - ')) {
-          // Variation from template — create it
-          const varName = item.productName.split(' - ')[1];
-          const newVar = await tx.productVariation.create({
-            data: {
-              productId: item.productId,
-              name: varName,
-              stockQty: item.quantity,
-            },
-          });
-          await tx.purchaseItem.update({
-            where: { id: item.id },
-            data: { variationId: newVar.id },
-          });
-          // Mark product as having variations
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { hasVariations: true },
-          });
         }
       }
     });
