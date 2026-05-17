@@ -98,11 +98,12 @@ export interface UpdateProductInput extends Partial<CreateProductInput> {}
 export const api = {
   // Products
   products: {
-    list(params?: { search?: string; categoryId?: string; active?: boolean; page?: number }) {
+    list(params?: { search?: string; categoryId?: string; active?: boolean; variationType?: string; page?: number }) {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set('search', params.search);
       if (params?.categoryId) searchParams.set('categoryId', params.categoryId);
       if (params?.active !== undefined) searchParams.set('active', String(params.active));
+      if (params?.variationType) searchParams.set('variationType', params.variationType);
       if (params?.page) searchParams.set('page', String(params.page));
       const qs = searchParams.toString();
       return request<ProductsResponse>(`/api/products${qs ? `?${qs}` : ''}`);
