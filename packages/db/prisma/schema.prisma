@@ -113,6 +113,9 @@ model Product {
   variations  ProductVariation[]
   orderItems  OrderItem[]
   commissions CommissionItem[]
+  purchaseItems PurchaseItem[]
+  batches      InventoryBatch[]
+  movements    InventoryMovement[]
 
   @@index([tenantId, active])
   @@index([tenantId, barcode])
