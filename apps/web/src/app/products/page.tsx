@@ -471,27 +471,8 @@ export default function ProductsPage() {
                       {/* Price */}
                       <td className="px-4 py-3 text-right">
                         <div className="text-white font-semibold">
-                          R$ {price.toFixed(2)}
+                          {price > 0 ? `R$ ${price.toFixed(2)}` : <span className="text-slate-500 text-xs">—</span>}
                         </div>
-                        <div className="text-xs text-slate-500">
-                          / {product.unit.toLowerCase()}
-                        </div>
-                      </td>
-
-                      {/* Margin / Profit */}
-                      <td className="px-4 py-3 text-right hidden sm:table-cell">
-                        {hasCost ? (
-                          <div>
-                            <div className={`text-sm font-medium ${margin >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                              {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
-                            </div>
-                            <div className={`text-xs ${profit > 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
-                              R$ {profit.toFixed(2)}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-slate-600 text-xs">-</span>
-                        )}
                       </td>
 
                       {/* Stock */}
@@ -501,7 +482,6 @@ export default function ProductsPage() {
                         }`}>
                           {totalStock > 0 ? `${totalStock}` : '0'}
                         </span>
-                        <span className="text-xs text-slate-500 ml-0.5">un</span>
                       </td>
 
                       {/* Actions */}
