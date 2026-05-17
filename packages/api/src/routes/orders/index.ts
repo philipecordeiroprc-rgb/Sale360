@@ -101,11 +101,12 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     // Pre-validate stock for all items (fail fast before transaction)
     for (const item of items) {
       if (item.productId) {
-        // Check product-level total stock
+        // Check stock for this product+variant from inventory batches
         const batches = await prisma.inventoryBatch.findMany({
           where: {
             tenantId: request.tenantId,
             productId: item.productId,
+            variationId: item.variationId || null,
             remainingQty: { gt: 0 },
           },
         });
