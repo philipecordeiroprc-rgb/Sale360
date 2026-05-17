@@ -158,6 +158,7 @@ export default function ProductsPage() {
     setVariations([]);
     setShowVariations(false);
     setFormError('');
+    setCurrentTemplate(null);
     setFormOpen(true);
   };
 
