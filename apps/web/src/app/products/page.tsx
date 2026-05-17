@@ -192,6 +192,8 @@ export default function ProductsPage() {
     );
     setShowVariations(product.hasVariations || (product.variations?.length > 0));
     setFormError('');
+    if (product.categoryId) loadTemplate(product.categoryId);
+    else setCurrentTemplate(null);
     setFormOpen(true);
   };
 
