@@ -32,7 +32,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
 
   if (!open) return null;
 
-  const sizeClass = size === 'sm' ? 'max-w-sm' : size === 'lg' ? 'max-w-2xl' : 'max-w-lg';
+  const sizeClass = size === 'sm' ? 'max-w-sm' : size === 'lg' ? 'max-w-2xl' : size === 'xl' ? 'max-w-4xl' : 'max-w-lg';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
