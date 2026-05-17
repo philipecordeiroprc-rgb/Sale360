@@ -177,14 +177,16 @@ export default function ProductsPage() {
   // Calculate suggested price based on cost + tax + margin
   const suggestedPrice = (() => {
     const cost = parseFloat(formData.costPrice) || 0;
+    const opsCost = parseFloat(formData.operationalCost) || 0;
     const tax = parseFloat(formData.taxRate) || 0;
     const price = parseFloat(formData.price) || 0;
     if (cost <= 0) return null;
-    // 30% default margin suggestion
-    const withMargin = cost / (1 - 0.30 - tax / 100);
+    // 30% default margin suggestion (over cost + operational cost)
+    const totalCost = cost + opsCost;
+    const withMargin = totalCost / (1 - 0.30 - tax / 100);
     return {
       value: Math.round(withMargin * 100) / 100,
-      currentProfit: price > 0 ? calcProfit(price, cost, tax) : null,
+      currentProfit: price > 0 ? calcProfit(price, cost, opsCost, tax) : null,
     };
   })();
 
