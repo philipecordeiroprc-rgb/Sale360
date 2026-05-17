@@ -234,41 +234,53 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
                   />
 
                   {editingId === cat.id ? (
-                    <>
-                      <input
-                        type="text"
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-indigo-500"
-                        onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
-                        autoFocus
-                      />
-                      <div className="flex gap-1">
-                        {PRESET_COLORS.slice(0, 5).map((c) => (
-                          <button
-                            key={c}
-                            onClick={() => setEditColor(c)}
-                            className={`w-5 h-5 rounded-full border-2 transition-all ${
-                              editColor === c ? 'border-white' : 'border-transparent'
-                            }`}
-                            style={{ backgroundColor: c }}
-                          />
-                        ))}
+                    <div className="flex flex-col gap-2 flex-1">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-indigo-500"
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
+                          autoFocus
+                        />
+                        <div className="flex gap-1">
+                          {PRESET_COLORS.slice(0, 5).map((c) => (
+                            <button
+                              key={c}
+                              onClick={() => setEditColor(c)}
+                              className={`w-5 h-5 rounded-full border-2 transition-all ${
+                                editColor === c ? 'border-white' : 'border-transparent'
+                              }`}
+                              style={{ backgroundColor: c }}
+                            />
+                          ))}
+                        </div>
+                        <button
+                          onClick={handleSaveEdit}
+                          disabled={saving}
+                          className="p-1.5 hover:bg-emerald-500/20 rounded-lg text-emerald-400 transition-colors"
+                        >
+                          <Check size={16} />
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
                       </div>
-                      <button
-                        onClick={handleSaveEdit}
-                        disabled={saving}
-                        className="p-1.5 hover:bg-emerald-500/20 rounded-lg text-emerald-400 transition-colors"
+                      <select
+                        value={editTemplateId}
+                        onChange={(e) => setEditTemplateId(e.target.value)}
+                        className="bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs focus:outline-none focus:border-indigo-500"
                       >
-                        <Check size={16} />
-                      </button>
-                      <button
-                        onClick={handleCancelEdit}
-                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
-                    </>
+                        <option value="">Sem template de variação</option>
+                        {templates.map((t) => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                      </select>
+                    </div>
                   ) : (
                     <>
                       <span className="flex-1 text-white text-sm">{cat.name}</span>
