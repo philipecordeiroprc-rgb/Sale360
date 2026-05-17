@@ -653,3 +653,21 @@ enum DimensionType {
   PESO             // 50g, 100g, 500g, 1kg...
   PERSONALIZADO    // Livre - definido pelo lojista
 }
+
+enum PurchaseStatus {
+  DRAFT
+  CONFIRMED
+  RECEIVED
+  CANCELLED
+}
+
+enum MovementType {
+  INITIAL_STOCK
+  PURCHASE_IN
+  PURCHASE_CANCEL
+  SALE_OUT
+  SALE_CANCEL
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  TRANSFER
+}
