@@ -132,10 +132,37 @@ export default function OrdersPage() {
     }
   };
 
+  // Available stock for currently selected product/variation
+  const getAvailableStock = (): number => {
+    if (!selectedProduct) return 0;
+    if (selectedProduct.variations?.length > 0 && selectedVariation) {
+      return Number(selectedVariation.stockQty || 0);
+    }
+    return Number(selectedProduct.stockQty || 0);
+  };
+
+  // How many of this product/variation are already in the cart
+  const getCartQty = (): number => {
+    return cart
+      .filter(c =>
+        c.productId === selectedProduct?.id &&
+        c.variationId === (selectedVariation?.id || undefined)
+      )
+      .reduce((sum, c) => sum + c.quantity, 0);
+  };
+
   const addToCart = () => {
     if (!selectedProduct) return;
     const qty = parseFloat(quantity);
     if (qty <= 0) { show('Quantidade inválida', 'error'); return; }
+
+    // Validate stock
+    const available = getAvailableStock();
+    const alreadyInCart = getCartQty();
+    if (qty + alreadyInCart > available) {
+      show(`Estoque insuficiente. Disponível: ${available - alreadyInCart}`, 'error');
+      return;
+    }
 
     const price = Number(selectedProduct.price || 0);
     const itemName = selectedVariation
