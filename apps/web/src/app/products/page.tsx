@@ -45,6 +45,7 @@ const emptyForm: FormData = {
   price: '',
   costPrice: '',
   taxRate: '',
+  operationalCost: '',
   stockQty: '0',
   barcode: '',
   sku: '',
