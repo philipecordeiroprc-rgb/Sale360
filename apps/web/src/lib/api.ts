@@ -57,6 +57,7 @@ export interface Product {
   isFractional: boolean;
   hasVariations: boolean;
   taxRate?: number | null;
+  operationalCost?: number | null;
   categoryId?: string | null;
   category?: ProductCategory | null;
   variations: any[];
