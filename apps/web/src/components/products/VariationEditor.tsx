@@ -29,6 +29,7 @@ export function VariationEditor({ variations, onChange }: VariationEditorProps) 
 
   // Inline edit state
   const [editingStock, setEditingStock] = useState<Record<number, string>>({});
+  const [editingLowStock, setEditingLowStock] = useState<Record<number, string>>({});
   const [editingPrice, setEditingPrice] = useState<Record<number, string>>({});
 
   const toggleDim1 = (val: string) => {
