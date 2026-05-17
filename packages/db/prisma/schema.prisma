@@ -188,6 +188,129 @@ model VariationDimension {
 }
 
 // ============================================================
+// FORNECEDORES, COMPRAS & ESTOQUE (PEPS/FIFO)
+// ============================================================
+
+model Supplier {
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  cnpj           String?  @unique
+  ie             String?  // Inscrição Estadual
+  email          String?
+  phone          String?
+  whatsapp       String?
+  contactName    String?
+  address        String?
+  addressNumber  String?
+  complement     String?
+  neighborhood   String?
+  city           String?
+  state          String?
+  zipCode        String?
+  notes          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
+
+  @@index([tenantId, active])
+  @@index([tenantId, name])
+  @@map("suppliers")
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  tenantId       String
+  supplierId     String
+  orderNumber    Int            // sequencial por tenant
+  status         PurchaseStatus @default(DRAFT)
+  notes          String?
+  subtotal       Decimal        @db.Decimal(10, 2)
+  discount       Decimal        @default(0) @db.Decimal(10, 2)
+  total          Decimal        @db.Decimal(10, 2)
+  receivedAt     DateTime?      // data que a mercadoria entrou no estoque (ordenação PEPS)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier       @relation(fields: [supplierId], references: [id])
+  items    PurchaseItem[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, orderNumber])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id          String  @id @default(cuid())
+  purchaseId  String
+  productId   String?
+  variationId String?
+  productName String  // snapshot
+  quantity    Decimal @db.Decimal(10, 3)
+  unitCost    Decimal @db.Decimal(10, 2) // custo unitário DESTA compra
+  total       Decimal @db.Decimal(10, 2) // quantity * unitCost
+
+  purchase  Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+
+  @@map("purchase_items")
+}
+
+model InventoryBatch {
+  id             String   @id @default(cuid())
+  tenantId       String
+  productId      String?
+  variationId    String?  // null para produto principal
+  purchaseItemId String?  // null para estoque inicial
+  quantity       Decimal  @db.Decimal(10, 3) // qtd original recebida
+  remainingQty   Decimal  @db.Decimal(10, 3) // qtd restante a vender
+  unitCost       Decimal  @db.Decimal(10, 2) // custo unitário deste lote
+  receivedAt     DateTime // data de entrada no estoque (ordenação PEPS)
+  createdAt      DateTime @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+
+  @@index([tenantId, productId, receivedAt])
+  @@index([tenantId, variationId, receivedAt])
+  @@map("inventory_batches")
+}
+
+model InventoryMovement {
+  id          String       @id @default(cuid())
+  tenantId    String
+  productId   String?
+  variationId String?
+  type        MovementType
+  quantity    Decimal      @db.Decimal(10, 3) // positivo=entrada, negativo=saída
+  unitCost    Decimal?     @db.Decimal(10, 2) // custo unitário no momento
+  totalCost   Decimal?     @db.Decimal(10, 2) // quantity * unitCost
+  batchId     String?      // lote consumido/criado
+  orderId     String?      // vínculo com venda
+  purchaseId  String?      // vínculo com compra
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+  batch     InventoryBatch?   @relation(fields: [batchId], references: [id])
+
+  @@index([tenantId, productId, createdAt])
+  @@index([tenantId, variationId, createdAt])
+  @@index([tenantId, batchId])
+  @@index([tenantId, orderId])
+  @@index([tenantId, type])
+  @@map("inventory_movements")
+}
+
+// ============================================================
 // CLIENTES & FIDELIZAÇÃO
 // ============================================================
 
