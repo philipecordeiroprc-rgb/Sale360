@@ -256,6 +256,7 @@ model Order {
   tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user     User?      @relation(fields: [userId], references: [id])
   customer Customer?  @relation(fields: [customerId], references: [id])
+  delivery Delivery?
   items    OrderItem[]
 
   @@index([tenantId, createdAt(sort: Desc)])
