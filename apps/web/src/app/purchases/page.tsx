@@ -203,7 +203,7 @@ export default function PurchasesPage() {
         supplierId = newSup.id;
       }
 
-      // Update products + create variations and build purchase items
+      // Build purchase items
       const purchaseItemsData: {
         productId: string;
         variationId?: string;
@@ -214,51 +214,19 @@ export default function PurchasesPage() {
       }[] = [];
 
       for (const item of purchaseItems) {
-        await api.products.update(item.productId, {
-          costPrice: item.costPrice,
-          operationalCost: item.operationalCost,
-          taxRate: item.taxRate,
-          price: item.salePrice || calcSuggested(item) || 0,
-          hasVariations: item.hasVariations,
-        });
+        // Only update product price if user entered a new one
+        if (item.salePrice > 0) {
+          await api.products.update(item.productId, { price: item.salePrice });
+        }
 
         if (item.hasVariations && item.variations.length > 0) {
-          // Load existing product variations to match by name
-          let existingVars: any[] = [];
-          try {
-            const product = await api.products.get(item.productId);
-            existingVars = product.variations || [];
-          } catch { /* ignore */ }
-
-          // Create/ensure variations and add one purchase item per variation
           for (const v of item.variations) {
             const varQty = v.stockQty || 0;
-            if (varQty <= 0) continue; // skip variations with no quantity
-
-            let variationId = v.id;
-            if (!variationId) {
-              // Try to find existing variation by name
-              const existing = existingVars.find((ev: any) =>
-                ev.name.toLowerCase() === v.name.toLowerCase()
-              );
-              if (existing) {
-                variationId = existing.id;
-              } else {
-                // Create new variation
-                const created = await api.products.addVariation(item.productId, {
-                  name: v.name,
-                  priceModifier: v.priceModifier || 0,
-                  stockQty: 0,
-                  sku: v.sku,
-                  barcode: v.barcode,
-                });
-                variationId = created.id;
-              }
-            }
+            if (varQty <= 0) continue;
 
             purchaseItemsData.push({
               productId: item.productId,
-              variationId,
+              variationId: v.id,
               productName: `${item.productName} - ${v.name}`,
               quantity: varQty,
               unitCost: item.costPrice,
