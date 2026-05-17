@@ -32,6 +32,7 @@ interface FormData {
   costPrice: string;
   taxRate: string;
   operationalCost: string;
+  desiredMargin: string;
   stockQty: string;
   barcode: string;
   sku: string;
@@ -46,6 +47,7 @@ const emptyForm: FormData = {
   costPrice: '',
   taxRate: '',
   operationalCost: '',
+  desiredMargin: '',
   stockQty: '0',
   barcode: '',
   sku: '',
