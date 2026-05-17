@@ -109,10 +109,7 @@ export default function ProductsPage() {
   const handleCreate = () => {
     setEditingProduct(null);
     setFormData({ ...emptyForm });
-    setVariations([]);
-    setShowVariations(false);
     setFormError('');
-    setCurrentTemplate(null);
     setFormOpen(true);
   };
 
@@ -122,32 +119,11 @@ export default function ProductsPage() {
     setFormData({
       name: product.name,
       description: product.description || '',
-      price: String(product.price),
-      costPrice: product.costPrice != null ? String(product.costPrice) : '',
-      taxRate: product.taxRate != null ? String(product.taxRate) : '',
-      operationalCost: product.operationalCost != null ? String(product.operationalCost) : '',
-      desiredMargin: '',
-      stockQty: String(product.stockQty),
-      barcode: product.barcode || '',
       sku: product.sku || '',
+      barcode: product.barcode || '',
       categoryId: product.categoryId || '',
-      unit: product.unit,
     });
-    setVariations(
-      product.variations?.map((v: any) => ({
-        id: v.id,
-        name: v.name,
-        priceModifier: Number(v.priceModifier),
-        stockQty: Number(v.stockQty),
-        lowStockAt: v.lowStockAt != null ? Number(v.lowStockAt) : undefined,
-        sku: v.sku || '',
-        barcode: v.barcode || '',
-      })) || [],
-    );
-    setShowVariations(product.hasVariations || (product.variations?.length > 0));
     setFormError('');
-    if (product.categoryId) loadTemplate(product.categoryId);
-    else setCurrentTemplate(null);
     setFormOpen(true);
   };
 
