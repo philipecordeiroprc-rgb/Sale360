@@ -141,6 +141,7 @@ model ProductVariation {
   purchaseItems   PurchaseItem[]
   batches         InventoryBatch[]
   movements       InventoryMovement[]
+  orderItems      OrderItem[]
 
   @@map("product_variations")
 }
