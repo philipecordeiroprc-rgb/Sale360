@@ -133,7 +133,10 @@ model ProductVariation {
   sku         String?
   barcode     String?
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  purchaseItems   PurchaseItem[]
+  batches         InventoryBatch[]
+  movements       InventoryMovement[]
 
   @@map("product_variations")
 }
