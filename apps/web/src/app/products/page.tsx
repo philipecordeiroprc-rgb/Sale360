@@ -523,11 +523,11 @@ export default function ProductsPage() {
           <div className="text-5xl mb-4">📦</div>
           <h3 className="text-xl font-semibold text-white mb-2">Nenhum produto encontrado</h3>
           <p className="text-slate-400 mb-6">
-            {search || selectedCategory !== 'all'
+            {search || selectedCategory !== 'all' || selectedVariationType !== 'all'
               ? 'Tente ajustar os filtros de busca.'
               : 'Comece cadastrando seu primeiro produto.'}
           </p>
-          {!search && selectedCategory === 'all' && (
+          {!search && selectedCategory === 'all' && selectedVariationType === 'all' && (
             <button
               onClick={handleCreate}
               className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors mx-auto"
