@@ -41,7 +41,7 @@ export default function CustomersPage() {
           placeholder="Buscar por nome, telefone ou email..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder-dark-600 focus:outline-none focus:border-indigo-500 transition-colors"
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
         />
       </div>
 
