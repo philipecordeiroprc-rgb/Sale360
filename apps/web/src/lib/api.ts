@@ -78,20 +78,12 @@ export interface ProductsResponse {
 
 export interface CreateProductInput {
   name: string;
-  price: number;
+  price?: number;
   description?: string;
   sku?: string;
   barcode?: string;
-  costPrice?: number;
-  unit?: string;
-  stockQty?: number;
-  lowStockAt?: number;
   categoryId?: string;
-  isFractional?: boolean;
-  taxRate?: number;
-  operationalCost?: number;
   imageUrl?: string;
-  hasVariations?: boolean;
 }
 
 export interface UpdateProductInput extends Partial<CreateProductInput> {}
