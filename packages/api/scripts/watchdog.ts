@@ -10,6 +10,9 @@ const MAX_RESTARTS = 10;
 const RESTART_DELAY = 2000; // 2s between restarts
 const RESTART_WINDOW = 30000; // 30s window for rate limiting
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..', '..', '..');
+
 let restarts = 0;
 let windowStart = Date.now();
 let shuttingDown = false;
@@ -19,9 +22,6 @@ process.on('SIGTERM', () => { shuttingDown = true; });
 process.on('SIGINT', () => { shuttingDown = true; });
 
 function runPredev() {
-  // Run from monorepo root so pnpm --filter resolves correctly
-  const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const repoRoot = path.resolve(__dirname, '..', '..', '..');
   try {
     console.log('[watchdog] Running prisma generate...');
     execSync('pnpm --filter @sale360/db db:generate', {
