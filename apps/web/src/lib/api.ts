@@ -83,12 +83,10 @@ export interface CreateProductInput {
   sku?: string;
   barcode?: string;
   categoryId?: string;
-  imageUrl?: string;
-}
-
-export interface UpdateProductInput extends Partial<CreateProductInput> {
   imageUrl?: string | null;
 }
+
+export interface UpdateProductInput extends Partial<CreateProductInput> {}
 
 export const api = {
   // Products
