@@ -374,6 +374,31 @@ export const api = {
       update(id: string, data: { companyName?: string; slug?: string; plan?: string; status?: string }) {
         return request<any>(`/api/admin/tenants/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
       },
+      users: {
+        list(tenantId: string) {
+          return request<any[]>(`/api/admin/tenants/${tenantId}/users`);
+        },
+        add(tenantId: string, data: { email: string; name: string; password: string; role: string; pin?: string }) {
+          return request<any>(`/api/admin/tenants/${tenantId}/users`, { method: 'POST', body: JSON.stringify(data) });
+        },
+        update(tenantId: string, userId: string, data: { role?: string; pin?: string }) {
+          return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
+        },
+        remove(tenantId: string, userId: string) {
+          return request<{ success: boolean }>(`/api/admin/tenants/${tenantId}/users/${userId}`, { method: 'DELETE' });
+        },
+        resetPassword(tenantId: string, userId: string, password: string) {
+          return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
+        },
+      },
+      features: {
+        get(tenantId: string) {
+          return request<any>(`/api/admin/tenants/${tenantId}/features`);
+        },
+        update(tenantId: string, overrides: Record<string, boolean>) {
+          return request<any>(`/api/admin/tenants/${tenantId}/features`, { method: 'PUT', body: JSON.stringify({ overrides }) });
+        },
+      },
     },
     users: {
       list() {
