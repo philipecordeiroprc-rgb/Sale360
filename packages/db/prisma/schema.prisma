@@ -466,6 +466,7 @@ model Order {
   paymentStatus PaymentStatus @default(PAID)
   syncStatus    SyncStatus @default(SYNCED)
   couponId      String?
+  couponDiscount Decimal?  @db.Decimal(10, 2) // desconto aplicado pelo cupom
   notes         String?
   createdAtDevice DateTime? // timestamp real da venda (offline)
   createdAt       DateTime  @default(now())
