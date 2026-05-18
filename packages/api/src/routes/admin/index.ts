@@ -112,6 +112,212 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   });
 
   // ============================================================
+  // Tenant Users (SUPER_ADMIN managing users per store)
+  // ============================================================
+
+  // List users of a tenant
+  app.get('/tenants/:id/users', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const users = await prisma.tenantUser.findMany({
+      where: { tenantId: id },
+      include: {
+        user: { select: { id: true, name: true, email: true, role: true, createdAt: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return users;
+  });
+
+  // Add user to tenant
+  app.post('/tenants/:id/users', async (request, reply) => {
+    const { id: tenantId } = request.params as { id: string };
+
+    const schema = z.object({
+      email: z.string().email(),
+      name: z.string().min(1, 'Nome é obrigatório'),
+      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
+      pin: z.string().length(4).optional(),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    // Find or create user
+    let user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+
+    if (user) {
+      const alreadyLinked = await prisma.tenantUser.findUnique({
+        where: { tenantId_userId: { tenantId, userId: user.id } },
+      });
+      if (alreadyLinked) {
+        return reply.status(400).send({ error: 'Usuário já está vinculado a esta loja.' });
+      }
+    } else {
+      const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
+      user = await prisma.user.create({
+        data: {
+          email: parsed.data.email,
+          name: parsed.data.name,
+          password: hashedPassword,
+        },
+      });
+    }
+
+    const tenantUser = await prisma.tenantUser.create({
+      data: {
+        tenantId,
+        userId: user.id,
+        role: parsed.data.role as any,
+        pin: parsed.data.pin || '',
+      },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    return reply.status(201).send(tenantUser);
+  });
+
+  // Update user role/pin in tenant
+  app.put('/tenants/:id/users/:userId', async (request, reply) => {
+    const { id: tenantId, userId } = request.params as { id: string; userId: string };
+
+    const schema = z.object({
+      role: z.enum(['OWNER', 'CASHIER']).optional(),
+      pin: z.string().length(4).optional(),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos' });
+    }
+
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    const updated = await prisma.tenantUser.update({
+      where: { id: tenantUser.id },
+      data: {
+        ...(parsed.data.role !== undefined ? { role: parsed.data.role as any } : {}),
+        ...(parsed.data.pin !== undefined ? { pin: parsed.data.pin } : {}),
+      },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    return updated;
+  });
+
+  // Remove user from tenant
+  app.delete('/tenants/:id/users/:userId', async (request, reply) => {
+    const { id: tenantId, userId } = request.params as { id: string; userId: string };
+
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    await prisma.tenantUser.delete({ where: { id: tenantUser.id } });
+    return { success: true };
+  });
+
+  // Reset user password from admin
+  app.post('/tenants/:id/users/:userId/reset-password', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    const schema = z.object({ password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres') });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+    const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
+    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+
+    return { message: 'Senha redefinida com sucesso.' };
+  });
+
+  // ============================================================
+  // Feature Overrides (per-tenant module toggling)
+  // ============================================================
+
+  // Get effective features for a tenant
+  app.get('/tenants/:id/features', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const tenant = await prisma.tenant.findUnique({
+      where: { id },
+      select: { plan: true, status: true, featureOverrides: true },
+    });
+
+    if (!tenant) return reply.status(404).send({ error: 'Empresa não encontrada.' });
+
+    // Base plan features
+    const baseFeatures: Record<string, boolean> = {
+      webVersion: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      aiDescriptions: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      aiAssistant: tenant.plan === 'PRIME',
+      magicRegister: tenant.plan === 'PRIME',
+      variations: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      bulkImport: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      suppliers: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      recurrentExpenses: tenant.plan === 'GROW' || tenant.plan === 'PRIME',
+      unlimitedUsers: tenant.plan === 'PRIME',
+      prioritySupport: tenant.plan === 'PRIME',
+      saturday: tenant.plan === 'PRIME',
+      videoCall: tenant.plan === 'PRIME',
+      whatsappSupport: tenant.plan === 'PRIME',
+    };
+
+    // Merge with overrides (if any)
+    const overrides = (tenant.featureOverrides as Record<string, boolean> | null) || {};
+    const features: Record<string, boolean> = {};
+    for (const key of Object.keys(baseFeatures)) {
+      features[key] = key in overrides ? overrides[key] : baseFeatures[key];
+    }
+
+    return {
+      plan: tenant.plan,
+      status: tenant.status,
+      features,
+      overrides,
+    };
+  });
+
+  // Update feature overrides for a tenant
+  app.put('/tenants/:id/features', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const schema = z.object({
+      overrides: z.record(z.boolean()),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    try {
+      const tenant = await prisma.tenant.update({
+        where: { id },
+        data: { featureOverrides: parsed.data.overrides },
+        select: { plan: true, status: true, featureOverrides: true },
+      });
+
+      return tenant;
+    } catch {
+      return reply.status(404).send({ error: 'Empresa não encontrada.' });
+    }
+  });
+
+  // ============================================================
   // Users (platform level)
   // ============================================================
 
