@@ -29,18 +29,17 @@ HASH_DIR="$ROOT/.deploy-hashes"
 mkdir -p "$HASH_DIR"
 
 changed_files() {
-  # Returns list of changed files since last deploy in a source dir
-  local src="$1" label="$2" hashfile="$HASH_DIR/$label.sha256"
+  local src label hashfile tmp
+  src="$1"
+  label="$2"
+  hashfile="$HASH_DIR/$label.sha256"
   if [ ! -f "$hashfile" ]; then
-    # First deploy — consider all files changed
-    find "$src" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.prisma' -o -name '*.json' -o -name '*.css' \) | head -5 >&2
     echo "FIRST_DEPLOY"
     return
   fi
-  # Compare current hashes with stored
-  local tmp=$(mktemp)
+  tmp=$(mktemp)
   find "$src" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.prisma' -o -name '*.json' -o -name '*.css' \) \
-    -exec sha256sum {} \; | sort > "$tmp"
+    -exec sha256sum {} \; 2>/dev/null | sort > "$tmp" || true
   if ! diff -q "$hashfile" "$tmp" > /dev/null 2>&1; then
     echo "CHANGED"
     cp "$tmp" "$hashfile"
