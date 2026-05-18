@@ -648,9 +648,9 @@ export default function PurchasesPage() {
                 {/* Add item button */}
                 <div className="flex items-center justify-between pt-3 border-t border-slate-700">
                   <span className="text-xs text-slate-500">
-                    Total: <span className="text-white font-semibold">R$ {(currentItem.costPrice * effectiveQty).toFixed(2)}</span>
+                    Total custo: <span className="text-white font-semibold">R$ {(currentItem.costPrice * effectiveQty).toFixed(2)}</span>
                     {currentItem.salePrice > 0 && (
-                      <span className="ml-2 text-emerald-400">| Venda: R$ {currentItem.salePrice.toFixed(2)}</span>
+                      <span className="ml-2 text-emerald-400">| Preço: R$ {currentItem.salePrice.toFixed(2)}</span>
                     )}
                   </span>
                   <button onClick={addCurrentItem}
