@@ -93,6 +93,10 @@ export default function PurchasesPage() {
   const [currentItem, setCurrentItem] = useState<PurchaseItemData>({ ...emptyItem });
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
+  // Template-based variation row builder
+  const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
+  const [rowDims, setRowDims] = useState<Record<string, string>>({});
+  const [rowQty, setRowQty] = useState<number>(0);
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
