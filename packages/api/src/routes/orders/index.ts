@@ -319,6 +319,14 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         },
       });
 
+      // Increment coupon usage count
+      if (validatedCoupon) {
+        await tx.coupon.update({
+          where: { id: validatedCoupon.id },
+          data: { usageCount: { increment: 1 } },
+        });
+      }
+
       return o;
     });
 
