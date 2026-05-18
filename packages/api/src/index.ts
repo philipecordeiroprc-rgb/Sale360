@@ -64,6 +64,17 @@ async function buildApp() {
     await api.register(paymentConfigRoutes, { prefix: '/api/payment-configs' });
   });
 
+  // SUPER_ADMIN routes (auth + SUPER_ADMIN check)
+  await app.register(async (adminApi) => {
+    adminApi.addHook('onRequest', authMiddleware);
+    adminApi.addHook('onRequest', async (request, reply) => {
+      if (request.userRole !== 'SUPER_ADMIN') {
+        reply.status(403).send({ error: 'Acesso restrito ao administrador da plataforma.' });
+      }
+    });
+    await adminApi.register(adminRoutes, { prefix: '/api/admin' });
+  });
+
   return app;
 }
 
