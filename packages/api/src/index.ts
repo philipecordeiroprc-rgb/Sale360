@@ -90,8 +90,8 @@ async function buildApp() {
     const registerSafe = async (plugin: any, opts: any) => {
       try {
         await api.register(plugin, opts);
-      } catch (err) {
-        app.log.error(`[ROUTE ERROR] Failed to register ${opts.prefix}:`, err);
+      } catch (err: any) {
+        app.log.error(`[ROUTE ERROR] Failed to register ${opts.prefix}:`, err?.message || err);
         // Route stays offline but server continues
       }
     };
