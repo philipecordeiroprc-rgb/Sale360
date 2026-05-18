@@ -321,6 +321,70 @@ export const api = {
     },
   },
 
+  // Tenant users (ADMIN)
+  tenant: {
+    users: {
+      list() {
+        return request<any[]>('/api/tenant/users');
+      },
+      create(data: { email: string; name: string; password: string; role: string; pin?: string }) {
+        return request<any>('/api/tenant/users', { method: 'POST', body: JSON.stringify(data) });
+      },
+      update(userId: string, data: { role?: string; pin?: string }) {
+        return request<any>(`/api/tenant/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
+      },
+      remove(userId: string) {
+        return request<{ success: boolean }>(`/api/tenant/users/${userId}`, { method: 'DELETE' });
+      },
+      resetPassword(userId: string, password: string) {
+        return request<any>(`/api/tenant/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
+      },
+    },
+    me: {
+      profile() {
+        return request<any>('/api/tenant/me/profile');
+      },
+      changePassword(currentPassword: string, newPassword: string) {
+        return request<any>('/api/tenant/me/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+      },
+    },
+    features() {
+      return request<any>('/api/tenant/features');
+    },
+    devices() {
+      return request<any[]>('/api/tenant/devices');
+    },
+  },
+
+  // Admin (SUPER_ADMIN)
+  admin: {
+    tenants: {
+      list(params?: { search?: string }) {
+        const sp = new URLSearchParams();
+        if (params?.search) sp.set('search', params.search);
+        const qs = sp.toString();
+        return request<any[]>(`/api/admin/tenants${qs ? `?${qs}` : ''}`);
+      },
+      get(id: string) {
+        return request<any>(`/api/admin/tenants/${id}`);
+      },
+      create(data: { companyName: string; slug: string; plan: string; status: string }) {
+        return request<any>('/api/admin/tenants', { method: 'POST', body: JSON.stringify(data) });
+      },
+      update(id: string, data: { companyName?: string; slug?: string; plan?: string; status?: string }) {
+        return request<any>(`/api/admin/tenants/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+      },
+    },
+    users: {
+      list() {
+        return request<any[]>('/api/admin/users');
+      },
+      resetPassword(userId: string, password: string) {
+        return request<any>(`/api/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
+      },
+    },
+  },
+
   // Variation Templates
   variationTemplates: {
     list() {
