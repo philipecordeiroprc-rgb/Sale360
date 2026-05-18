@@ -86,7 +86,9 @@ export interface CreateProductInput {
   imageUrl?: string;
 }
 
-export interface UpdateProductInput extends Partial<CreateProductInput> {}
+export interface UpdateProductInput extends Partial<CreateProductInput> {
+  imageUrl?: string | null;
+}
 
 export const api = {
   // Products
