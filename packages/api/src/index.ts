@@ -70,7 +70,7 @@ async function buildApp() {
   app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
   // Global error handler — catch all unhandled route errors
-  app.setErrorHandler((error, _request, reply) => {
+  app.setErrorHandler((error: any, _request, reply) => {
     app.log.error(error);
     const statusCode = error.statusCode || 500;
     reply.status(statusCode).send({
