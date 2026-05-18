@@ -18,8 +18,9 @@ model Tenant {
   companyName String
   plan        Plan     @default(PRO)
   status      Status   @default(TRIAL)
-  trialEndsAt DateTime?
-  createdAt   DateTime @default(now())
+  trialEndsAt     DateTime?
+  featureOverrides Json?
+  createdAt       DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   users        TenantUser[]
