@@ -76,6 +76,7 @@ log "🔍 Detectando mudanças..."
 CHANGED_API="$FORCE_API"
 CHANGED_WEB="$FORCE_WEB"
 CHANGED_DB="$FORCE_DB"
+NEED_INSTALL=false
 
 # Check each package's source files
 if ! $FORCE_API && [ "$(changed_files "$ROOT/packages/api/src" "api-src")" != "" ]; then
