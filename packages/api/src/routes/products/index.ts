@@ -8,6 +8,7 @@ const createProductSchema = z.object({
   sku: z.string().optional(),
   barcode: z.string().optional(),
   price: z.number().default(0),
+  lowStockAt: z.number().optional(),
   categoryId: z.string().optional(),
   imageUrl: z.string().nullable().optional(),
 });
