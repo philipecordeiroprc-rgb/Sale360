@@ -135,8 +135,31 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
             quantity: item.quantity,
             unitCost: item.unitCost,
             total: item.total,
+            salePrice: item.salePrice || undefined,
+            taxRatePct: item.taxRatePct || undefined,
+            marginPct: item.marginPct || undefined,
           })),
         },
+      },
+      include: {
+        items: true,
+        supplier: { select: { id: true, name: true } },
+        customer: { select: { id: true, name: true } },
+      },
+    });
+
+    // Update product pricing (price + taxRate) for items with salePrice
+    for (const item of items) {
+      if (item.productId && item.salePrice && item.salePrice > 0) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            price: item.salePrice,
+            taxRate: item.taxRatePct || undefined,
+          },
+        });
+      }
+    }
       },
       include: {
         items: true,
