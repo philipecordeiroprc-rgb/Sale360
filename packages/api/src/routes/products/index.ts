@@ -53,7 +53,37 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
       prisma.product.count({ where }),
     ]);
 
-    return { products, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
+    // Calculate realized margin from completed orders
+    const productIds = products.map(p => p.id);
+    let margins: Record<string, number> = {};
+    if (productIds.length > 0) {
+      const rows = await prisma.$queryRawUnsafe<{ productId: string; avgMargin: number }[]>(
+        `SELECT oi."productId",
+          AVG(
+            (oi."unitPrice" - COALESCE(oi."costPrice", 0) - (oi."unitPrice" * COALESCE(oi."taxRate", 0) / 100.0) - COALESCE(p."operationalCost", 0))
+            / NULLIF(oi."unitPrice", 0) * 100
+          ) as "avgMargin"
+        FROM "order_items" oi
+        JOIN "orders" o ON o.id = oi."orderId"
+        JOIN "products" p ON p.id = oi."productId"
+        WHERE oi."productId" = ANY($1::text[])
+          AND o.status = 'COMPLETED'
+          AND o."tenantId" = $2
+        GROUP BY oi."productId"`,
+        productIds,
+        request.tenantId,
+      );
+      for (const r of rows) {
+        margins[r.productId] = Number(r.avgMargin);
+      }
+    }
+
+    const productsWithMargin = products.map(p => ({
+      ...p,
+      avgMargin: margins[p.id] ?? null,
+    }));
+
+    return { products: productsWithMargin, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
   });
 
   // Get single product
