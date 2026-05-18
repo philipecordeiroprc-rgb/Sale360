@@ -109,7 +109,13 @@ if [ "$(changed_files "$ROOT/apps/web/package.json" "web-pkg")" != "" ]; then
   NEED_INSTALL=true
 fi
 
-log "API: ${CHANGED_API:-false} | Web: ${CHANGED_WEB:-false} | DB: ${CHANGED_DB:-false} | Install: ${NEED_INSTALL:-false}"
+# Check nginx config changes
+CHANGED_NGINX=false
+if [ "$(changed_files "$ROOT/nginx-sale360.conf" "nginx")" != "" ]; then
+  CHANGED_NGINX=true
+fi
+
+log "API: ${CHANGED_API:-false} | Web: ${CHANGED_WEB:-false} | DB: ${CHANGED_DB:-false} | Nginx: $CHANGED_NGINX | Install: ${NEED_INSTALL:-false}"
 
 if [ "$CHECK_ONLY" = true ]; then
   exit 0
