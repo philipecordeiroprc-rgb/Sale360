@@ -56,10 +56,16 @@ export function Sidebar() {
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-30">
-      {/* Logo */}
+      {/* Logo + Store Name */}
       <div className="p-6 border-b border-slate-800">
         <h1 className="text-2xl font-black text-indigo-400 tracking-tight">SALE360</h1>
-        <p className="text-xs text-slate-400 mt-1">PDV Inteligente</p>
+        {tenant?.companyName ? (
+          <p className="text-sm text-white font-medium mt-1 truncate" title={tenant.companyName}>
+            {tenant.companyName}
+          </p>
+        ) : (
+          <p className="text-xs text-slate-400 mt-1">PDV Inteligente</p>
+        )}
       </div>
 
       {/* Nav */}
