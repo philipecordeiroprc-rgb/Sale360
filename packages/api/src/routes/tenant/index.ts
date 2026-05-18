@@ -36,7 +36,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
 
     if (!tenant) return { error: 'Not found' };
 
-    const baseFeatures: Record<string, { maxUsers: number; maxDevices: number } | boolean> = {
+    const baseFeatures: Record<string, Record<string, any>> = {
       PRO: {
         maxUsers: 1,
         maxDevices: 1,
