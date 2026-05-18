@@ -433,6 +433,7 @@ model Order {
   deviceId      String?
   userId        String?   // vendedor
   customerId    String?
+  customerName  String?   // nome avulso (quando cliente não é cadastrado)
   orderNumber   Int       // sequencial por tenant
   localId       String?   // ID local do dispositivo offline
   status        OrderStatus @default(COMPLETED)
