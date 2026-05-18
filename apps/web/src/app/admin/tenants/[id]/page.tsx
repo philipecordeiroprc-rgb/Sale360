@@ -191,13 +191,7 @@ export default function TenantDetailPage() {
     }
     if (!resetModal) return;
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}/users/${resetModal.userId}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ password: newPassword }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      await api.admin.tenants.users.resetPassword(id, resetModal.userId, newPassword);
       show('Senha redefinida!');
       setResetModal(null);
     } catch (err: any) {
