@@ -229,13 +229,7 @@ export default function TenantDetailPage() {
   const handleFeaturesSave = async () => {
     setFeaturesSaving(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}/features`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ overrides }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      await api.admin.tenants.features.update(id, overrides);
       show('Módulos atualizados!');
       loadFeatures();
     } catch (err: any) {
