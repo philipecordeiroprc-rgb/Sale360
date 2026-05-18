@@ -59,7 +59,7 @@ function spawnWatch() {
   const child = spawn('npx', ['tsx', 'watch', 'src/index.ts'], {
     stdio: 'inherit',
     shell: true,
-    cwd: repoRoot,
+    cwd: apiRoot,
     env: { ...process.env, FORCE_COLOR: '1' },
   });
 
