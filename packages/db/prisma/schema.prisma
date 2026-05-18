@@ -260,6 +260,9 @@ model PurchaseItem {
   quantity    Decimal @db.Decimal(10, 3)
   unitCost    Decimal @db.Decimal(10, 2) // custo unitário DESTA compra
   total       Decimal @db.Decimal(10, 2) // quantity * unitCost
+  salePrice   Decimal? @db.Decimal(10, 2) // preço de venda sugerido
+  taxRatePct  Decimal? @db.Decimal(5, 2)  // taxa cartão (%)
+  marginPct   Decimal? @db.Decimal(5, 2)  // margem de lucro (%)
 
   purchase  Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   product   Product?          @relation(fields: [productId], references: [id])
