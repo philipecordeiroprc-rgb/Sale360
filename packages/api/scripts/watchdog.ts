@@ -36,9 +36,17 @@ function runPredev() {
       console.error('[watchdog] DLL locked by running process — killing stale node processes...');
       try {
         if (process.platform === 'win32') {
-          execSync('taskkill //F //IM node.exe 2>nul', { stdio: 'ignore' });
+          // Find and kill only the process on port 3001
+          const { stdout } = require('child_process').execSync(
+            'netstat -ano | findstr ":3001" | findstr LISTENING',
+            { stdio: 'pipe' }
+          );
+          const pid = String(stdout).trim().split(/\s+/).pop();
+          if (pid && /^\d+$/.test(pid)) {
+            execSync(`taskkill //F //PID ${pid}`, { stdio: 'ignore' });
+          }
         } else {
-          execSync('pkill -f "tsx watch" 2>/dev/null || true', { stdio: 'ignore' });
+          execSync('pkill -f "tsx watch.*src/index.ts" 2>/dev/null || true', { stdio: 'ignore' });
         }
         // Retry after killing
         setTimeout(() => {
