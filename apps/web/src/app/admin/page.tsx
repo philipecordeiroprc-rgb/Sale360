@@ -40,6 +40,7 @@ const STATUSES: Plan[] = [
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
