@@ -454,6 +454,7 @@ model OrderItem {
   total       Decimal @db.Decimal(10, 2)
   costPrice   Decimal? @db.Decimal(10, 2) // custo unitário na venda (PEPS)
   totalCost   Decimal? @db.Decimal(10, 2) // quantity * costPrice (CMV)
+  taxRate     Decimal? @db.Decimal(5, 2)  // taxa cartão (%) no momento da venda
 
   variationId String?
 
