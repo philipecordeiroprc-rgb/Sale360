@@ -610,18 +610,16 @@ export default function ProductsPage() {
                           >
                             <DollarSign size={15} className="text-slate-400 hover:text-emerald-400" />
                           </button>
-                          {hasVariations && (
-                            <button
-                              onClick={() => setStockProduct(product)}
-                              className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
-                              title="Ver estoque por variação"
-                            >
-                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hover:text-white">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                              </svg>
-                            </button>
-                          )}
+                          <button
+                            onClick={() => setStockProduct(product)}
+                            className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Estoque mínimo e variações"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400 hover:text-amber-400">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                              <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                          </button>
                           <button
                             onClick={() => handleEdit(product)}
                             className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
