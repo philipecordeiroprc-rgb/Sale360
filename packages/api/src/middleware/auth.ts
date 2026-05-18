@@ -7,7 +7,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'; // 7 days for offline
 
 export interface JwtPayload {
   userId: string;
-  tenantId: string;
+  tenantId?: string;
   deviceId?: string;
   role: string;
 }
