@@ -129,6 +129,8 @@ export default function ProductsPage() {
       sku: product.sku || '',
       barcode: product.barcode || '',
       categoryId: product.categoryId || '',
+      lowStockAt: product.lowStockAt != null ? String(product.lowStockAt) : '',
+      price: product.price != null ? String(product.price) : '',
     });
     setFormError('');
     setFormOpen(true);
