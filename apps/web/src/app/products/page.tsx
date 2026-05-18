@@ -546,16 +546,15 @@ export default function ProductsPage() {
                         })()}
                       </td>
 
-                      {/* Margin */}
+                      {/* Margin (realizada nas vendas) */}
                       <td className="px-4 py-3 text-right hidden xl:table-cell">
                         {(() => {
-                          const cost = Number(product.costPrice || 0);
-                          if (cost > 0 && price > 0) {
-                            const margin = ((price - cost) / cost * 100);
-                            const positive = margin >= 0;
+                          const avgMargin = (product as any).avgMargin;
+                          if (avgMargin != null) {
+                            const positive = avgMargin >= 0;
                             return (
                               <span className={`text-sm font-semibold ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
-                                {positive ? '+' : ''}{margin.toFixed(0)}%
+                                {positive ? '+' : ''}{avgMargin.toFixed(0)}%
                               </span>
                             );
                           }
