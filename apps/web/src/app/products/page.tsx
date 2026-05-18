@@ -525,6 +525,22 @@ export default function ProductsPage() {
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-0.5">
+                          <button
+                            onClick={async () => {
+                              setCostProduct(product);
+                              setCostData(null);
+                              setCostLoading(true);
+                              try {
+                                const data = await api.inventory.batchesByProduct(product.id);
+                                setCostData(data);
+                              } catch { setCostData({ error: true }); }
+                              setCostLoading(false);
+                            }}
+                            className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Histórico de custos"
+                          >
+                            <DollarSign size={15} className="text-slate-400 hover:text-emerald-400" />
+                          </button>
                           {hasVariations && (
                             <button
                               onClick={() => setStockProduct(product)}
