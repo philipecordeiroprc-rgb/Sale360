@@ -25,6 +25,8 @@ const createOrderSchema = z.object({
   notes: z.string().optional(),
   localId: z.string().optional(),
   createdAtDevice: z.string().optional(),
+  couponId: z.string().optional(),
+  couponDiscount: z.number().optional(),
 });
 
 export const orderRoutes: FastifyPluginAsync = async (app) => {
