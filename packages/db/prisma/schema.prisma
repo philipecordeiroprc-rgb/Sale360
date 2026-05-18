@@ -702,3 +702,8 @@ enum MovementType {
   ADJUSTMENT_OUT
   TRANSFER
 }
+
+enum PlatformRole {
+  USER
+  SUPER_ADMIN
+}
