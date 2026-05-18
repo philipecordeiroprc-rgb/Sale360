@@ -126,12 +126,18 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         let totalCost: number | undefined;
 
         if (item.productId) {
-          // Fetch product tax rate for historical record
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
+          // Tax rate from payment method config (product taxRate is for pricing reference only)
+          let taxRate: number | undefined;
+          const paymentConfig = await tx.paymentMethodConfig.findUnique({
+            where: {
+              tenantId_paymentMethod: {
+                tenantId: request.tenantId,
+                paymentMethod: orderData.paymentMethod,
+              },
+            },
             select: { taxRate: true },
           });
-          const taxRate = product?.taxRate ? Number(product.taxRate) : undefined;
+          taxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
 
           // FIFO: consume from oldest batches
           let remaining = item.quantity;
