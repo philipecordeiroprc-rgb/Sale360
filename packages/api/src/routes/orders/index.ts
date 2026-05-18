@@ -126,6 +126,13 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         let totalCost: number | undefined;
 
         if (item.productId) {
+          // Fetch product tax rate for historical record
+          const product = await tx.product.findUnique({
+            where: { id: item.productId },
+            select: { taxRate: true },
+          });
+          const taxRate = product?.taxRate ? Number(product.taxRate) : undefined;
+
           // FIFO: consume from oldest batches
           let remaining = item.quantity;
           let totalCostAcc = 0;
@@ -187,6 +194,18 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               costPrice: Math.round(costPrice * 100) / 100,
             },
           });
+
+          return {
+            productId: item.productId,
+            variationId: item.variationId || null,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            costPrice: costPrice ? Math.round(costPrice * 100) / 100 : undefined,
+            totalCost: totalCost ? Math.round(totalCost * 100) / 100 : undefined,
+            taxRate,
+          };
         }
 
         return {
@@ -196,8 +215,6 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           total: item.total,
-          costPrice: costPrice ? Math.round(costPrice * 100) / 100 : undefined,
-          totalCost: totalCost ? Math.round(totalCost * 100) / 100 : undefined,
         };
       }));
 
