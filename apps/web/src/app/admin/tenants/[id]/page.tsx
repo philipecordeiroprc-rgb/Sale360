@@ -143,23 +143,20 @@ export default function TenantDetailPage() {
     e.preventDefault();
     setUserSaving(true);
     try {
-      const token = getToken();
-      const url = editingUserId
-        ? `${API_URL}/api/admin/tenants/${id}/users/${editingUserId}`
-        : `${API_URL}/api/admin/tenants/${id}/users`;
-      const method = editingUserId ? 'PUT' : 'POST';
-
-      const body = editingUserId
-        ? { role: userForm.role, pin: userForm.pin || undefined }
-        : { email: userForm.email, name: userForm.name, password: userForm.password, role: userForm.role, pin: userForm.pin || undefined };
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) throw new Error((await res.json()).error || 'Erro ao salvar');
+      if (editingUserId) {
+        await api.admin.tenants.users.update(id, editingUserId, {
+          role: userForm.role,
+          pin: userForm.pin || undefined,
+        });
+      } else {
+        await api.admin.tenants.users.add(id, {
+          email: userForm.email,
+          name: userForm.name,
+          password: userForm.password,
+          role: userForm.role,
+          pin: userForm.pin || undefined,
+        });
+      }
 
       show(editingUserId ? 'Usuário atualizado!' : 'Usuário adicionado!');
       setShowUserModal(false);
