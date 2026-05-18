@@ -23,6 +23,36 @@ import { authMiddleware } from './middleware/auth.js';
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
 
+// ============================================================
+// Global error handlers — prevent process crashes
+// ============================================================
+
+process.on('uncaughtException', (err) => {
+  console.error('[UNCAUGHT EXCEPTION]', err);
+  // Keep the process alive — do NOT exit
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[UNHANDLED REJECTION]', reason);
+  // Keep the process alive — do NOT exit
+});
+
+// Graceful shutdown
+let shuttingDown = false;
+process.on('SIGTERM', async () => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log('[SHUTDOWN] SIGTERM received — closing server...');
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  console.log('[SHUTDOWN] SIGINT received — closing server...');
+  process.exit(0);
+});
+
 async function buildApp() {
   const app = Fastify({
     logger: {
@@ -36,8 +66,18 @@ async function buildApp() {
   await app.register(cors, { origin: true, credentials: true });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 
-  // Health check (no auth)
+  // Health check (no auth — for uptime monitoring)
   app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+
+  // Global error handler — catch all unhandled route errors
+  app.setErrorHandler((error, _request, reply) => {
+    app.log.error(error);
+    const statusCode = error.statusCode || 500;
+    reply.status(statusCode).send({
+      error: statusCode === 500 ? 'Erro interno do servidor' : error.message,
+      statusCode,
+    });
+  });
 
   // Public routes (no auth required)
   await app.register(authRoutes, { prefix: '/api/auth' });
