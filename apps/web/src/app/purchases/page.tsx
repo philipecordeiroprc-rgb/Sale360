@@ -333,7 +333,9 @@ export default function PurchasesPage() {
       setFormOpen(false);
       loadPurchases();
     } catch (err: any) {
-      show(err.message || 'Erro ao criar compra', 'error');
+      console.error('handleCreate error:', err);
+      const msg = err?.message || err?.error || 'Erro ao criar compra';
+      show(msg, 'error');
     } finally {
       setSaving(false);
     }
