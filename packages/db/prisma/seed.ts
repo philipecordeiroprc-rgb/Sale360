@@ -34,6 +34,18 @@ async function main() {
     },
   });
 
+  // Create SUPER_ADMIN (platform-level)
+  const superAdmin = await prisma.user.upsert({
+    where: { email: 'super@sale360.app' },
+    update: {},
+    create: {
+      email: 'super@sale360.app',
+      name: 'Super Admin',
+      password: '$2b$10$W19Ukgb092gf/xoZa83B9.bcRLR1b3eEGHXNls4o3DZEhZLcMoZ0i', // admin123
+      role: PlatformRole.SUPER_ADMIN,
+    },
+  });
+
   // Create demo user
   const user = await prisma.user.upsert({
     where: { email: 'admin@sale360.app' },
