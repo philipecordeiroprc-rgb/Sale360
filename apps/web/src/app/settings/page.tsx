@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Settings, Percent, Save, Loader2 } from 'lucide-react';
+import { Percent, Save, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import api from '@/lib/api';
+
+const DEFAULT_CONFIGS = [
+  { paymentMethod: 'cash', label: 'Dinheiro', taxRate: 0 },
+  { paymentMethod: 'pix', label: 'Pix', taxRate: 0 },
+  { paymentMethod: 'debit', label: 'Debito', taxRate: 1.5 },
+  { paymentMethod: 'credit', label: 'Credito', taxRate: 4.5 },
+  { paymentMethod: 'credit_store', label: 'Fiado', taxRate: 4.5 },
+];
 
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -14,8 +22,9 @@ function useToast() {
 }
 
 export default function SettingsPage() {
-  const [configs, setConfigs] = useState<{ paymentMethod: string; label: string; taxRate: number }[]>([]);
+  const [configs, setConfigs] = useState(DEFAULT_CONFIGS);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const { toast, show } = useToast();
 
@@ -25,11 +34,13 @@ export default function SettingsPage() {
 
   const loadConfigs = async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await api.paymentConfigs.list();
       setConfigs(data);
     } catch (err: any) {
-      show(err.message || 'Erro ao carregar configurações', 'error');
+      console.error('Erro ao carregar taxas:', err);
+      setError(err.message || 'Erro ao carregar configuracoes');
     } finally {
       setLoading(false);
     }
@@ -43,7 +54,7 @@ export default function SettingsPage() {
         taxRate: c.taxRate,
       }));
       await api.paymentConfigs.update(payload);
-      show('Configurações salvas!');
+      show('Configuracoes salvas!');
     } catch (err: any) {
       show(err.message || 'Erro ao salvar', 'error');
     } finally {
@@ -89,6 +100,18 @@ export default function SettingsPage() {
           </div>
         ) : (
           <>
+            {error && (
+              <div className="mx-5 mt-4 flex items-center gap-2 px-4 py-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+                <AlertCircle size={16} className="text-amber-400 flex-shrink-0" />
+                <p className="text-amber-400 text-sm flex-1">
+                  Usando valores padrao. Erro ao carregar do servidor: {error}
+                </p>
+                <button onClick={loadConfigs} className="text-amber-400 hover:text-amber-300 flex-shrink-0">
+                  <RefreshCw size={16} />
+                </button>
+              </div>
+            )}
+
             <div className="p-5 space-y-4">
               {configs.map((config) => (
                 <div key={config.paymentMethod} className="flex items-center gap-4">
