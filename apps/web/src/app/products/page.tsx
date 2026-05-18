@@ -15,6 +15,8 @@ interface FormData {
   sku: string;
   barcode: string;
   categoryId: string;
+  lowStockAt: string;
+  price: string;
 }
 
 const emptyForm: FormData = {
@@ -23,6 +25,8 @@ const emptyForm: FormData = {
   sku: '',
   barcode: '',
   categoryId: '',
+  lowStockAt: '',
+  price: '',
 };
 
 function useToast() {
