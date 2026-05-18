@@ -323,6 +323,22 @@ model InventoryMovement {
 }
 
 // ============================================================
+// CONFIGURAÇÕES
+// ============================================================
+
+model PaymentMethodConfig {
+  id            String @id @default(cuid())
+  tenantId      String
+  paymentMethod String // "cash", "pix", "debit", "credit", "credit_store"
+  taxRate       Decimal @db.Decimal(5, 2) // taxa % (0 para dinheiro/Pix)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, paymentMethod])
+  @@map("payment_method_configs")
+}
+
+// ============================================================
 // CLIENTES & FIDELIZAÇÃO
 // ============================================================
 
