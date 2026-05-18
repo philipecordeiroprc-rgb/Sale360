@@ -364,7 +364,16 @@ export default function OrdersPage() {
                 {orders.map((o: any) => (
                   <tr key={o.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
                     <td className="px-4 py-3 text-indigo-400 font-mono text-sm font-semibold">#{o.orderNumber}</td>
-                    <td className="px-4 py-3 text-white text-sm">{o.customer?.name || '—'}</td>
+                    <td className="px-4 py-3 text-white text-sm">
+                        {o.customer?.name || o.customerName ? (
+                          <span>
+                            {o.customer?.name || o.customerName}
+                            {!o.customer?.id && o.customerName && (
+                              <span className="ml-1.5 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Avulso</span>
+                            )}
+                          </span>
+                        ) : '—'}
+                      </td>
                     <td className="px-4 py-3 text-center text-slate-400 text-sm hidden md:table-cell">{o.items?.length || 0}</td>
                     <td className="px-4 py-3 text-right text-slate-400 hidden sm:table-cell">R$ {Number(o.subtotal).toFixed(2)}</td>
                     <td className="px-4 py-3 text-right text-red-400 hidden sm:table-cell">{Number(o.discount) > 0 ? `R$ ${Number(o.discount).toFixed(2)}` : '—'}</td>
