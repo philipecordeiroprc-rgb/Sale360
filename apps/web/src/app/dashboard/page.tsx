@@ -128,7 +128,16 @@ export default function DashboardPage() {
                     <td className="p-4">
                       <span className="text-indigo-400 font-mono text-sm">#{o.orderNumber}</span>
                     </td>
-                    <td className="p-4 text-white text-sm">{o.customer?.name || '—'}</td>
+                    <td className="p-4 text-white text-sm">
+                        {o.customer?.name || o.customerName ? (
+                          <span>
+                            {o.customer?.name || o.customerName}
+                            {!o.customer?.id && o.customerName && (
+                              <span className="ml-1.5 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Avulso</span>
+                            )}
+                          </span>
+                        ) : '—'}
+                      </td>
                     <td className="p-4 text-center text-slate-400 text-sm">{o.items?.length || 0}</td>
                     <td className="p-4 text-right text-white font-semibold text-sm">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="p-4 text-center">
