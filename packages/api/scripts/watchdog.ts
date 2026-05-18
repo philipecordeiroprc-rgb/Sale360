@@ -17,10 +17,10 @@ process.on('SIGTERM', () => { shuttingDown = true; });
 process.on('SIGINT', () => { shuttingDown = true; });
 
 function runPredev() {
+  // Run from monorepo root so pnpm --filter resolves correctly
+  const repoRoot = new URL('../../..', import.meta.url).pathname;
   try {
     console.log('[watchdog] Running prisma generate...');
-    // Run from monorepo root so pnpm --filter resolves correctly
-    const repoRoot = new URL('../../..', import.meta.url).pathname;
     execSync('pnpm --filter @sale360/db db:generate', {
       stdio: 'inherit',
       cwd: repoRoot,
