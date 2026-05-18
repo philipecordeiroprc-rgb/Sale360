@@ -217,7 +217,8 @@ async function main() {
   console.log('Seed completed!');
   console.log(`  Tenant: demo (${tenant.id})`);
   console.log(`  Templates: ${templates.length} criados`);
-  console.log('  User: admin@sale360.app / admin123');
+  console.log('  User: admin@sale360.app / admin123 (ADMIN loja)');
+  console.log('  Super Admin: super@sale360.app / admin123 (plataforma)');
 }
 
 main()
