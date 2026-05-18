@@ -549,7 +549,7 @@ export default function ProductsPage() {
                       {/* Margin (realizada nas vendas) */}
                       <td className="px-4 py-3 text-right hidden xl:table-cell">
                         {(() => {
-                          const avgMargin = (product as any).avgMargin;
+                          const avgMargin = product.avgMargin;
                           if (avgMargin != null) {
                             const positive = avgMargin >= 0;
                             return (
