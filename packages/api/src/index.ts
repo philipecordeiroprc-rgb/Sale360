@@ -118,15 +118,31 @@ async function buildApp() {
   return app;
 }
 
-// Start
-const app = await buildApp();
+// Start with retry (handles port-in-use, DB not ready, etc.)
+async function start() {
+  const app = await buildApp();
 
-try {
-  await app.listen({ port: PORT, host: HOST });
-  console.log(`🚀 Sale360 API running on http://localhost:${PORT}`);
-} catch (err) {
-  app.log.error(err);
-  process.exit(1);
+  const maxRetries = 5;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await app.listen({ port: PORT, host: HOST });
+      console.log(`🚀 Sale360 API running on http://localhost:${PORT}`);
+      return;
+    } catch (err: any) {
+      if (err.code === 'EADDRINUSE' && attempt < maxRetries) {
+        console.error(`[STARTUP] Port ${PORT} in use — retrying (${attempt}/${maxRetries})...`);
+        await new Promise(r => setTimeout(r, 2000));
+        continue;
+      }
+      app.log.error(err);
+      if (attempt === maxRetries) {
+        console.error('[STARTUP] Failed to start after retries. Exiting.');
+        process.exit(1);
+      }
+    }
+  }
 }
+
+start();
 
 export { buildApp };
