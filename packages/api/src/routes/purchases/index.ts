@@ -10,6 +10,7 @@ const purchaseItemSchema = z.object({
   unitCost: z.number().min(0, 'Custo unitário não pode ser negativo'),
   total: z.number(),
   salePrice: z.number().optional(),
+  operationalCost: z.number().optional(),
   taxRatePct: z.number().optional(),
   marginPct: z.number().optional(),
 });
