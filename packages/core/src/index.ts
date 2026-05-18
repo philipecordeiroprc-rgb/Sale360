@@ -163,8 +163,8 @@ export const PERMISSIONS = {
 export function hasPermission(role: string, permission: string): boolean {
   const perms = PERMISSIONS[role as keyof typeof PERMISSIONS];
   if (!perms) return false;
-  if (perms.includes('*')) return true;
-  return perms.some(p => {
+  if ((perms as readonly string[]).includes('*')) return true;
+  return (perms as readonly string[]).some(p => {
     if (p.endsWith('.*')) return permission.startsWith(p.slice(0, -1));
     return p === permission;
   });
