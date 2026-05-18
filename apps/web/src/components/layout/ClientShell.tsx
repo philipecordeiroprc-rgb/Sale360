@@ -17,13 +17,14 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
 
   // Auth pages — no sidebar, full width
   if (isAuthPage) {
-    return <>{children}</>;
+    return <><PageTitle />{children}</>;
   }
 
   // Admin pages — no sidebar, full width
   if (isAdminRoute && isSuperAdmin) {
     return (
       <main className="min-h-screen bg-slate-950">
+        <PageTitle />
         {children}
       </main>
     );
@@ -34,6 +35,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     <div className="flex">
       <Sidebar />
       <main className="ml-64 flex-1 p-8 min-h-screen">
+        <PageTitle />
         {children}
       </main>
     </div>
