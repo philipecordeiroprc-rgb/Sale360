@@ -484,6 +484,35 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
+                      {/* Average Cost */}
+                      <td className="px-4 py-3 text-right">
+                        {(() => {
+                          const cost = Number(product.costPrice || 0);
+                          return cost > 0 ? (
+                            <span className="text-slate-300 font-mono text-sm">R$ {cost.toFixed(2)}</span>
+                          ) : (
+                            <span className="text-slate-600 text-xs">—</span>
+                          );
+                        })()}
+                      </td>
+
+                      {/* Margin */}
+                      <td className="px-4 py-3 text-right hidden xl:table-cell">
+                        {(() => {
+                          const cost = Number(product.costPrice || 0);
+                          if (cost > 0 && price > 0) {
+                            const margin = ((price - cost) / cost * 100);
+                            const positive = margin >= 0;
+                            return (
+                              <span className={`text-sm font-semibold ${positive ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {positive ? '+' : ''}{margin.toFixed(0)}%
+                              </span>
+                            );
+                          }
+                          return <span className="text-slate-600 text-xs">—</span>;
+                        })()}
+                      </td>
+
                       {/* Stock */}
                       <td className="px-4 py-3">
                         <span className={`text-sm font-semibold ${
