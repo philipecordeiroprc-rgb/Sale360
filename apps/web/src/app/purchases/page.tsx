@@ -680,6 +680,13 @@ export default function PurchasesPage() {
                     <div className="flex items-center gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{item.productName}</p>
+                        {item.salePrice > 0 && (
+                          <p className="text-xs text-slate-400">
+                            Venda: R$ {item.salePrice.toFixed(2)}
+                            {item.taxRatePct > 0 && <span className="ml-2 text-slate-500">Tx: {item.taxRatePct}%</span>}
+                            {item.marginPct > 0 && <span className="ml-2 text-slate-500">Mg: {item.marginPct}%</span>}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right flex-shrink-0">
                         <p className="text-sm text-white font-medium">{item.quantity}</p>
