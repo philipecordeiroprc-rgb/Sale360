@@ -79,26 +79,11 @@ export default function AdminPage() {
     setError('');
 
     try {
-      const token = getToken();
-      const url = editingId
-        ? `${API_URL}/api/admin/tenants/${editingId}`
-        : `${API_URL}/api/admin/tenants`;
-      const method = editingId ? 'PATCH' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Erro ao salvar');
+      if (editingId) {
+        await api.admin.tenants.update(editingId, form);
+      } else {
+        await api.admin.tenants.create(form);
       }
-
       setShowModal(false);
       fetchTenants();
     } catch (err: any) {
