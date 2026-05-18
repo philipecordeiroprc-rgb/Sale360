@@ -89,9 +89,9 @@ export async function authMiddleware(
 }
 
 export function generateToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as any);
 }
 
 export function generateRefreshToken(userId: string): string {
-  return jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' } as any);
 }
