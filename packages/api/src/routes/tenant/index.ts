@@ -97,15 +97,190 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // ============================================================
   // Users management
+  // ============================================================
+
+  // List users in tenant
   app.get('/users', async (request) => {
     const users = await prisma.tenantUser.findMany({
       where: { tenantId: request.tenantId },
       include: {
         user: { select: { id: true, name: true, email: true } },
       },
+      orderBy: { createdAt: 'asc' },
     });
     return users;
+  });
+
+  // Add user to tenant
+  app.post('/users', async (request, reply) => {
+    const schema = z.object({
+      email: z.string().email(),
+      name: z.string().min(1, 'Nome é obrigatório'),
+      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
+      pin: z.string().length(4).optional(),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    // Check plan user limit
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: request.tenantId },
+      select: { plan: true },
+    });
+
+    const userCount = await prisma.tenantUser.count({ where: { tenantId: request.tenantId } });
+
+    const limits: Record<string, number> = { PRO: 1, GROW: 10, PRIME: Infinity };
+    if (userCount >= (limits[tenant!.plan] || 1)) {
+      return reply.status(400).send({
+        error: `Limite de usuários atingido para o plano ${tenant!.plan}. Faça upgrade para adicionar mais usuários.`,
+      });
+    }
+
+    // Find or create user
+    let user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+
+    if (user) {
+      // Check if already in this tenant
+      const alreadyLinked = await prisma.tenantUser.findUnique({
+        where: { tenantId_userId: { tenantId: request.tenantId, userId: user.id } },
+      });
+      if (alreadyLinked) {
+        return reply.status(400).send({ error: 'Usuário já está vinculado a esta loja.' });
+      }
+    } else {
+      const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
+      user = await prisma.user.create({
+        data: {
+          email: parsed.data.email,
+          name: parsed.data.name,
+          password: hashedPassword,
+        },
+      });
+    }
+
+    const tenantUser = await prisma.tenantUser.create({
+      data: {
+        tenantId: request.tenantId,
+        userId: user.id,
+        role: parsed.data.role as any,
+        pin: parsed.data.pin || '',
+      },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    return reply.status(201).send(tenantUser);
+  });
+
+  // Update user role/pin in tenant
+  app.put('/users/:userId', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+    const schema = z.object({
+      role: z.enum(['OWNER', 'CASHIER']).optional(),
+      pin: z.string().length(4).optional(),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos' });
+    }
+
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId: request.tenantId, userId } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    const updated = await prisma.tenantUser.update({
+      where: { id: tenantUser.id },
+      data: parsed.data,
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+
+    return updated;
+  });
+
+  // Remove user from tenant
+  app.delete('/users/:userId', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId: request.tenantId, userId } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    await prisma.tenantUser.delete({ where: { id: tenantUser.id } });
+    return { success: true };
+  });
+
+  // Reset user password (ADMIN only)
+  app.post('/users/:userId/reset-password', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+    const schema = z.object({ password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres') });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos' });
+    }
+
+    // Verify user belongs to this tenant
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId: request.tenantId, userId } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
+    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+
+    return { message: 'Senha redefinida com sucesso.' };
+  });
+
+  // ============================================================
+  // Current user profile
+  // ============================================================
+
+  // Get current user profile
+  app.get('/me/profile', async (request) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { id: true, name: true, email: true, avatarUrl: true, role: true },
+    });
+
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId: request.tenantId, userId: request.userId } },
+      select: { role: true, pin: true },
+    });
+
+    return { ...user, storeRole: tenantUser?.role, pin: tenantUser?.pin };
+  });
+
+  // Change own password
+  app.post('/me/change-password', async (request, reply) => {
+    const schema = z.object({
+      currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
+      newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: request.userId } });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+    const valid = await bcrypt.compare(parsed.data.currentPassword, user.password);
+    if (!valid) {
+      return reply.status(400).send({ error: 'Senha atual incorreta.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+    await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+
+    return { message: 'Senha alterada com sucesso.' };
   });
 
   // Devices list
