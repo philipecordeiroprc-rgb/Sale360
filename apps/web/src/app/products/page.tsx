@@ -145,13 +145,15 @@ export default function ProductsPage() {
 
     try {
       setSaving(true);
-      const payload = {
+      const payload: any = {
         name: formData.name.trim(),
         description: formData.description.trim() || undefined,
         barcode: formData.barcode.trim() || undefined,
         sku: formData.sku.trim() || undefined,
         categoryId: formData.categoryId || undefined,
       };
+      if (formData.price) payload.price = parseFloat(formData.price);
+      if (formData.lowStockAt) payload.lowStockAt = parseFloat(formData.lowStockAt);
 
       if (editingProduct) {
         await api.products.update(editingProduct.id, payload);
