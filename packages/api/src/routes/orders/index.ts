@@ -122,6 +122,48 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
+    // Validate coupon if provided
+    let validatedCoupon: any = null;
+    if (orderData.couponId) {
+      const coupon = await prisma.coupon.findFirst({
+        where: { id: orderData.couponId, tenantId: request.tenantId, active: true },
+        include: { products: true, categories: true },
+      });
+      if (!coupon) {
+        return reply.status(400).send({ valid: false, error: 'Cupom não encontrado ou inativo' });
+      }
+      // Check date validity
+      const now = new Date();
+      if (coupon.validFrom && now < coupon.validFrom) {
+        return reply.status(400).send({ valid: false, error: 'Cupom ainda não está válido' });
+      }
+      if (coupon.validUntil && now > coupon.validUntil) {
+        return reply.status(400).send({ valid: false, error: 'Cupom expirado' });
+      }
+      // Check usage limit
+      if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
+        return reply.status(400).send({ valid: false, error: 'Limite de uso do cupom atingido' });
+      }
+      // Check min order value
+      if (coupon.minOrderValue && orderData.subtotal < Number(coupon.minOrderValue)) {
+        return reply.status(400).send({
+          valid: false,
+          error: `Pedido mínimo de R$ ${Number(coupon.minOrderValue).toFixed(2)} para usar este cupom`,
+        });
+      }
+      // Check product/category restrictions
+      const productIds = items.map((i) => i.productId).filter(Boolean) as string[];
+      if (coupon.products.length > 0 && productIds.length > 0) {
+        const couponProductIds = new Set(coupon.products.map((p: any) => p.productId));
+        const hasEligible = productIds.some((pid) => couponProductIds.has(pid));
+        if (!hasEligible) {
+          return reply.status(400).send({ valid: false, error: 'Este cupom não se aplica aos produtos do pedido' });
+        }
+      }
+      // Category check would need categoryIds from product lookup — skip for now (PDV doesn't send them)
+      validatedCoupon = coupon;
+    }
+
     const order = await prisma.$transaction(async (tx) => {
       // Create order with items (costPrice/totalCost filled after FIFO calc)
       const itemsData = await Promise.all(items.map(async (item) => {
