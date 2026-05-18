@@ -139,6 +139,7 @@ model Product {
   purchaseItems PurchaseItem[]
   batches      InventoryBatch[]
   movements    InventoryMovement[]
+  couponProducts CouponProduct[]
 
   @@index([tenantId, active])
   @@index([tenantId, barcode])
