@@ -393,11 +393,61 @@ export default function ProductsPage() {
                       <td className="px-4 py-3">
                         <div className="relative group w-10 h-10">
                           {product.imageUrl ? (
-                            <img
-                              src={product.imageUrl}
-                              alt={product.name}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
+                            <>
+                              <img
+                                src={product.imageUrl}
+                                alt={product.name}
+                                className="w-10 h-10 rounded-lg object-cover"
+                              />
+                              {/* Hover overlay */}
+                              <div className="absolute inset-0 bg-black/60 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-0.5">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = async (ev: any) => {
+                                      const file = ev.target.files?.[0];
+                                      if (!file) return;
+                                      const reader = new FileReader();
+                                      reader.onload = async () => {
+                                        try {
+                                          await api.products.update(product.id, { imageUrl: reader.result as string });
+                                          show('Foto atualizada!');
+                                          await loadProducts();
+                                        } catch { show('Erro ao salvar foto', 'error'); }
+                                      };
+                                      reader.readAsDataURL(file);
+                                    };
+                                    input.click();
+                                  }}
+                                  className="p-0.5 hover:bg-white/20 rounded transition-colors"
+                                  title="Alterar foto"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (!confirm('Remover foto do produto?')) return;
+                                    try {
+                                      await api.products.update(product.id, { imageUrl: null as any });
+                                      show('Foto removida!');
+                                      await loadProducts();
+                                    } catch { show('Erro ao remover foto', 'error'); }
+                                  }}
+                                  className="p-0.5 hover:bg-red-500/50 rounded transition-colors"
+                                  title="Remover foto"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                                  </svg>
+                                </button>
+                              </div>
+                            </>
                           ) : (
                             <button
                               onClick={() => {
