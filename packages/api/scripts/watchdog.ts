@@ -20,7 +20,8 @@ process.on('SIGINT', () => { shuttingDown = true; });
 
 function runPredev() {
   // Run from monorepo root so pnpm --filter resolves correctly
-  const repoRoot = new URL('../../..', import.meta.url).pathname;
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const repoRoot = path.resolve(__dirname, '..', '..', '..');
   try {
     console.log('[watchdog] Running prisma generate...');
     execSync('pnpm --filter @sale360/db db:generate', {
