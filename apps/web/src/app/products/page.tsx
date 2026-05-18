@@ -56,6 +56,9 @@ export default function ProductsPage() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
+  const [costProduct, setCostProduct] = useState<Product | null>(null);
+  const [costData, setCostData] = useState<any>(null);
+  const [costLoading, setCostLoading] = useState(false);
 
   const { toast, show } = useToast();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
