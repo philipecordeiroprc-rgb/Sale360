@@ -265,6 +265,18 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
               >
                 Definir estoque...
               </button>
+              {!purchaseMode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const qty = parseInt(prompt('Estoque mínimo para todas as variações:') || '0') || 0;
+                    setAllLowStock(qty);
+                  }}
+                  className="text-xs text-slate-500 hover:text-amber-400 transition-colors"
+                >
+                  Definir estoque mínimo...
+                </button>
+              )}
             </div>
           </div>
 
