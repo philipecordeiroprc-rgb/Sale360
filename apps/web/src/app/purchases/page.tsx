@@ -215,6 +215,7 @@ export default function PurchasesPage() {
       });
     } else {
       // Simple product, no variations
+      setTemplateDims([]);
       setCurrentItem({
         productId: p.id,
         productName: p.name,
