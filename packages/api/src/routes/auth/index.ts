@@ -172,6 +172,72 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // Forgot password
+  app.post('/forgot-password', async (request, reply) => {
+    const schema = z.object({ email: z.string().email() });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Email inválido' });
+    }
+
+    const { email } = parsed.data;
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    // Always return success to avoid email enumeration
+    if (!user) {
+      return { message: 'Se o email estiver cadastrado, você receberá um link de recuperação.' };
+    }
+
+    // Generate token (1 hour expiry)
+    const token = randomBytes(32).toString('hex');
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    await sendResetEmail(email, token, user.name);
+
+    return { message: 'Se o email estiver cadastrado, você receberá um link de recuperação.' };
+  });
+
+  // Reset password
+  app.post('/reset-password', async (request, reply) => {
+    const schema = z.object({
+      token: z.string().min(1),
+      password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos. A senha deve ter no mínimo 6 caracteres.' });
+    }
+
+    const { token, password } = parsed.data;
+
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+
+    if (!resetToken || resetToken.usedAt || resetToken.expiresAt < new Date()) {
+      return reply.status(400).send({ error: 'Token inválido ou expirado.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: resetToken.userId },
+        data: { password: hashedPassword },
+      }),
+      prisma.passwordResetToken.update({
+        where: { id: resetToken.id },
+        data: { usedAt: new Date() },
+      }),
+    ]);
+
+    return { message: 'Senha redefinida com sucesso.' };
+  });
+
   // Refresh token
   app.post('/refresh', async (request, reply) => {
     const schema = z.object({ refreshToken: z.string() });
