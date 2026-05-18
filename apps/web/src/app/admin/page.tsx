@@ -27,9 +27,10 @@ const PLANS: Plan[] = [
 ];
 
 const STATUSES: Plan[] = [
-  { label: 'Ativo', value: 'ACTIVE' },
-  { label: 'Inativo', value: 'INACTIVE' },
   { label: 'Trial', value: 'TRIAL' },
+  { label: 'Ativo', value: 'ACTIVE' },
+  { label: 'Suspenso', value: 'SUSPENDED' },
+  { label: 'Cancelado', value: 'CANCELLED' },
 ];
 
 export default function AdminPage() {
