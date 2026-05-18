@@ -29,7 +29,29 @@ function runPredev() {
       stdio: 'inherit',
       cwd: repoRoot,
     });
-  } catch {
+  } catch (err) {
+    const msg = (err as any)?.stderr || (err as any)?.message || String(err);
+    // EPERM on Windows: DLL locked by a running Node.js process — kill stale processes first
+    if (msg.includes('EPERM') || msg.includes('operation not permitted')) {
+      console.error('[watchdog] DLL locked by running process — killing stale node processes...');
+      try {
+        if (process.platform === 'win32') {
+          execSync('taskkill //F //IM node.exe 2>nul', { stdio: 'ignore' });
+        } else {
+          execSync('pkill -f "tsx watch" 2>/dev/null || true', { stdio: 'ignore' });
+        }
+        // Retry after killing
+        setTimeout(() => {
+          try {
+            console.log('[watchdog] Retrying prisma generate...');
+            execSync('pnpm --filter @sale360/db db:generate', { stdio: 'inherit', cwd: repoRoot });
+          } catch {
+            console.error('[watchdog] prisma generate failed again — continuing anyway');
+          }
+        }, 2000);
+        return;
+      } catch { /* best-effort */ }
+    }
     console.error('[watchdog] prisma generate failed — retrying in 3s...');
     // Windows file lock race — retry once after a delay
     setTimeout(() => {
