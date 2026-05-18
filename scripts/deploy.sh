@@ -24,27 +24,33 @@ log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG"; }
 ok() { log "✅ $*"; }
 fail() { log "❌ $*"; exit 1; }
 
-# ---- Progress spinner for silent commands ----
-with_spinner() {
+# ---- Progress keepalive for silent commands ----
+# Prints a dot every second so SSH doesn't look dead during long builds
+keepalive_run() {
   local msg="$1"; shift
-  local pid chars="/-\|" i=0
-  "$@" > /tmp/spinner-out.$$ 2>&1 &
+  local pid start elapsed
+
+  "$@" > /tmp/keepalive-out.$$ 2>&1 &
   pid=$!
+  start=$(date +%s)
+
+  printf "[$(date '+%H:%M:%S')] %s" "$msg"
   while kill -0 $pid 2>/dev/null; do
-    printf "\r[$(date '+%H:%M:%S')] %s %s" "${chars:$i:1}" "$msg"
-    i=$(( (i+1) % 4 ))
-    sleep 0.3
+    elapsed=$(( $(date +%s) - start ))
+    printf "."
+    sleep 1
   done
   wait $pid
   local rc=$?
-  printf "\r\033[K"
+
   if [ $rc -eq 0 ]; then
-    ok "$msg"
+    echo " OK (${elapsed}s)"
   else
-    fail "$msg (exit $rc)"
+    echo " FAIL (exit $rc)"
   fi
-  cat /tmp/spinner-out.$$ >> "$LOG"
-  rm -f /tmp/spinner-out.$$
+
+  cat /tmp/keepalive-out.$$ >> "$LOG"
+  rm -f /tmp/keepalive-out.$$
   return $rc
 }
 
