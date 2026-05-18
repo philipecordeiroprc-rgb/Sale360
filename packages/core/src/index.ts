@@ -151,19 +151,21 @@ export const UNITS = [
 // --- Permissions ---
 
 export const PERMISSIONS = {
+  SUPER_ADMIN: ['*'],
   OWNER: ['*'],
-  MANAGER: [
-    'products.read', 'products.write',
-    'orders.read', 'orders.write', 'orders.cancel',
-    'customers.read', 'customers.write',
-    'commands.read', 'commands.write',
-    'finance.read',
-    'reports.read',
-  ],
   CASHIER: [
     'products.read',
     'orders.read', 'orders.write',
     'customers.read', 'customers.write',
-    'commands.read', 'commands.write',
   ],
 } as const;
+
+export function hasPermission(role: string, permission: string): boolean {
+  const perms = PERMISSIONS[role as keyof typeof PERMISSIONS];
+  if (!perms) return false;
+  if (perms.includes('*')) return true;
+  return perms.some(p => {
+    if (p.endsWith('.*')) return permission.startsWith(p.slice(0, -1));
+    return p === permission;
+  });
+}
