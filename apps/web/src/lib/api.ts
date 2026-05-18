@@ -62,6 +62,7 @@ export interface Product {
   hasVariations: boolean;
   taxRate?: number | null;
   operationalCost?: number | null;
+  avgMargin?: number | null;
   categoryId?: string | null;
   category?: ProductCategory | null;
   variations: any[];
