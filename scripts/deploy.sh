@@ -48,9 +48,12 @@ changed_files() {
 }
 
 save_hashes() {
-  local src="$1" label="$2" hashfile="$HASH_DIR/$label.sha256"
+  local src label hashfile
+  src="$1"
+  label="$2"
+  hashfile="$HASH_DIR/$label.sha256"
   find "$src" -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.js' -o -name '*.prisma' -o -name '*.json' -o -name '*.css' \) \
-    -exec sha256sum {} \; | sort > "$hashfile"
+    -exec sha256sum {} \; 2>/dev/null | sort > "$hashfile" || true
 }
 
 # ---- Health checks ----
