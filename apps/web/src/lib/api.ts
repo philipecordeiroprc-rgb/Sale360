@@ -186,6 +186,7 @@ export const api = {
     },
     create(data: {
       customerId?: string;
+      customerName?: string;
       items: { productId?: string; variationId?: string; productName: string; quantity: number; unitPrice: number; total: number }[];
       subtotal: number;
       discount?: number;
