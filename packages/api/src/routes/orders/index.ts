@@ -14,6 +14,7 @@ const orderItemSchema = z.object({
 const createOrderSchema = z.object({
   deviceId: z.string().optional(),
   customerId: z.string().optional(),
+  customerName: z.string().optional(),
   items: z.array(orderItemSchema).min(1),
   subtotal: z.number(),
   discount: z.number().default(0),
