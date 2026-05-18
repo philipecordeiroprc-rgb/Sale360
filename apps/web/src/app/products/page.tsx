@@ -704,6 +704,23 @@ export default function ProductsPage() {
             </select>
           </div>
 
+          {/* Price + Low Stock */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-slate-400 text-sm mb-1">Preço de Venda (R$)</label>
+              <input type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                placeholder="0,00"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+            </div>
+            <div>
+              <label className="block text-slate-400 text-sm mb-1">Estoque Mínimo (un)</label>
+              <input type="number" step="1" min="0" value={formData.lowStockAt} onChange={(e) => setFormData({ ...formData, lowStockAt: e.target.value })}
+                placeholder="Ex: 10"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+              <p className="text-[10px] text-slate-500 mt-1">Ao atingir esta qtd, o estoque ficará amarelo. Ao zerar, vermelho.</p>
+            </div>
+          </div>
+
           {/* Actions */}
           <div className="flex gap-3 pt-2 sticky bottom-0 bg-slate-900 py-3 border-t border-slate-800">
             <button type="button" onClick={() => setFormOpen(false)}
