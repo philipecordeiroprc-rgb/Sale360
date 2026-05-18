@@ -203,6 +203,19 @@ if ${CHANGED_WEB:-false}; then
   wait_health "Web" health_web
 fi
 
+# Reload nginx if config changed
+if [ "$CHANGED_NGINX" = true ]; then
+  log "Recarregando nginx..."
+  sudo cp "$ROOT/nginx-sale360.conf" /etc/nginx/conf.d/sale360.conf
+  if sudo nginx -t 2>/dev/null; then
+    sudo systemctl reload nginx
+    save_hashes "$ROOT/nginx-sale360.conf" "nginx"
+    ok "Nginx recarregado"
+  else
+    fail "Nginx config inválida — abortando reload"
+  fi
+fi
+
 # ---- Update lockfile hash ----
 save_hashes "$ROOT/pnpm-lock.yaml" "lockfile" 2>/dev/null || true
 save_hashes "$ROOT/packages/api/package.json" "api-pkg" 2>/dev/null || true
