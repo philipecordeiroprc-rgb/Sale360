@@ -71,11 +71,7 @@ export default function TenantDetailPage() {
   const loadTenant = async () => {
     setLoading(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await api.admin.tenants.get(id);
       setTenant(data);
       setInfoForm({
         companyName: data.companyName || '',
@@ -83,8 +79,8 @@ export default function TenantDetailPage() {
         plan: data.plan || 'PRO',
         status: data.status || 'TRIAL',
       });
-    } catch {
-      show('Erro ao carregar loja', 'error');
+    } catch (err: any) {
+      show(err.message || 'Erro ao carregar loja', 'error');
     } finally {
       setLoading(false);
     }
