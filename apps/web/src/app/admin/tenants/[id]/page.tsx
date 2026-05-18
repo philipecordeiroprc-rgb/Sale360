@@ -92,13 +92,7 @@ export default function TenantDetailPage() {
   const handleInfoSave = async () => {
     setInfoSaving(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(infoForm),
-      });
-      if (!res.ok) throw new Error((await res.json()).error || 'Erro');
+      await api.admin.tenants.update(id, infoForm);
       show('Loja atualizada!');
       loadTenant();
     } catch (err: any) {
