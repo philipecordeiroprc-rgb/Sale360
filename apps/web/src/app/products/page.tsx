@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
-  Tags, X, Layers,
+  Tags, X, Layers, DollarSign,
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
