@@ -569,35 +569,41 @@ export default function PurchasesPage() {
                   )}
                 </div>
 
-                {/* Pricing: cost, tax, margin, sale price */}
+                {/* Precificacao: 5 campos — custo un, custo oper, taxa, margem, preco venda */}
                 <div className="bg-slate-900 rounded-lg p-3 mb-3">
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$) *</label>
+                      <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$)</label>
                       <input type="number"
                         value={currentItem.costPrice || ''}
                         onChange={(e) => {
                           const cost = Number(e.target.value);
-                          setCurrentItem({
-                            ...currentItem,
-                            costPrice: cost,
-                            salePrice: calcSalePrice(cost, currentItem.marginPct, currentItem.taxRatePct),
-                          });
+                          const updated = { ...currentItem, costPrice: cost };
+                          setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" step="0.01" placeholder="0,00"
                         className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Taxa Cartão %</label>
+                      <label className="block text-xs text-slate-400 mb-1">Custo Oper. (R$)</label>
+                      <input type="number"
+                        value={currentItem.operationalCost || ''}
+                        onChange={(e) => {
+                          const op = Number(e.target.value);
+                          const updated = { ...currentItem, operationalCost: op };
+                          setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
+                        }}
+                        min="0" step="0.01" placeholder="0,00"
+                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Taxa %</label>
                       <input type="number"
                         value={currentItem.taxRatePct || ''}
                         onChange={(e) => {
                           const tax = Number(e.target.value);
-                          setCurrentItem({
-                            ...currentItem,
-                            taxRatePct: tax,
-                            salePrice: calcSalePrice(currentItem.costPrice, currentItem.marginPct, tax),
-                          });
+                          const updated = { ...currentItem, taxRatePct: tax };
+                          setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
                         className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
@@ -608,11 +614,8 @@ export default function PurchasesPage() {
                         value={currentItem.marginPct || ''}
                         onChange={(e) => {
                           const margin = Number(e.target.value);
-                          setCurrentItem({
-                            ...currentItem,
-                            marginPct: margin,
-                            salePrice: calcSalePrice(currentItem.costPrice, margin, currentItem.taxRatePct),
-                          });
+                          const updated = { ...currentItem, marginPct: margin };
+                          setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
                         className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
@@ -621,22 +624,26 @@ export default function PurchasesPage() {
                       <label className="block text-xs text-slate-400 mb-1">Pr. Venda (R$)</label>
                       <input type="number"
                         value={currentItem.salePrice || ''}
-                        onChange={(e) => setCurrentItem({ ...currentItem, salePrice: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const price = Number(e.target.value);
+                          // Quando edita preço, recalcula a margem
+                          const updated = { ...currentItem, salePrice: price };
+                          setCurrentItem({ ...updated, marginPct: calcMarginFromSale(updated) });
+                        }}
                         min="0" step="0.01" placeholder="Auto"
                         className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                   </div>
-                  {currentItem.salePrice > 0 && currentItem.costPrice > 0 && (
+                  {/* Linha de resumo */}
+                  {totalCost(currentItem) > 0 && currentItem.salePrice > 0 && (
                     <div className="mt-2 text-xs text-slate-400 text-center">
-                      Markup: <span className="text-indigo-400 font-semibold">{((currentItem.salePrice / currentItem.costPrice - 1) * 100).toFixed(1)}%</span>
+                      Custo total: <span className="text-white font-medium">R$ {totalCost(currentItem).toFixed(2)}</span>
                       <span className="mx-2">|</span>
-                      Lucro bruto: <span className="text-emerald-400 font-semibold">R$ {(currentItem.salePrice - currentItem.costPrice).toFixed(2)}</span>
-                      {currentItem.salePrice > 0 && currentItem.costPrice > 0 && (
-                        <>
-                          <span className="mx-2">|</span>
-                          Margem real: <span className="text-emerald-400 font-semibold">{(((currentItem.salePrice - currentItem.costPrice) / currentItem.salePrice) * 100).toFixed(1)}%</span>
-                        </>
-                      )}
+                      Markup: <span className="text-indigo-400 font-semibold">{((currentItem.salePrice / totalCost(currentItem) - 1) * 100).toFixed(1)}%</span>
+                      <span className="mx-2">|</span>
+                      Lucro bruto: <span className="text-emerald-400 font-semibold">R$ {(currentItem.salePrice - totalCost(currentItem)).toFixed(2)}</span>
+                      <span className="mx-2">|</span>
+                      Margem real: <span className="text-emerald-400 font-semibold">{(((currentItem.salePrice - totalCost(currentItem)) / currentItem.salePrice) * 100).toFixed(1)}%</span>
                     </div>
                   )}
                 </div>
