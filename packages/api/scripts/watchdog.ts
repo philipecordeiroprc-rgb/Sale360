@@ -10,6 +10,11 @@ const RESTART_WINDOW = 30000; // 30s window for rate limiting
 
 let restarts = 0;
 let windowStart = Date.now();
+let shuttingDown = false;
+
+// Only stop the watchdog when the user explicitly asked to stop (Ctrl+C)
+process.on('SIGTERM', () => { shuttingDown = true; });
+process.on('SIGINT', () => { shuttingDown = true; });
 
 function runPredev() {
   try {
