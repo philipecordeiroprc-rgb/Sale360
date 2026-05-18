@@ -719,6 +719,108 @@ export default function ProductsPage() {
           </div>
         </Modal>
       )}
+
+      {/* Cost History Modal */}
+      {costProduct && (
+        <Modal
+          open={!!costProduct}
+          onClose={() => { setCostProduct(null); setCostData(null); }}
+          title={`Custos - ${costProduct.name}`}
+          size="lg"
+        >
+          {costLoading ? (
+            <div className="space-y-3 animate-pulse py-4">
+              <div className="h-4 bg-slate-800 rounded w-1/3" />
+              <div className="h-20 bg-slate-800 rounded" />
+              <div className="h-20 bg-slate-800 rounded" />
+            </div>
+          ) : costData?.error ? (
+            <div className="text-center text-red-400 py-6">Erro ao carregar histórico de custos.</div>
+          ) : costData ? (
+            <div className="space-y-4">
+              {/* Summary cards */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                  <p className="text-xs text-slate-500 mb-1">Custo Médio</p>
+                  <p className="text-xl font-bold text-white">
+                    R$ {Number(costData.summary?.averageCost || 0).toFixed(2)}
+                  </p>
+                </div>
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                  <p className="text-xs text-slate-500 mb-1">Em Estoque</p>
+                  <p className="text-xl font-bold text-white">{costData.summary?.totalRemaining || 0} un</p>
+                </div>
+                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-center">
+                  <p className="text-xs text-slate-500 mb-1">Lotes Ativos</p>
+                  <p className="text-xl font-bold text-white">{costData.summary?.totalBatches || 0}</p>
+                </div>
+              </div>
+
+              {/* Preço de venda vs Custo */}
+              {(() => {
+                const cost = Number(costData.summary?.averageCost || 0);
+                const price = Number(costProduct.price || 0);
+                if (cost > 0 && price > 0) {
+                  const margin = ((price - cost) / cost * 100);
+                  return (
+                    <div className={`border rounded-xl px-4 py-3 text-sm flex items-center justify-between ${
+                      margin >= 0 ? 'bg-emerald-400/5 border-emerald-400/20' : 'bg-red-400/5 border-red-400/20'
+                    }`}>
+                      <span className="text-slate-400">
+                        Preço de venda: <span className="text-white font-semibold">R$ {price.toFixed(2)}</span>
+                      </span>
+                      <span className={margin >= 0 ? 'text-emerald-400' : 'text-red-400'}>
+                        Margem: {margin >= 0 ? '+' : ''}{margin.toFixed(0)}%
+                      </span>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Batches table */}
+              {costData.batches?.length > 0 ? (
+                <div className="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden">
+                  <div className="grid grid-cols-5 gap-2 px-4 py-2.5 text-xs text-slate-500 bg-slate-900/50 border-b border-slate-800">
+                    <span>Recebido em</span>
+                    <span>Variação</span>
+                    <span className="text-right">Custo Un.</span>
+                    <span className="text-right">Qtd. Original</span>
+                    <span className="text-right">Qtd. Restante</span>
+                  </div>
+                  <div className="divide-y divide-slate-800/50 max-h-64 overflow-y-auto">
+                    {costData.batches.map((batch: any) => (
+                      <div key={batch.id} className="grid grid-cols-5 gap-2 px-4 py-2.5 text-sm items-center">
+                        <span className="text-slate-300">
+                          {new Date(batch.receivedAt).toLocaleDateString('pt-BR')}
+                        </span>
+                        <span className="text-slate-400">
+                          {batch.variation?.name || '—'}
+                        </span>
+                        <span className="text-right text-slate-300 font-mono">
+                          R$ {Number(batch.unitCost).toFixed(2)}
+                        </span>
+                        <span className="text-right text-slate-300">
+                          {Number(batch.quantity)}
+                        </span>
+                        <span className={`text-right font-semibold ${
+                          Number(batch.remainingQty) > 0 ? 'text-white' : 'text-slate-600'
+                        }`}>
+                          {Number(batch.remainingQty)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-slate-500 py-4 bg-slate-950 border border-slate-800 rounded-xl">
+                  Nenhum lote encontrado. O custo será registrado na primeira compra.
+                </div>
+              )}
+            </div>
+          ) : null}
+        </Modal>
+      )}
     </div>
   );
 }
