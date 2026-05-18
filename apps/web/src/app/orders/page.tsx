@@ -640,7 +640,16 @@ export default function OrdersPage() {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Cliente</p>
-                <p className="text-white text-sm">{detailOrder.customer?.name || '—'}</p>
+                <p className="text-white text-sm">
+                  {detailOrder.customer?.name || detailOrder.customerName ? (
+                    <span>
+                      {detailOrder.customer?.name || detailOrder.customerName}
+                      {!detailOrder.customer?.id && detailOrder.customerName && (
+                        <span className="ml-1.5 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Avulso</span>
+                      )}
+                    </span>
+                  ) : '—'}
+                </p>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
