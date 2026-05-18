@@ -322,12 +322,14 @@ export default function PurchasesPage() {
       }
 
       // Create purchase
-      await api.purchases.create({
+      const payload = {
         supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItemsData,
-      });
+      };
+      console.log('Creating purchase:', JSON.stringify(payload, null, 2));
+      await api.purchases.create(payload);
 
       show('Compra criada! Ao receber, o estoque será atualizado.');
       setFormOpen(false);
