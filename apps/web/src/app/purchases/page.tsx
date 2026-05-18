@@ -658,9 +658,106 @@ export default function PurchasesPage() {
                 </div>
 
                 {/* Variations */}
-                {currentItem.hasVariations ? (
+                {currentItem.hasVariations && templateDims.length > 0 ? (
+                  /* ── Template-based: row builder with dropdowns ── */
                   <div className="mb-3 bg-slate-900 rounded-lg p-3">
-                    <p className="text-xs text-slate-400 mb-2">Qtd comprada por variacao</p>
+                    <p className="text-xs text-slate-400 mb-2">Variações da compra</p>
+
+                    {/* Tabela de linhas já adicionadas */}
+                    {currentItem.variations.length > 0 && (
+                      <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
+                        <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                          {templateDims.map((d: any) => (
+                            <span key={d.id || d.label}>{d.label}</span>
+                          ))}
+                          <span className="text-center">Qtd</span>
+                          <span />
+                        </div>
+                        {currentItem.variations.map((v, vi) => {
+                          const parts = v.name.split(' ');
+                          return (
+                            <div key={vi}
+                              className="grid gap-2 px-3 py-1.5 items-center text-sm"
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                              {parts.map((part: string, pi: number) => (
+                                <span key={pi} className="text-white truncate">{part}</span>
+                              ))}
+                              <span className="text-white text-center font-medium">{v.stockQty || 0}</span>
+                              <button
+                                onClick={() => {
+                                  const updated = currentItem.variations.filter((_, i) => i !== vi);
+                                  setCurrentItem({ ...currentItem, variations: updated });
+                                }}
+                                className="text-slate-500 hover:text-red-400 justify-self-center">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Linha para adicionar nova variação */}
+                    <div className="bg-slate-800 rounded-lg p-2">
+                      <div className="grid gap-2 items-end"
+                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 100px 40px` }}>
+                        {templateDims.map((d: any) => (
+                          <div key={d.id || d.label}>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
+                            <select
+                              value={rowDims[d.label] || ''}
+                              onChange={(e) => setRowDims({ ...rowDims, [d.label]: e.target.value })}
+                              className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
+                              <option value="">—</option>
+                              {d.options.map((opt: string) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                        <div>
+                          <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
+                          <input type="number" value={rowQty || ''}
+                            onChange={(e) => setRowQty(Number(e.target.value))}
+                            min="0" step="1" placeholder="0"
+                            className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                        </div>
+                        <button
+                          onClick={() => {
+                            const allDims = templateDims.every((d: any) => rowDims[d.label]);
+                            if (!allDims || rowQty <= 0) return;
+                            const name = templateDims.map((d: any) => rowDims[d.label]).join(' ');
+                            setCurrentItem({
+                              ...currentItem,
+                              variations: [
+                                ...currentItem.variations,
+                                { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
+                              ],
+                            });
+                            setRowDims({});
+                            setRowQty(0);
+                          }}
+                          disabled={!templateDims.every((d: any) => rowDims[d.label]) || rowQty <= 0}
+                          className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
+                          title="Adicionar variação">
+                          <Plus size={16} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
+                      <span className="text-xs text-slate-400">
+                        Variações: <span className="text-white font-semibold">{currentItem.variations.length}</span>
+                        <span className="mx-2">|</span>
+                        Qtd total: <span className="text-white font-semibold">{effectiveQty}</span>
+                      </span>
+                    </div>
+                  </div>
+                ) : currentItem.hasVariations ? (
+                  /* ── Existing variations: show list with qty inputs ── */
+                  <div className="mb-3 bg-slate-900 rounded-lg p-3">
+                    <p className="text-xs text-slate-400 mb-2">Qtd comprada por variação</p>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {currentItem.variations.map((v, vi) => (
                         <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
@@ -682,6 +779,7 @@ export default function PurchasesPage() {
                     </div>
                   </div>
                 ) : (
+                  /* ── Simple product: single quantity ── */
                   <div className="mb-3">
                     <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
                     <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
