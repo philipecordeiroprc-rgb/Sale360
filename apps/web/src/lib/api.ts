@@ -195,6 +195,8 @@ export const api = {
       paymentMethod: string;
       paymentStatus?: string;
       notes?: string;
+      couponId?: string;
+      couponDiscount?: number;
     }) {
       // Generate localId for offline support
       const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
