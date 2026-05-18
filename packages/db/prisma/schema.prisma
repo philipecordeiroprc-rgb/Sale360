@@ -38,6 +38,7 @@ model Tenant {
   inventoryBatches  InventoryBatch[]
   inventoryMovements  InventoryMovement[]
   paymentMethodConfigs PaymentMethodConfig[]
+  coupons      Coupon[]
 
   @@map("tenants")
 }
