@@ -363,7 +363,7 @@ export const api = {
         const sp = new URLSearchParams();
         if (params?.search) sp.set('search', params.search);
         const qs = sp.toString();
-        return request<any[]>(`/api/admin/tenants${qs ? `?${qs}` : ''}`);
+        return request<{ tenants: any[]; total: number; page: number; totalPages: number }>(`/api/admin/tenants${qs ? `?${qs}` : ''}`);
       },
       get(id: string) {
         return request<any>(`/api/admin/tenants/${id}`);
