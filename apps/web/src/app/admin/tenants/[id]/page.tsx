@@ -205,11 +205,7 @@ export default function TenantDetailPage() {
   const loadFeatures = async () => {
     setFeaturesLoading(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}/features`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await api.admin.tenants.features.get(id);
       setFeatures(data.features || {});
       setOverrides(data.overrides || {});
     } catch {
