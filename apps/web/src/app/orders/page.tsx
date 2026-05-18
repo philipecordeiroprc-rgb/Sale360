@@ -229,6 +229,7 @@ export default function OrdersPage() {
     try {
       await api.orders.create({
         customerId: selectedCustomer?.id || undefined,
+        customerName: useWalkIn && walkInName.trim() ? walkInName.trim() : undefined,
         items: cart.map(item => ({
           productId: item.productId,
           variationId: item.variationId,
@@ -242,7 +243,6 @@ export default function OrdersPage() {
         total: totalWithDiscount,
         paymentMethod: selectedPayment.id,
         paymentStatus: selectedPayment.paymentStatus || 'PAID',
-        notes: useWalkIn && walkInName.trim() ? `Cliente: ${walkInName.trim()}` : undefined,
       });
 
       show('Venda realizada!');
