@@ -9,7 +9,7 @@ const createProductSchema = z.object({
   barcode: z.string().optional(),
   price: z.number().default(0),
   categoryId: z.string().optional(),
-  imageUrl: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 const updateProductSchema = createProductSchema.partial();
