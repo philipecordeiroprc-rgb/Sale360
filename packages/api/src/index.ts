@@ -87,21 +87,30 @@ async function buildApp() {
     // Auth middleware applied to all routes below
     api.addHook('onRequest', authMiddleware);
 
-    await api.register(productRoutes, { prefix: '/api/products' });
-    await api.register(orderRoutes, { prefix: '/api/orders' });
-    await api.register(customerRoutes, { prefix: '/api/customers' });
-    await api.register(commandRoutes, { prefix: '/api/commands' });
-    await api.register(financeRoutes, { prefix: '/api/finance' });
-    await api.register(tenantRoutes, { prefix: '/api/tenant' });
-    await api.register(syncRoutes, { prefix: '/api/sync' });
-    await api.register(categoriesRoutes, { prefix: '/api/categories' });
-    await api.register(variationTemplateRoutes, { prefix: '/api/variation-templates' });
-    await api.register(integrationRoutes, { prefix: '/api/integrations' });
-    await api.register(supplierRoutes, { prefix: '/api/suppliers' });
-    await api.register(purchaseRoutes, { prefix: '/api/purchases' });
-    await api.register(inventoryRoutes, { prefix: '/api/inventory' });
-    await api.register(reportRoutes, { prefix: '/api/reports' });
-    await api.register(paymentConfigRoutes, { prefix: '/api/payment-configs' });
+    const registerSafe = async (plugin: any, opts: any) => {
+      try {
+        await api.register(plugin, opts);
+      } catch (err) {
+        app.log.error(`[ROUTE ERROR] Failed to register ${opts.prefix}:`, err);
+        // Route stays offline but server continues
+      }
+    };
+
+    await registerSafe(productRoutes, { prefix: '/api/products' });
+    await registerSafe(orderRoutes, { prefix: '/api/orders' });
+    await registerSafe(customerRoutes, { prefix: '/api/customers' });
+    await registerSafe(commandRoutes, { prefix: '/api/commands' });
+    await registerSafe(financeRoutes, { prefix: '/api/finance' });
+    await registerSafe(tenantRoutes, { prefix: '/api/tenant' });
+    await registerSafe(syncRoutes, { prefix: '/api/sync' });
+    await registerSafe(categoriesRoutes, { prefix: '/api/categories' });
+    await registerSafe(variationTemplateRoutes, { prefix: '/api/variation-templates' });
+    await registerSafe(integrationRoutes, { prefix: '/api/integrations' });
+    await registerSafe(supplierRoutes, { prefix: '/api/suppliers' });
+    await registerSafe(purchaseRoutes, { prefix: '/api/purchases' });
+    await registerSafe(inventoryRoutes, { prefix: '/api/inventory' });
+    await registerSafe(reportRoutes, { prefix: '/api/reports' });
+    await registerSafe(paymentConfigRoutes, { prefix: '/api/payment-configs' });
   });
 
   // SUPER_ADMIN routes (auth + SUPER_ADMIN check)
