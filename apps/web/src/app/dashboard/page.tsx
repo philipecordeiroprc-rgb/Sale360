@@ -5,8 +5,10 @@ import {
   TrendingUp, DollarSign, ShoppingCart, Users, Package,
 } from 'lucide-react';
 import api from '@/lib/api';
+import { useAuth } from '@/lib/auth';
 
 export default function DashboardPage() {
+  const { tenant } = useAuth();
   const [summary, setSummary] = useState<any>(null);
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [newCustomers, setNewCustomers] = useState(0);
