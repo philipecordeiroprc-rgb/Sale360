@@ -30,7 +30,7 @@ function runPredev() {
     // Windows file lock race — retry once after a delay
     setTimeout(() => {
       try {
-        execSync('pnpm --filter @sale360/db db:generate', { stdio: 'inherit' });
+        execSync('pnpm --filter @sale360/db db:generate', { stdio: 'inherit', cwd: repoRoot });
       } catch {
         console.error('[watchdog] prisma generate failed again — continuing anyway');
       }
