@@ -35,6 +35,27 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
     }
 
+    // SUPER_ADMIN login — no tenant context needed
+    if (user.role === 'SUPER_ADMIN') {
+      const token = generateToken({
+        userId: user.id,
+        role: 'SUPER_ADMIN',
+      });
+      const refreshToken = generateRefreshToken(user.id);
+
+      return {
+        token,
+        refreshToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: 'SUPER_ADMIN',
+        },
+        tenant: null,
+      };
+    }
+
     // Find tenant (first one for simplicity; in production support multiple)
     const tenantUser = await prisma.tenantUser.findFirst({
       where: { userId: user.id },
