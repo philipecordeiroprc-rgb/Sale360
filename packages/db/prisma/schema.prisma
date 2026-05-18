@@ -36,6 +36,7 @@ model Tenant {
   purchases    Purchase[]
   inventoryBatches  InventoryBatch[]
   inventoryMovements  InventoryMovement[]
+  paymentMethodConfigs PaymentMethodConfig[]
 
   @@map("tenants")
 }
