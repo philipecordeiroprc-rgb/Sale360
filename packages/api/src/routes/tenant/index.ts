@@ -1,5 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
+import bcrypt from 'bcrypt';
 import { prisma } from '@sale360/db';
+import { z } from 'zod';
 
 export const tenantRoutes: FastifyPluginAsync = async (app) => {
   // Get current tenant info
