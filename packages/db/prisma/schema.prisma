@@ -177,6 +177,7 @@ model Category {
   tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   variationTemplate VariationTemplate? @relation(fields: [variationTemplateId], references: [id], onDelete: SetNull)
   products          Product[]
+  couponCategories  CouponCategory[]
 
   @@unique([tenantId, name])
   @@map("categories")
