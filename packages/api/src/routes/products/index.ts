@@ -57,8 +57,8 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const productIds = products.map(p => p.id);
     let margins: Record<string, number> = {};
     if (productIds.length > 0) {
-      const rows = await prisma.$queryRaw<{ productId: string; avgMargin: number }[]>(
-        Prisma.sql`SELECT oi."productId",
+      const rows = await prisma.$queryRaw<{ productId: string; avgMargin: number }[]>`
+        SELECT oi."productId",
           AVG(
             (oi."unitPrice" - COALESCE(oi."costPrice", 0) - (oi."unitPrice" * COALESCE(oi."taxRate", 0) / 100.0) - COALESCE(p."operationalCost", 0))
             / NULLIF(oi."unitPrice", 0) * 100
@@ -69,8 +69,8 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
         WHERE oi."productId" = ANY(${productIds}::text[])
           AND o.status = 'COMPLETED'
           AND o."tenantId" = ${request.tenantId}::text
-        GROUP BY oi."productId"`,
-      );
+        GROUP BY oi."productId"
+      `;
       for (const r of rows) {
         margins[r.productId] = Number(r.avgMargin);
       }
