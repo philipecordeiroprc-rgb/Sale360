@@ -173,10 +173,11 @@ export default function AdminPage() {
                   <td className="px-6 py-4">
                     <span className={`inline-block px-2 py-1 rounded-lg text-xs font-medium
                       ${t.status === 'ACTIVE' ? 'bg-green-400/10 text-green-400' : ''}
-                      ${t.status === 'INACTIVE' ? 'bg-red-400/10 text-red-400' : ''}
+                      ${t.status === 'SUSPENDED' ? 'bg-red-400/10 text-red-400' : ''}
+                      ${t.status === 'CANCELLED' ? 'bg-red-400/10 text-red-400' : ''}
                       ${t.status === 'TRIAL' ? 'bg-yellow-400/10 text-yellow-400' : ''}
                     `}>
-                      {t.status === 'ACTIVE' ? 'Ativo' : t.status === 'INACTIVE' ? 'Inativo' : 'Trial'}
+                      {t.status === 'ACTIVE' ? 'Ativo' : t.status === 'SUSPENDED' ? 'Suspenso' : t.status === 'CANCELLED' ? 'Cancelado' : 'Trial'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-slate-400 text-sm">
