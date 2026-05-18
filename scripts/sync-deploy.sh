@@ -11,7 +11,7 @@ SERVER_IP="137.131.193.203"
 SERVER_USER="opc"
 SSH_KEY="C:/Users/rafac/Documents/GitHub/Sale360/sales360.key"
 REMOTE_ROOT="/home/opc/sale360"
-SSH_OPTS="-i \"$SSH_KEY\" -o StrictHostKeyChecking=no -o ConnectTimeout=10"
+SSH_OPTS="-i \"$SSH_KEY\" -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o TCPKeepAlive=yes"
 
 FORCE_FLAGS=""
 DRY_RUN=false
