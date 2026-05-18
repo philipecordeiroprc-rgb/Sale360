@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 
 const createProductSchema = z.object({
