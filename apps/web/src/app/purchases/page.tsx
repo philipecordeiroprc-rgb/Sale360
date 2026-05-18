@@ -241,14 +241,13 @@ export default function PurchasesPage() {
         quantity: number;
         unitCost: number;
         total: number;
+        salePrice?: number;
+        taxRatePct?: number;
+        marginPct?: number;
       }[] = [];
 
       for (const item of purchaseItems) {
-        // Only update product price if user entered a new one
-        if (item.salePrice > 0) {
-          await api.products.update(item.productId, { price: item.salePrice });
-        }
-
+        // Product price and tax are now updated by the API on purchase create
         if (item.hasVariations && item.variations.length > 0) {
           for (const v of item.variations) {
             const varQty = v.stockQty || 0;
@@ -261,6 +260,9 @@ export default function PurchasesPage() {
               quantity: varQty,
               unitCost: item.costPrice,
               total: item.costPrice * varQty,
+              salePrice: item.salePrice || undefined,
+              taxRatePct: item.taxRatePct || undefined,
+              marginPct: item.marginPct || undefined,
             });
           }
         } else {
@@ -270,6 +272,9 @@ export default function PurchasesPage() {
             quantity: item.quantity,
             unitCost: item.costPrice,
             total: item.costPrice * item.quantity,
+            salePrice: item.salePrice || undefined,
+            taxRatePct: item.taxRatePct || undefined,
+            marginPct: item.marginPct || undefined,
           });
         }
       }
