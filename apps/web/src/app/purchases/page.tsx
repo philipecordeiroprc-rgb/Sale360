@@ -266,12 +266,12 @@ export default function PurchasesPage() {
         unitCost: number;
         total: number;
         salePrice?: number;
+        operationalCost?: number;
         taxRatePct?: number;
         marginPct?: number;
       }[] = [];
 
       for (const item of purchaseItems) {
-        // Product price and tax are now updated by the API on purchase create
         if (item.hasVariations && item.variations.length > 0) {
           for (const v of item.variations) {
             const varQty = v.stockQty || 0;
@@ -285,6 +285,7 @@ export default function PurchasesPage() {
               unitCost: item.costPrice,
               total: item.costPrice * varQty,
               salePrice: item.salePrice || undefined,
+              operationalCost: item.operationalCost || undefined,
               taxRatePct: item.taxRatePct || undefined,
               marginPct: item.marginPct || undefined,
             });
@@ -297,6 +298,7 @@ export default function PurchasesPage() {
             unitCost: item.costPrice,
             total: item.costPrice * item.quantity,
             salePrice: item.salePrice || undefined,
+            operationalCost: item.operationalCost || undefined,
             taxRatePct: item.taxRatePct || undefined,
             marginPct: item.marginPct || undefined,
           });
