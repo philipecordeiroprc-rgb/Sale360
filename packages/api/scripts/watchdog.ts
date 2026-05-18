@@ -57,11 +57,13 @@ function spawnWatch() {
   });
 
   child.on('exit', (code, signal) => {
-    if (signal === 'SIGTERM' || signal === 'SIGINT' || code === 0) {
-      console.log('[watchdog] Clean exit. Stopping.');
+    // Only stop if the user intentionally pressed Ctrl+C (SIGINT/SIGTERM on the watchdog itself).
+    // Any other exit (including code 0 from process.exit deep in the server) is a crash.
+    if (shuttingDown) {
+      console.log('[watchdog] Shutting down by user request.');
       process.exit(0);
     }
-    console.error(`[watchdog] tsx watch exited with code ${code}, signal ${signal}`);
+    console.error(`[watchdog] tsx watch exited unexpectedly (code=${code}, signal=${signal})`);
     console.log(`[watchdog] Restarting in ${RESTART_DELAY / 1000}s...`);
     setTimeout(spawnWatch, RESTART_DELAY);
   });
