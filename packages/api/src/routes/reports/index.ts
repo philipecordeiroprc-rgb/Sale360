@@ -73,9 +73,11 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         const itemRevenue = Number(item.total);
         const itemCost = Number(item.totalCost || 0);
         const opsCost = (Number(item.product?.operationalCost || 0)) * Number(item.quantity);
+        const taxRate = Number(item.taxRate || 0);
+        const taxAmount = itemRevenue * (taxRate / 100);
         productMap[name].quantity += Number(item.quantity);
         productMap[name].revenue += itemRevenue;
-        productMap[name].profit += itemRevenue - itemCost - opsCost;
+        productMap[name].profit += itemRevenue - itemCost - opsCost - taxAmount;
       }
     }
     const topProducts = Object.values(productMap)
