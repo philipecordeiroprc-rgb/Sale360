@@ -311,9 +311,11 @@ export default function ProductsPage() {
             <div className="col-span-2 h-4 bg-slate-800 rounded" />
             <div className="col-span-1 h-4 bg-slate-800 rounded" />
             <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
             <div className="col-span-2 h-4 bg-slate-800 rounded" />
-            <div className="col-span-2 h-4 bg-slate-800 rounded" />
-            <div className="col-span-2 h-4 bg-slate-800 rounded" />
+            <div className="col-span-1 h-4 bg-slate-800 rounded" />
             <div className="col-span-1 h-4 bg-slate-800 rounded" />
           </div>
           {Array.from({ length: 8 }).map((_, i) => (
@@ -322,9 +324,11 @@ export default function ProductsPage() {
               <div className="col-span-2 h-5 bg-slate-800 rounded" />
               <div className="col-span-1 h-4 bg-slate-800 rounded" />
               <div className="col-span-1 h-4 bg-slate-800 rounded" />
-              <div className="col-span-2 h-5 bg-slate-800 rounded" />
-              <div className="col-span-2 h-5 bg-slate-800 rounded" />
+              <div className="col-span-1 h-5 bg-slate-800 rounded" />
+              <div className="col-span-1 h-5 bg-slate-800 rounded" />
+              <div className="col-span-1 h-4 bg-slate-800 rounded" />
               <div className="col-span-2 h-4 bg-slate-800 rounded" />
+              <div className="col-span-1 h-8 bg-slate-800 rounded" />
               <div className="col-span-1 h-8 bg-slate-800 rounded" />
             </div>
           ))}
