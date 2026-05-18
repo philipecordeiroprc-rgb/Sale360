@@ -302,6 +302,16 @@ export const api = {
     },
   },
 
+  // Payment Method Configs
+  paymentConfigs: {
+    list() {
+      return request<{ paymentMethod: string; label: string; taxRate: number }[]>('/api/payment-configs');
+    },
+    update(configs: { paymentMethod: string; taxRate: number }[]) {
+      return request<any>('/api/payment-configs', { method: 'PUT', body: JSON.stringify({ configs }) });
+    },
+  },
+
   // Dashboard
   dashboard: {
     summary() {
