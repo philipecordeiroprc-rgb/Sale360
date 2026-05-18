@@ -121,7 +121,7 @@ if [ "$CHECK_ONLY" = true ]; then
   exit 0
 fi
 
-if ! ${CHANGED_API:-false} && ! ${CHANGED_WEB:-false} && ! ${CHANGED_DB:-false}; then
+if ! ${CHANGED_API:-false} && ! ${CHANGED_WEB:-false} && ! ${CHANGED_DB:-false} && ! ${CHANGED_NGINX:-false}; then
   log "Nada mudou. Nenhum deploy necessário."
   exit 0
 fi
