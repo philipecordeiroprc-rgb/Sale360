@@ -37,9 +37,9 @@ function runPredev() {
       try {
         if (process.platform === 'win32') {
           // Find and kill only the process on port 3001
-          const { stdout } = require('child_process').execSync(
+          const stdout = execSync(
             'netstat -ano | findstr ":3001" | findstr LISTENING',
-            { stdio: 'pipe' }
+            { stdio: 'pipe', encoding: 'utf-8' }
           );
           const pid = String(stdout).trim().split(/\s+/).pop();
           if (pid && /^\d+$/.test(pid)) {
