@@ -17,6 +17,7 @@ async function main() {
   await prisma.tenantUser.deleteMany();
   await prisma.integration.deleteMany();
   await prisma.device.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
   await prisma.user.deleteMany();
   await prisma.tenant.deleteMany();
 
