@@ -16,10 +16,11 @@ const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
 interface PurchaseItemData {
   productId: string;
   productName: string;
-  costPrice: number;   // unit cost (lote PEPS)
-  salePrice: number;    // preço de venda (calculado ou manual)
-  taxRatePct: number;   // taxa cartão (%)
-  marginPct: number;    // margem de lucro (%)
+  costPrice: number;       // custo unitário
+  operationalCost: number; // custo operacional (embalagem, frete)
+  taxRatePct: number;      // taxa cartão (%)
+  marginPct: number;       // margem de lucro (%)
+  salePrice: number;       // preço de venda (calculado ou manual)
   quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
@@ -29,19 +30,33 @@ const emptyItem: PurchaseItemData = {
   productId: '',
   productName: '',
   costPrice: 0,
-  salePrice: 0,
+  operationalCost: 0,
   taxRatePct: 0,
   marginPct: 0,
+  salePrice: 0,
   quantity: 1,
   hasVariations: false,
   variations: [],
 };
 
-// Calcula preço de venda: cost / (1 - (margin% + tax%))
-const calcSalePrice = (cost: number, marginPct: number, taxPct: number): number => {
-  const divisor = 1 - (marginPct / 100) - (taxPct / 100);
+// Custo total (unitário + operacional)
+const totalCost = (item: PurchaseItemData): number => item.costPrice + item.operationalCost;
+
+// Calcula preço de venda: (custo total) / (1 - taxa% - margem%)
+const calcSalePrice = (item: PurchaseItemData): number => {
+  const cost = totalCost(item);
+  if (cost <= 0) return item.salePrice;
+  const divisor = 1 - (item.taxRatePct / 100) - (item.marginPct / 100);
   if (divisor <= 0) return 0;
   return Math.round((cost / divisor) * 100) / 100;
+};
+
+// Calcula margem a partir do preço de venda: 1 - taxa% - (custo total / preço)
+const calcMarginFromSale = (item: PurchaseItemData): number => {
+  const cost = totalCost(item);
+  if (cost <= 0 || item.salePrice <= 0) return item.marginPct;
+  const margin = (1 - (item.taxRatePct / 100) - (cost / item.salePrice)) * 100;
+  return Math.round(margin * 10) / 10;
 };
 
 function useToast() {
