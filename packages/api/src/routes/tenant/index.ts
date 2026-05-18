@@ -31,12 +31,12 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   app.get('/features', async (request) => {
     const tenant = await prisma.tenant.findUnique({
       where: { id: request.tenantId },
-      select: { plan: true, status: true },
+      select: { plan: true, status: true, featureOverrides: true },
     });
 
     if (!tenant) return { error: 'Not found' };
 
-    const features = {
+    const baseFeatures: Record<string, { maxUsers: number; maxDevices: number } | boolean> = {
       PRO: {
         maxUsers: 1,
         maxDevices: 1,
@@ -90,10 +90,23 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
       },
     };
 
+    const base = baseFeatures[tenant.plan] as Record<string, any>;
+    const overrides = (tenant.featureOverrides as Record<string, boolean> | null) || {};
+
+    // Merge overrides into base features
+    const features: Record<string, any> = {};
+    for (const [key, value] of Object.entries(base)) {
+      if (key === 'maxUsers' || key === 'maxDevices') {
+        features[key] = value; // numeric fields — not overridable
+      } else {
+        features[key] = key in overrides ? overrides[key] : value;
+      }
+    }
+
     return {
       plan: tenant.plan,
       status: tenant.status,
-      features: features[tenant.plan],
+      features,
     };
   });
 
