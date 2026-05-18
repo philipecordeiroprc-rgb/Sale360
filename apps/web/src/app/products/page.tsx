@@ -434,7 +434,7 @@ export default function ProductsPage() {
                                     e.stopPropagation();
                                     if (!confirm('Remover foto do produto?')) return;
                                     try {
-                                      await api.products.update(product.id, { imageUrl: null as any });
+                                      await api.products.update(product.id, { imageUrl: null });
                                       show('Foto removida!');
                                       await loadProducts();
                                     } catch { show('Erro ao remover foto', 'error'); }
