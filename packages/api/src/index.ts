@@ -16,6 +16,7 @@ import { supplierRoutes } from './routes/suppliers/index.js';
 import { purchaseRoutes } from './routes/purchases/index.js';
 import { inventoryRoutes } from './routes/inventory/index.js';
 import { reportRoutes } from './routes/reports/index.js';
+import { paymentConfigRoutes } from './routes/payment-configs/index.js';
 import { authMiddleware } from './middleware/auth.js';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
