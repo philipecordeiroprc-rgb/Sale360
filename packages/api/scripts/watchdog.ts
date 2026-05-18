@@ -12,6 +12,7 @@ const RESTART_WINDOW = 30000; // 30s window for rate limiting
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
+const apiRoot = path.resolve(__dirname, '..');
 
 let restarts = 0;
 let windowStart = Date.now();
