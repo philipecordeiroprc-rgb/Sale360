@@ -119,6 +119,10 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
     onChange(variations.map((v) => ({ ...v, stockQty: qty })));
   };
 
+  const setAllLowStock = (qty: number) => {
+    onChange(variations.map((v) => ({ ...v, lowStockAt: qty })));
+  };
+
   // Count new combinations
   const countNew = (): number => {
     if (!hasSelection) return 0;
