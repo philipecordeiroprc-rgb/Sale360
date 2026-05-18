@@ -9,6 +9,9 @@ const purchaseItemSchema = z.object({
   quantity: z.number().positive('Quantidade deve ser positiva'),
   unitCost: z.number().min(0, 'Custo unitário não pode ser negativo'),
   total: z.number(),
+  salePrice: z.number().optional(),
+  taxRatePct: z.number().optional(),
+  marginPct: z.number().optional(),
 });
 
 const createPurchaseSchema = z.object({
