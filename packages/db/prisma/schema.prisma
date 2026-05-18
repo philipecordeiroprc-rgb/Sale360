@@ -462,6 +462,7 @@ model Order {
   paymentMethod String    // "pix", "credit", "debit", "cash", "credit_store"
   paymentStatus PaymentStatus @default(PAID)
   syncStatus    SyncStatus @default(SYNCED)
+  couponId      String?
   notes         String?
   createdAtDevice DateTime? // timestamp real da venda (offline)
   createdAt       DateTime  @default(now())
@@ -469,6 +470,7 @@ model Order {
   tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user     User?      @relation(fields: [userId], references: [id])
   customer Customer?  @relation(fields: [customerId], references: [id])
+  coupon   Coupon?    @relation(fields: [couponId], references: [id])
   delivery Delivery?
   items    OrderItem[]
 
