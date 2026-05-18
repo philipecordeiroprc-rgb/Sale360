@@ -171,11 +171,7 @@ export default function TenantDetailPage() {
   const handleRemoveUser = async (userId: string) => {
     if (!confirm('Remover este usuário da loja?')) return;
     try {
-      const token = getToken();
-      await fetch(`${API_URL}/api/admin/tenants/${id}/users/${userId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.admin.tenants.users.remove(id, userId);
       show('Usuário removido!');
       loadUsers();
     } catch (err: any) {
