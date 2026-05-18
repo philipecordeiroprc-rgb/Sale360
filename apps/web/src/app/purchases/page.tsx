@@ -17,7 +17,9 @@ interface PurchaseItemData {
   productId: string;
   productName: string;
   costPrice: number;   // unit cost (lote PEPS)
-  salePrice: number;    // optional: update product selling price
+  salePrice: number;    // preço de venda (calculado ou manual)
+  taxRatePct: number;   // taxa cartão (%)
+  marginPct: number;    // margem de lucro (%)
   quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
@@ -28,9 +30,18 @@ const emptyItem: PurchaseItemData = {
   productName: '',
   costPrice: 0,
   salePrice: 0,
+  taxRatePct: 0,
+  marginPct: 0,
   quantity: 1,
   hasVariations: false,
   variations: [],
+};
+
+// Calcula preço de venda: cost / (1 - (margin% + tax%))
+const calcSalePrice = (cost: number, marginPct: number, taxPct: number): number => {
+  const divisor = 1 - (marginPct / 100) - (taxPct / 100);
+  if (divisor <= 0) return 0;
+  return Math.round((cost / divisor) * 100) / 100;
 };
 
 function useToast() {
