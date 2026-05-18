@@ -43,12 +43,14 @@ export default function LoginPage() {
         return;
       }
 
-      // Set cookie via API route (or set directly)
-      document.cookie = `sale360_token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-      document.cookie = `sale360_user=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
-      document.cookie = `sale360_tenant=${encodeURIComponent(JSON.stringify(data.tenant))}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+      useAuth.getState().setAuth({
+        token: data.token,
+        user: data.user,
+        tenant: data.tenant,
+      });
 
-      router.push('/dashboard');
+      const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
+      router.push(redirectTo);
       router.refresh();
     } catch (err) {
       setError('Erro de conexão. Verifique sua internet.');
