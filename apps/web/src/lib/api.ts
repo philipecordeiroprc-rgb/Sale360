@@ -314,6 +314,45 @@ export const api = {
     },
   },
 
+  // Coupons
+  coupons: {
+    list(params?: { search?: string; active?: boolean }) {
+      const sp = new URLSearchParams();
+      if (params?.search) sp.set('search', params.search);
+      if (params?.active !== undefined) sp.set('active', String(params.active));
+      const qs = sp.toString();
+      return request<{ coupons: any[] }>(`/api/coupons${qs ? `?${qs}` : ''}`);
+    },
+    get(id: string) {
+      return request<any>(`/api/coupons/${id}`);
+    },
+    create(data: {
+      code: string;
+      description?: string;
+      discountType: 'PERCENTAGE' | 'FIXED';
+      discountValue: number;
+      minOrderValue?: number;
+      maxDiscount?: number;
+      usageLimit?: number;
+      validFrom?: string;
+      validUntil?: string;
+      active?: boolean;
+      productIds?: string[];
+      categoryIds?: string[];
+    }) {
+      return request<any>('/api/coupons', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(id: string, data: Record<string, unknown>) {
+      return request<any>(`/api/coupons/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+    delete(id: string) {
+      return request<{ success: boolean }>(`/api/coupons/${id}`, { method: 'DELETE' });
+    },
+    validate(data: { code: string; orderSubtotal: number; productIds?: string[]; categoryIds?: string[] }) {
+      return request<any>('/api/coupons/validate', { method: 'POST', body: JSON.stringify(data) });
+    },
+  },
+
   // Dashboard
   dashboard: {
     summary() {
