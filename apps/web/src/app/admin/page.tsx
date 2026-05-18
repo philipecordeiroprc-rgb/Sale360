@@ -181,7 +181,7 @@ export default function AdminPage() {
               tenants.map((t) => (
                 <tr
                   key={t.id}
-                  onClick={() => openEdit(t)}
+                  onClick={() => router.push(`/admin/tenants/${t.id}`)}
                   className="border-b border-slate-800/50 hover:bg-slate-800/50 cursor-pointer transition-colors"
                 >
                   <td className="px-6 py-4">
