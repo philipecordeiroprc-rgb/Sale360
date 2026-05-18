@@ -137,6 +137,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
             unitCost: item.unitCost,
             total: item.total,
             salePrice: item.salePrice || undefined,
+            operationalCost: item.operationalCost || undefined,
             taxRatePct: item.taxRatePct || undefined,
             marginPct: item.marginPct || undefined,
           })),
@@ -149,7 +150,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       },
     });
 
-    // Update product pricing (price + taxRate) for items with salePrice
+    // Update product pricing for items with salePrice
     for (const item of items) {
       if (item.productId && item.salePrice && item.salePrice > 0) {
         await prisma.product.update({
@@ -157,6 +158,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           data: {
             price: item.salePrice,
             taxRate: item.taxRatePct || undefined,
+            operationalCost: item.operationalCost || undefined,
           },
         });
       }
@@ -208,6 +210,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
               unitCost: item.unitCost,
               total: item.total,
               salePrice: item.salePrice || undefined,
+              operationalCost: item.operationalCost || undefined,
               taxRatePct: item.taxRatePct || undefined,
               marginPct: item.marginPct || undefined,
             })),
