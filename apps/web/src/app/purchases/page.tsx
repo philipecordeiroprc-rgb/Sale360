@@ -189,8 +189,14 @@ export default function PurchasesPage() {
         })),
       });
     } else if (hasTemplate) {
-      // Generate variation combos from template
-      const combos = generateCombos(template.dimensions);
+      // Template-based: user builds variation rows manually with dropdowns
+      const dims = template.dimensions.map((d: any) => ({
+        ...d,
+        options: Array.isArray(d.options) ? d.options : (typeof d.options === 'string' ? JSON.parse(d.options) : []),
+      }));
+      setTemplateDims(dims);
+      setRowDims({});
+      setRowQty(0);
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -201,13 +207,7 @@ export default function PurchasesPage() {
         salePrice: Number(p.price || 0),
         quantity: 0,
         hasVariations: true,
-        variations: combos.map((name: string) => ({
-          id: undefined,
-          name,
-          priceModifier: 0,
-          stockQty: 0,
-          lowStockAt: undefined,
-        })),
+        variations: [], // starts empty, rows added manually
       });
     } else {
       // Simple product, no variations
