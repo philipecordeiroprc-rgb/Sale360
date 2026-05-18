@@ -3,6 +3,8 @@
  * Spawns tsx watch and restarts it if it dies unexpectedly.
  */
 import { spawn, execSync } from 'child_process';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 const MAX_RESTARTS = 10;
 const RESTART_DELAY = 2000; // 2s between restarts
