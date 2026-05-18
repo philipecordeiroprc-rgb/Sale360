@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthHydrator } from '@/components/layout/AuthHydrator';
+import { ClientShell } from '@/components/layout/ClientShell';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -13,12 +13,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body className="bg-slate-950 text-white antialiased">
         <AuthHydrator>
-          <div className="flex">
-            <Sidebar />
-            <main className="ml-64 flex-1 p-8 min-h-screen">
-              {children}
-            </main>
-          </div>
+          <ClientShell>
+            {children}
+          </ClientShell>
         </AuthHydrator>
       </body>
     </html>
