@@ -108,11 +108,7 @@ export default function TenantDetailPage() {
   const loadUsers = async () => {
     setUsersLoading(true);
     try {
-      const token = getToken();
-      const res = await fetch(`${API_URL}/api/admin/tenants/${id}/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+      const data = await api.admin.tenants.users.list(id);
       setUsers(Array.isArray(data) ? data : []);
     } catch {
       setUsers([]);
