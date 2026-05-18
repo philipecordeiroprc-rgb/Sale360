@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Sidebar } from './Sidebar';
+import { PageTitle } from './PageTitle';
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
