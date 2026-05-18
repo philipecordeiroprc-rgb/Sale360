@@ -401,8 +401,11 @@ export const api = {
       },
     },
     users: {
-      list() {
-        return request<any[]>('/api/admin/users');
+      list(params?: { search?: string }) {
+        const sp = new URLSearchParams();
+        if (params?.search) sp.set('search', params.search);
+        const qs = sp.toString();
+        return request<{ users: any[]; total: number; page: number; totalPages: number }>(`/api/admin/users${qs ? `?${qs}` : ''}`);
       },
       resetPassword(userId: string, password: string) {
         return request<any>(`/api/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
