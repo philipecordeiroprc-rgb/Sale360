@@ -173,6 +173,7 @@ export default function PurchasesPage() {
 
     if (hasExistingVars) {
       // Use existing variations
+      setTemplateDims([]);
       setCurrentItem({
         productId: p.id,
         productName: p.name,
