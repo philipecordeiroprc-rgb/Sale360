@@ -241,6 +241,9 @@ export default function PurchasesPage() {
     if (effectiveQty <= 0) { show('Quantidade deve ser maior que zero', 'error'); return; }
     setPurchaseItems([...purchaseItems, { ...currentItem, quantity: effectiveQty }]);
     setCurrentItem({ ...emptyItem });
+    setTemplateDims([]);
+    setRowDims({});
+    setRowQty(0);
     setProductSearch('');
     setProductResults([]);
   };
