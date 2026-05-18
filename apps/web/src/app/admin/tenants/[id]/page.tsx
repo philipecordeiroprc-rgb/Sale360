@@ -3,14 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Plus, X, Trash2, Loader2, Save } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-
-function getToken(): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(/(?:^|;\s*)sale360_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
+import api from '@/lib/api';
 
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
