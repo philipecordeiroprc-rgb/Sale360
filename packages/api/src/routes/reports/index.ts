@@ -37,7 +37,7 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     const orderCount = orders.length;
     const avgTicket = orderCount > 0 ? revenue / orderCount : 0;
 
-    // Profit = revenue - CMV (totalCost) - operational cost
+    // Profit = revenue - CMV (totalCost) - operational cost - tax (card fee)
     let costTotal = 0;
     let profit = 0;
     for (const o of orders) {
@@ -45,8 +45,10 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         const itemRevenue = Number(item.total);
         const itemCost = Number(item.totalCost || 0);
         const opsCost = (Number(item.product?.operationalCost || 0)) * Number(item.quantity);
-        costTotal += itemCost + opsCost;
-        profit += itemRevenue - itemCost - opsCost;
+        const taxRate = Number(item.taxRate || 0); // taxa cartão (%) no momento da venda
+        const taxAmount = itemRevenue * (taxRate / 100);
+        costTotal += itemCost + opsCost + taxAmount;
+        profit += itemRevenue - itemCost - opsCost - taxAmount;
       }
     }
 
