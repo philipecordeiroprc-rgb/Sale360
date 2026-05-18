@@ -171,9 +171,9 @@ BUILD_FAILED=false
 # Build DB (if changed) — no service restart needed, just regenerate client
 if ${CHANGED_DB:-false}; then
   cd "$ROOT/packages/db"
-  with_spinner "DB: prisma generate" pnpm exec prisma generate || true
+  keepalive_run "DB: prisma generate" pnpm exec prisma generate || true
   if [ -f "$ROOT/packages/db/generated/index.js" ]; then
-    with_spinner "DB: tsc" npx tsc src/index.ts src/client.ts --outDir dist --module ESNext --moduleResolution bundler --target ES2022 --esModuleInterop --skipLibCheck
+    keepalive_run "DB: tsc" npx tsc src/index.ts src/client.ts --outDir dist --module ESNext --moduleResolution bundler --target ES2022 --esModuleInterop --skipLibCheck
     save_hashes "$ROOT/packages/db/prisma" "db-prisma"
     save_hashes "$ROOT/packages/db/src" "db-src"
   fi
@@ -182,7 +182,7 @@ fi
 # Build API (if changed) — build while old version is still running
 if ${CHANGED_API:-false}; then
   cd "$ROOT/packages/api"
-  if with_spinner "API: tsc" npx tsc; then
+  if keepalive_run "API: tsc" npx tsc; then
     save_hashes "$ROOT/packages/api/src" "api-src"
   else
     log "⚠️  API build falhou — serviço antigo continua rodando"
@@ -193,7 +193,7 @@ fi
 # Build Web (if changed) — build while old version is still running
 if ${CHANGED_WEB:-false}; then
   cd "$ROOT/apps/web"
-  if with_spinner "Web: next build" npx next build; then
+  if keepalive_run "Web: next build" npx next build; then
     save_hashes "$ROOT/apps/web/src" "web-src"
   else
     log "⚠️  Web build falhou — serviço antigo continua rodando"
