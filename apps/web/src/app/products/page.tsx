@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
+import { StockDetailModal } from '@/components/products/StockDetailModal';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 interface FormData {
