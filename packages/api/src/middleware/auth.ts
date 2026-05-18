@@ -44,6 +44,15 @@ export async function authMiddleware(
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
+    // SUPER_ADMIN — no tenant context needed
+    if (payload.role === 'SUPER_ADMIN') {
+      request.tenantId = '';
+      request.userId = payload.userId;
+      request.deviceId = payload.deviceId;
+      request.userRole = payload.role;
+      return;
+    }
+
     // Verify tenant exists and is active
     const tenant = await prisma.tenant.findUnique({
       where: { id: payload.tenantId },
@@ -66,7 +75,7 @@ export async function authMiddleware(
     }
 
     // Inject tenant info into request
-    request.tenantId = payload.tenantId;
+    request.tenantId = payload.tenantId!;
     request.userId = payload.userId;
     request.deviceId = payload.deviceId;
     request.userRole = payload.role;
