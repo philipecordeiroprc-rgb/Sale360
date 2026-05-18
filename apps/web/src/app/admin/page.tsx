@@ -48,14 +48,8 @@ export default function AdminPage() {
 
   const fetchTenants = async () => {
     try {
-      const token = getToken();
-      const sp = new URLSearchParams();
-      if (search) sp.set('search', search);
-      const res = await fetch(`${API_URL}/api/admin/tenants?${sp.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setTenants(Array.isArray(data) ? data : data.tenants || []);
+      const data = await api.admin.tenants.list({ search: search || undefined });
+      setTenants(data?.tenants || []);
     } catch {
       setTenants([]);
     } finally {
