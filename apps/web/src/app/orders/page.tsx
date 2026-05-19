@@ -637,9 +637,20 @@ export default function OrdersPage() {
                 })}
               </div>
               {selectedPayment.paymentStatus === 'PENDING' && (
-                <p className="text-xs text-amber-400 mt-2">
-                  ⚠ Venda pendente — será registrada como fiado do cliente.
-                </p>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label className="block text-slate-400 text-xs mb-1">Data de Vencimento</label>
+                    <input
+                      type="date"
+                      value={dueDate}
+                      onChange={(e) => setDueDate(e.target.value)}
+                      className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                  <p className="text-xs text-amber-400">
+                    ⚠ Venda pendente — será registrada como fiado do cliente.
+                  </p>
+                </div>
               )}
             </div>
           )}
