@@ -99,7 +99,7 @@ interface AppState {
 
   // Products (cached locally)
   products: Product[];
-  categories: { id: string; name: string; color: string }[];
+  categories: { id: string; name: string }[];
 
   // Commands
   commands: TableCommand[];
