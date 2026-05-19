@@ -202,7 +202,7 @@ export default function ProductsPage() {
   const activeCategories = categories.filter((c) => c._count.products > 0);
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-4 animate-slide-up">
       {/* Toast */}
       {toast && (
         <div
