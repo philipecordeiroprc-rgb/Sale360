@@ -273,7 +273,7 @@ function UsuariosTab() {
         </button>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-x-auto">
         {loading ? (
           <div className="p-8 flex justify-center">
             <Loader2 size={24} className="animate-spin text-slate-400" />
@@ -283,7 +283,7 @@ function UsuariosTab() {
         ) : users.length === 0 ? (
           <div className="p-8 text-center text-slate-500">Nenhum usuario cadastrado.</div>
         ) : (
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead>
               <tr className="border-b border-slate-800">
                 <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Nome</th>
