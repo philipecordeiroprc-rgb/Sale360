@@ -11,6 +11,7 @@ interface Tenant {
   companyName: string;
   plan: string;
   status: string;
+  trialEndsAt?: string | null;
   _count?: { users: number; products: number; orders: number };
   createdAt: string;
 }
