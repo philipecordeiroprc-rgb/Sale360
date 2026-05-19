@@ -73,11 +73,13 @@ export default function TenantDetailPage() {
     try {
       const data = await api.admin.tenants.get(id);
       setTenant(data);
+      const trialEnd = data.trialEndsAt ? new Date(data.trialEndsAt).toISOString().split('T')[0] : '';
       setInfoForm({
         companyName: data.companyName || '',
         slug: data.slug || '',
         plan: data.plan || 'PRO',
         status: data.status || 'TRIAL',
+        trialEndsAt: trialEnd,
       });
     } catch (err: any) {
       show(err.message || 'Erro ao carregar loja', 'error');
