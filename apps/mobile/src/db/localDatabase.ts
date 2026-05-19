@@ -111,7 +111,7 @@ export async function saveProductsLocally(
       p.id, p.name, p.description || null, p.barcode || null,
       p.price, p.costPrice || null, p.stockQty, p.unit || 'UN',
       p.imageUrl || null, p.category?.id || null,
-      p.category?.name || null, p.category?.color || null,
+      p.category?.name || null,
       p.isFractional ? 1 : 0, p.hasVariations ? 1 : 0,
       p.active ? 1 : 0, p.updatedAt || new Date().toISOString(),
     ]);
