@@ -1,37 +1,16 @@
+import Link from 'next/link';
+
 export default function NotFound() {
   return (
-    <html>
-      <body>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          background: '#020617',
-          color: '#fff',
-          fontFamily: 'system-ui, sans-serif',
-        }}>
-          <h1 style={{ fontSize: '6rem', fontWeight: 900, color: '#818cf8', margin: 0 }}>404</h1>
-          <p style={{ fontSize: '1.25rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-            Página não encontrada
-          </p>
-          <a
-            href="/dashboard"
-            style={{
-              marginTop: '2rem',
-              padding: '0.75rem 1.5rem',
-              background: '#6366f1',
-              color: '#fff',
-              borderRadius: '0.75rem',
-              textDecoration: 'none',
-              fontWeight: 600,
-            }}
-          >
-            Voltar ao Painel
-          </a>
-        </div>
-      </body>
-    </html>
+    <div className="min-h-dvh flex flex-col items-center justify-center bg-slate-950 text-white p-4">
+      <h1 className="text-6xl font-black text-indigo-400 mb-2">404</h1>
+      <p className="text-lg text-slate-400 mb-6">Página não encontrada</p>
+      <Link
+        href="/dashboard"
+        className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl font-semibold transition-colors"
+      >
+        Voltar ao Painel
+      </Link>
+    </div>
   );
 }
