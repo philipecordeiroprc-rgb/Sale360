@@ -208,6 +208,9 @@ export const api = {
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
+    pay(id: string, data?: { paidAmount?: number }) {
+      return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
+    },
   },
 
   // Suppliers
