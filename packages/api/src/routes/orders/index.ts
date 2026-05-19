@@ -457,11 +457,16 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         createdAt: { gte: today },
         status: 'COMPLETED',
       },
-      select: { total: true, paymentMethod: true },
+      select: { total: true, paymentMethod: true, paymentStatus: true },
     });
 
-    const totalSales = orders.reduce((sum, o) => sum + Number(o.total), 0);
-    const count = orders.length;
+    const paidOrders = orders.filter(o => o.paymentStatus === 'PAID');
+    const pendingOrders = orders.filter(o => o.paymentStatus === 'PENDING' || o.paymentStatus === 'CREDIT_STORE');
+
+    const totalSales = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const pendingAmount = pendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const count = paidOrders.length;
+    const pendingCount = pendingOrders.length;
     const byMethod = orders.reduce((acc: Record<string, { count: number; total: number }>, o) => {
       const method = o.paymentMethod || 'outro';
       if (!acc[method]) acc[method] = { count: 0, total: 0 };
@@ -470,6 +475,72 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       return acc;
     }, {});
 
-    return { date: today.toISOString().slice(0, 10), totalSales, count, byMethod };
+    return { date: today.toISOString().slice(0, 10), totalSales, count, pendingAmount, pendingCount, byMethod };
+  });
+
+  // Receive payment for a pending fiado order
+  app.post('/:id/pay', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const order = await prisma.order.findFirst({
+      where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
+      include: { items: true, customer: true },
+    });
+    if (!order) return reply.status(404).send({ error: 'Venda não encontrada' });
+
+    if (order.paymentStatus === 'PAID') {
+      return reply.status(400).send({ error: 'Venda já está paga' });
+    }
+    if (order.status === 'CANCELLED') {
+      return reply.status(400).send({ error: 'Venda cancelada não pode ser paga' });
+    }
+
+    const schema = z.object({
+      paidAmount: z.number().optional(), // valor parcial (default: total)
+    });
+    const parsed = schema.safeParse(request.body || {});
+    const paidAmount = parsed.success && parsed.data.paidAmount ? parsed.data.paidAmount : Number(order.total);
+    const newPaymentStatus = paidAmount >= Number(order.total) ? 'PAID' : 'PARTIAL';
+
+    await prisma.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id: order.id },
+        data: {
+          paymentStatus: newPaymentStatus,
+          paidAmount: { increment: paidAmount },
+        },
+      });
+
+      // Update cash flow
+      await tx.cashFlow.updateMany({
+        where: { orderId: order.id, type: 'IN' },
+        data: { paidAt: new Date() },
+      });
+
+      // Decrease customer creditBalance and create PAYMENT transaction
+      if (order.customerId) {
+        const updatedCustomer = await tx.customer.update({
+          where: { id: order.customerId },
+          data: { creditBalance: { decrement: paidAmount } },
+        });
+        await tx.creditTransaction.create({
+          data: {
+            customerId: order.customerId,
+            type: 'PAYMENT',
+            amount: paidAmount,
+            balanceAfter: updatedCustomer.creditBalance,
+            referenceId: order.id,
+            notes: `Pagamento venda #${order.orderNumber}`,
+          },
+        });
+      }
+    });
+
+    if (newPaymentStatus === 'PARTIAL') {
+      const remaining = Number(order.total) - Number(order.paidAmount) - paidAmount;
+      return { success: true, status: 'PARTIAL', remaining, message: `Pagamento parcial recebido. Restam R$ ${remaining.toFixed(2)}` };
+    }
+
+    return { success: true, status: 'PAID', message: 'Pagamento recebido com sucesso!' };
   });
 };
