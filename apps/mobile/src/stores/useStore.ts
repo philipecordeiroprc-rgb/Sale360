@@ -127,7 +127,7 @@ interface AppState {
 
   // Products cache
   setProducts: (products: Product[]) => void;
-  setCategories: (categories: { id: string; name: string; color: string }[]) => void;
+  setCategories: (categories: { id: string; name: string }[]) => void;
   updateProductStock: (productId: string, newStock: number) => void;
 
   // Commands
