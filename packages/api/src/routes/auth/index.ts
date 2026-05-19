@@ -279,6 +279,71 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
+  // Switch tenant (for users with multiple stores)
+  app.post('/switch-tenant', async (request, reply) => {
+    const schema = z.object({
+      tenantId: z.string().min(1),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'tenantId é obrigatório' });
+    }
+
+    // Extract userId from JWT
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return reply.status(401).send({ error: 'Token não encontrado' });
+    }
+
+    try {
+      const jwt = await import('jsonwebtoken');
+      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
+
+      // Verify user belongs to this tenant
+      const tenantUser = await prisma.tenantUser.findFirst({
+        where: { userId: payload.userId, tenantId: parsed.data.tenantId },
+        include: { tenant: true },
+      });
+
+      if (!tenantUser) {
+        return reply.status(403).send({ error: 'Acesso negado para esta empresa' });
+      }
+
+      // Verify tenant status
+      if (tenantUser.tenant.status === 'SUSPENDED' || tenantUser.tenant.status === 'CANCELLED') {
+        return reply.status(403).send({ error: 'Empresa indisponível' });
+      }
+
+      // Generate new token with selected tenant
+      const token = generateToken({
+        userId: payload.userId,
+        tenantId: tenantUser.tenantId,
+        role: tenantUser.role,
+      });
+      const refreshToken = generateRefreshToken(payload.userId);
+
+      return {
+        token,
+        refreshToken,
+        user: {
+          id: payload.userId,
+          role: tenantUser.role,
+          pin: tenantUser.pin,
+        },
+        tenant: {
+          id: tenantUser.tenant.id,
+          slug: tenantUser.tenant.slug,
+          companyName: tenantUser.tenant.companyName,
+          plan: tenantUser.tenant.plan,
+          status: tenantUser.tenant.status,
+        },
+      };
+    } catch {
+      return reply.status(401).send({ error: 'Token inválido ou expirado' });
+    }
+  });
+
   // Refresh token
   app.post('/refresh', async (request, reply) => {
     const schema = z.object({ refreshToken: z.string() });
