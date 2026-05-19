@@ -533,10 +533,7 @@ export default function ProductsPage() {
                       {/* Category */}
                       <td className="px-4 py-3 hidden lg:table-cell">
                         {product.category ? (
-                          <span
-                            className="px-2 py-0.5 rounded-md text-xs text-white whitespace-nowrap"
-                            style={{ backgroundColor: (product.category.color || '#6366F1') + '50' }}
-                          >
+                          <span className="px-2 py-0.5 rounded-md text-xs text-white whitespace-nowrap bg-indigo-500/20">
                             {product.category.name}
                           </span>
                         ) : (
