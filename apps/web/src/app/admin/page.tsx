@@ -220,14 +220,16 @@ export default function AdminPage() {
               </div>
 
               <div>
-                <label className="block text-slate-400 text-sm mb-1">Slug (URL)</label>
+                <label className="block text-slate-400 text-sm mb-1">Slug (identificador único na URL)</label>
                 <input
                   type="text"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                  placeholder="Ex: minha-loja"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                   required
                 />
+                <p className="text-slate-500 text-xs mt-1">Apenas letras minúsculas e hífen. Ex: minha-loja</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -256,6 +258,17 @@ export default function AdminPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">Término do Trial</label>
+                <input
+                  type="date"
+                  value={form.trialEndsAt}
+                  onChange={(e) => setForm({ ...form, trialEndsAt: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+                <p className="text-slate-500 text-xs mt-1">Deixe em branco para sem data de trial</p>
               </div>
 
               {error && (
