@@ -101,9 +101,9 @@ export async function saveProductsLocally(
   const stmt = await database.prepareAsync(
     `INSERT OR REPLACE INTO products
      (id, name, description, barcode, price, cost_price, stock_qty, unit,
-      image_url, category_id, category_name, category_color,
+      image_url, category_id, category_name,
       is_fractional, has_variations, active, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   );
 
   for (const p of products) {
