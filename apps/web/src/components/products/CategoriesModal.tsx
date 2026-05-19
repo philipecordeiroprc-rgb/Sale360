@@ -5,19 +5,6 @@ import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
-const PRESET_COLORS = [
-  '#6366F1', // indigo
-  '#3B82F6', // blue
-  '#34D399', // emerald
-  '#F59E0B', // amber
-  '#EC4899', // pink
-  '#8B5CF6', // violet
-  '#EF4444', // red
-  '#06B6D4', // cyan
-  '#F97316', // orange
-  '#84CC16', // lime
-];
-
 interface CategoriesModalProps {
   open: boolean;
   onClose: () => void;
@@ -31,13 +18,11 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
 
   // New category form
   const [newName, setNewName] = useState('');
-  const [newColor, setNewColor] = useState(PRESET_COLORS[0]);
   const [adding, setAdding] = useState(false);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editColor, setEditColor] = useState('');
   const [editTemplateId, setEditTemplateId] = useState('');
   const [saving, setSaving] = useState(false);
   const [newTemplateId, setNewTemplateId] = useState('');
@@ -76,11 +61,9 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
       setAdding(true);
       await api.categories.create({
         name: newName.trim(),
-        color: newColor,
         variationTemplateId: newTemplateId || undefined,
       });
       setNewName('');
-      setNewColor(PRESET_COLORS[0]);
       setNewTemplateId('');
       await loadCategories();
       onChanged();
@@ -94,7 +77,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   const handleEdit = (cat: CategoryWithCount) => {
     setEditingId(cat.id);
     setEditName(cat.name);
-    setEditColor(cat.color || PRESET_COLORS[0]);
     setEditTemplateId(cat.variationTemplateId || '');
   };
 
@@ -104,7 +86,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
       setSaving(true);
       await api.categories.update(editingId, {
         name: editName.trim(),
-        color: editColor,
         variationTemplateId: editTemplateId || null,
       });
       setEditingId(null);
@@ -162,18 +143,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
               onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
             />
           </div>
-          <div className="flex gap-1 items-center">
-            {PRESET_COLORS.slice(0, 5).map((c) => (
-              <button
-                key={c}
-                onClick={() => setNewColor(c)}
-                className={`w-6 h-6 rounded-full border-2 transition-all ${
-                  newColor === c ? 'border-white scale-110' : 'border-transparent'
-                }`}
-                style={{ backgroundColor: c }}
-              />
-            ))}
-          </div>
           <button
             onClick={handleAdd}
             disabled={adding || !newName.trim()}
@@ -182,21 +151,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
             <Plus size={16} />
             {adding ? '...' : 'Adicionar'}
           </button>
-        </div>
-
-        {/* Color picker expanded */}
-        <div className="flex gap-1 flex-wrap">
-          {PRESET_COLORS.map((c) => (
-            <button
-              key={c}
-              onClick={() => setNewColor(c)}
-              className={`w-5 h-5 rounded-full border-2 transition-all ${
-                newColor === c ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'
-              }`}
-              style={{ backgroundColor: c }}
-              title={c}
-            />
-          ))}
         </div>
 
         {/* Template de variação */}
@@ -227,12 +181,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
                   key={cat.id}
                   className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-800/50 transition-colors group"
                 >
-                  {/* Color dot */}
-                  <div
-                    className="w-4 h-4 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: cat.color || '#6366F1' }}
-                  />
-
                   {editingId === cat.id ? (
                     <div className="flex flex-col gap-2 flex-1">
                       <div className="flex items-center gap-2">
@@ -244,18 +192,6 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
                           onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit()}
                           autoFocus
                         />
-                        <div className="flex gap-1">
-                          {PRESET_COLORS.slice(0, 5).map((c) => (
-                            <button
-                              key={c}
-                              onClick={() => setEditColor(c)}
-                              className={`w-5 h-5 rounded-full border-2 transition-all ${
-                                editColor === c ? 'border-white' : 'border-transparent'
-                              }`}
-                              style={{ backgroundColor: c }}
-                            />
-                          ))}
-                        </div>
                         <button
                           onClick={handleSaveEdit}
                           disabled={saving}
