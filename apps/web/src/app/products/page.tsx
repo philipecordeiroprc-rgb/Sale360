@@ -345,7 +345,7 @@ export default function ProductsPage() {
       )}
 
       {!loading && !error && products.length === 0 && (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center">
           <div className="text-5xl mb-4">📦</div>
           <h3 className="text-xl font-semibold text-white mb-2">Nenhum produto encontrado</h3>
           <p className="text-slate-400 mb-6">
