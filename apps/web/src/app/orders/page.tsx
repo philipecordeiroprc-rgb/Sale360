@@ -40,6 +40,7 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [todayRevenue, setTodayRevenue] = useState(0);
+  const [pendingRevenue, setPendingRevenue] = useState(0);
   const { toast, show } = useToast();
   const searchTimer = useRef<NodeJS.Timeout>(undefined);
   const [search, setSearch] = useState('');
