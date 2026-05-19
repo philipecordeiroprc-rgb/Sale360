@@ -45,7 +45,7 @@ export default function TenantDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('info');
 
   // Info form
-  const [infoForm, setInfoForm] = useState({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL' });
+  const [infoForm, setInfoForm] = useState({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL', trialEndsAt: '' });
   const [infoSaving, setInfoSaving] = useState(false);
 
   // Users
