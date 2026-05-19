@@ -51,7 +51,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <h1 className="ml-2 text-base font-bold text-indigo-400">SALE360</h1>
       </div>
 
-      <main className="flex-1 p-3 md:p-5 md:ml-52 mt-12 md:mt-0 w-full max-w-full overflow-x-hidden" style={{ height: '100dvh' }}>
+      <main className="flex-1 p-3 md:p-5 min-h-screen md:ml-52 mt-12 md:mt-0 w-full max-w-full overflow-x-hidden">
         <PageTitle />
         <PullToRefresh>
           {children}
