@@ -68,7 +68,8 @@ export default function AdminPage() {
 
   const openEdit = (t: Tenant) => {
     setEditingId(t.id);
-    setForm({ companyName: t.companyName, slug: t.slug, plan: t.plan, status: t.status });
+    const trialEnd = t.trialEndsAt ? new Date(t.trialEndsAt).toISOString().split('T')[0] : '';
+    setForm({ companyName: t.companyName, slug: t.slug, plan: t.plan, status: t.status, trialEndsAt: trialEnd });
     setError('');
     setShowModal(true);
   };
