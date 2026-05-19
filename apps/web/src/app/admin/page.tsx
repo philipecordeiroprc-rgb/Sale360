@@ -61,7 +61,7 @@ export default function AdminPage() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL' });
+    setForm({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL', trialEndsAt: '' });
     setError('');
     setShowModal(true);
   };
