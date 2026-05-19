@@ -60,28 +60,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-dvh bg-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
         {/* Logo */}
-        <div className="text-center mb-10">
+        <div className="text-center mb-6">
           <img
             src="/icon-192.png"
             alt="Sale360"
-            className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-lg shadow-indigo-500/20"
+            className="w-14 h-14 mx-auto mb-3 rounded-2xl shadow-lg shadow-indigo-500/20"
           />
-          <h1 className="text-4xl font-black text-white tracking-tight">
+          <h1 className="text-3xl font-black text-white tracking-tight">
             Sale<span className="text-indigo-400">360</span>
           </h1>
-          <p className="text-slate-400 mt-1 text-lg">PDV Inteligente</p>
+          <p className="text-slate-400 mt-0.5 text-base">PDV Inteligente</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-xl font-bold text-white text-center mb-6">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <h2 className="text-lg font-bold text-white text-center mb-4">
             {mode === 'pin' ? 'Login Rápido (PIN)' : 'Entrar'}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3">
             {/* Email */}
             <div>
               <label className="block text-slate-400 text-sm mb-1">Email</label>
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu@email.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               />
             </div>
@@ -106,14 +106,14 @@ export default function LoginPage() {
                 onChange={(e) => mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value)}
                 maxLength={mode === 'pin' ? 4 : undefined}
                 placeholder={mode === 'pin' ? '1234' : '••••••'}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               />
             </div>
 
             {/* Error */}
             {error && (
-              <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-3 text-red-400 text-sm">
+              <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
                 {error}
               </div>
             )}
@@ -122,34 +122,30 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
+              className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
-          {/* Toggle mode */}
-          <div className="mt-4 text-center">
+          {/* Toggle & Forgot */}
+          <div className="mt-3 flex items-center justify-between text-sm">
             <button
               onClick={() => { setMode(mode === 'pin' ? 'password' : 'pin'); setError(''); }}
-              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-indigo-400 hover:text-indigo-300 transition-colors"
             >
-              {mode === 'pin' ? 'Usar senha' : 'Usar PIN rápido'}
+              {mode === 'pin' ? 'Usar senha' : 'Usar PIN'}
             </button>
-          </div>
-
-          {/* Forgot password */}
-          <div className="mt-3 text-center">
             <a
               href="/forgot-password"
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-slate-500 hover:text-slate-300 transition-colors"
             >
               Esqueceu a senha?
             </a>
           </div>
 
           {/* Credentials hint */}
-          <div className="mt-6 pt-4 border-t border-slate-800">
+          <div className="mt-4 pt-3 border-t border-slate-800">
             <p className="text-xs text-slate-400 text-center">
               Demo: admin@sale360.app / admin123
             </p>
