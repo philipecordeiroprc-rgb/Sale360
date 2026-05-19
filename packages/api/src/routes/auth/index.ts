@@ -56,40 +56,57 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       };
     }
 
-    // Find tenant (first one for simplicity; in production support multiple)
-    const tenantUser = await prisma.tenantUser.findFirst({
+    // Find all tenants for this user
+    const tenantUsers = await prisma.tenantUser.findMany({
       where: { userId: user.id },
       include: { tenant: true },
+      orderBy: { tenant: { companyName: 'asc' } },
     });
 
-    if (!tenantUser) {
+    if (tenantUsers.length === 0) {
       return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
     }
 
-    // If PIN provided, validate
-    if (pin && tenantUser.pin !== pin) {
-      return reply.status(401).send({ error: 'PIN incorreto' });
+    // Build tenants list
+    const tenants = tenantUsers.map((tu) => ({
+      id: tu.tenant.id,
+      slug: tu.tenant.slug,
+      companyName: tu.tenant.companyName,
+      plan: tu.tenant.plan,
+      status: tu.tenant.status,
+      role: tu.role,
+      pin: tu.pin,
+    }));
+
+    // Pick first tenant as default (or match by PIN if provided)
+    let selectedTu = tenantUsers[0];
+    if (pin) {
+      const matched = tenantUsers.find((tu) => tu.pin === pin);
+      if (!matched) {
+        return reply.status(401).send({ error: 'PIN incorreto' });
+      }
+      selectedTu = matched;
     }
 
     // If deviceId, register device
     if (deviceId) {
       await prisma.device.upsert({
-        where: { tenantId_name: { tenantId: tenantUser.tenantId, name: deviceId } },
+        where: { tenantId_name: { tenantId: selectedTu.tenantId, name: deviceId } },
         update: { lastSyncAt: new Date() },
         create: {
-          tenantId: tenantUser.tenantId,
+          tenantId: selectedTu.tenantId,
           name: deviceId,
           type: 'mobile',
         },
       });
     }
 
-    // Generate tokens
+    // Generate tokens with selected tenant
     const token = generateToken({
       userId: user.id,
-      tenantId: tenantUser.tenantId,
+      tenantId: selectedTu.tenantId,
       deviceId,
-      role: tenantUser.role,
+      role: selectedTu.role,
     });
     const refreshToken = generateRefreshToken(user.id);
 
@@ -100,16 +117,17 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: tenantUser.role,
-        pin: tenantUser.pin,
+        role: selectedTu.role,
+        pin: selectedTu.pin,
       },
       tenant: {
-        id: tenantUser.tenant.id,
-        slug: tenantUser.tenant.slug,
-        companyName: tenantUser.tenant.companyName,
-        plan: tenantUser.tenant.plan,
-        status: tenantUser.tenant.status,
+        id: selectedTu.tenant.id,
+        slug: selectedTu.tenant.slug,
+        companyName: selectedTu.tenant.companyName,
+        plan: selectedTu.tenant.plan,
+        status: selectedTu.tenant.status,
       },
+      tenants,
     };
   });
 
