@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Sidebar } from './Sidebar';
 import { PageTitle } from './PageTitle';
@@ -8,6 +10,7 @@ import { PageTitle } from './PageTitle';
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isSuperAdmin } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdminRoute = pathname.startsWith('/admin');
   const isAuthPage =
@@ -33,8 +36,21 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   // Tenant pages — sidebar + main
   return (
     <div className="flex">
-      <Sidebar />
-      <main className="ml-64 flex-1 p-8 min-h-screen">
+      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+
+      {/* Mobile header bar */}
+      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center px-4 z-30 md:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+          aria-label="Abrir menu"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="ml-3 text-lg font-bold text-indigo-400">SALE360</h1>
+      </div>
+
+      <main className="flex-1 p-4 md:p-8 min-h-screen md:ml-64 mt-14 md:mt-0 w-full max-w-full overflow-x-hidden">
         <PageTitle />
         {children}
       </main>
