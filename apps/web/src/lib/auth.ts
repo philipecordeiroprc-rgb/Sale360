@@ -17,17 +17,22 @@ interface Tenant {
   companyName: string;
   plan: string;
   status: string;
+  role?: string;
+  pin?: string | null;
 }
 
 interface AuthState {
   token: string | null;
   user: User | null;
   tenant: Tenant | null;
+  availableTenants: Tenant[];
   isAuthenticated: boolean;
   isSuperAdmin: boolean;
 
   hydrate: () => void;
-  setAuth: (data: { token: string; user: User; tenant: Tenant | null }) => void;
+  setAuth: (data: { token: string; user: User; tenant: Tenant | null; tenants?: Tenant[] }) => void;
+  setAvailableTenants: (tenants: Tenant[]) => void;
+  switchTenant: (tenantId: string) => Promise<void>;
   logout: () => void;
 }
 
