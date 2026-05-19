@@ -196,7 +196,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
-      pin: z.string().length(4).optional().nullable(),
+      pin: z.string().length(4).optional(),
       name: z.string().min(1).optional(),
       email: z.string().email().optional(),
     });
