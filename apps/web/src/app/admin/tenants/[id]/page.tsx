@@ -546,40 +546,38 @@ export default function TenantDetailPage() {
             </div>
 
             <form onSubmit={handleUserSave} className="space-y-4">
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">Nome</label>
+                <input
+                  type="text"
+                  value={userForm.name}
+                  onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-slate-400 text-sm mb-1">Email</label>
+                <input
+                  type="email"
+                  value={userForm.email}
+                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                  required
+                />
+              </div>
               {!editingUserId && (
-                <>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-1">Nome</label>
-                    <input
-                      type="text"
-                      value={userForm.name}
-                      onChange={(e) => setUserForm({ ...userForm, name: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-1">Email</label>
-                    <input
-                      type="email"
-                      value={userForm.email}
-                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-1">Senha</label>
-                    <input
-                      type="password"
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                </>
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Senha</label>
+                  <input
+                    type="password"
+                    value={userForm.password}
+                    onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+                    required
+                    minLength={6}
+                  />
+                </div>
               )}
 
               <div>
