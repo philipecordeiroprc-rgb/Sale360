@@ -318,13 +318,14 @@ export default function TenantDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-slate-400 text-sm mb-1">Slug</label>
+              <label className="block text-slate-400 text-sm mb-1">Slug (identificador único na URL)</label>
               <input
                 type="text"
                 value={infoForm.slug}
                 onChange={(e) => setInfoForm({ ...infoForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
               />
+              <p className="text-slate-500 text-xs mt-1">Apenas letras minúsculas e hífen. Ex: minha-loja</p>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
