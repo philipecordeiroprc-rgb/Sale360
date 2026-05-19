@@ -297,8 +297,8 @@ export default function OrdersPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-4 flex-wrap">
-        <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
+      <div className="flex flex-col sm:flex-row gap-2 mb-4">
+        <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 self-start">
           {[
             { id: '', label: 'Todos' },
             { id: 'PAID', label: 'Pagos' },
@@ -306,14 +306,14 @@ export default function OrdersPage() {
             { id: 'CANCELLED', label: 'Cancelados' },
           ].map(s => (
             <button key={s.id} onClick={() => { setStatusFilter(s.id); setPage(1); }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+              className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 statusFilter === s.id ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white'
               }`}>
               {s.label}
             </button>
           ))}
         </div>
-        <div className="relative flex-1 max-w-xs ml-auto">
+        <div className="relative flex-1 sm:max-w-xs">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input value={search} onChange={(e) => { setSearch(e.target.value); clearTimeout(searchTimer.current); searchTimer.current = setTimeout(() => { setPage(1); }, 300); }}
             placeholder="Buscar venda..."
