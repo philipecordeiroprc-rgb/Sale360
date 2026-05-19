@@ -409,10 +409,10 @@ export const api = {
       get(id: string) {
         return request<any>(`/api/admin/tenants/${id}`);
       },
-      create(data: { companyName: string; slug: string; plan: string; status: string }) {
+      create(data: { companyName: string; slug: string; plan: string; status: string; trialEndsAt?: string }) {
         return request<any>('/api/admin/tenants', { method: 'POST', body: JSON.stringify(data) });
       },
-      update(id: string, data: { companyName?: string; slug?: string; plan?: string; status?: string }) {
+      update(id: string, data: { companyName?: string; slug?: string; plan?: string; status?: string; trialEndsAt?: string | null }) {
         return request<any>(`/api/admin/tenants/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
       },
       users: {
