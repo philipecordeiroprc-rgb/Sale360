@@ -90,6 +90,16 @@ export interface CreateProductInput {
 export interface UpdateProductInput extends Partial<CreateProductInput> {}
 
 export const api = {
+  // Auth
+  auth: {
+    switchTenant(tenantId: string) {
+      return request<{ token: string; refreshToken: string; user: any; tenant: any }>('/api/auth/switch-tenant', {
+        method: 'POST',
+        body: JSON.stringify({ tenantId }),
+      });
+    },
+  },
+
   // Products
   products: {
     list(params?: { search?: string; categoryId?: string; active?: boolean; variationName?: string; page?: number }) {
