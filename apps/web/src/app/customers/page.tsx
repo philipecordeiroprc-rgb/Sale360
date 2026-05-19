@@ -193,8 +193,8 @@ export default function CustomersPage() {
         </div>
       ) : (
         <>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
+            <table className="w-full min-w-[700px] text-sm">
               <thead>
                 <tr className="text-slate-500 text-xs border-b border-slate-800">
                   <th className="text-left px-4 py-3">Nome</th>
