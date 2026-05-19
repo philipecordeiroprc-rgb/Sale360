@@ -18,7 +18,7 @@ export interface Product {
   stockQty: number;
   unit: string;
   imageUrl?: string;
-  category?: { id: string; name: string; color: string };
+  category?: { id: string; name: string };
   variations?: ProductVariation[];
   isFractional: boolean;
   active: boolean;
