@@ -19,6 +19,7 @@ export function middleware(request: NextRequest) {
   const isAdminRoute = pathname.startsWith('/admin');
   const isForgotPassword = pathname.startsWith('/forgot-password');
   const isResetPassword = pathname.startsWith('/reset-password');
+  const isSelectStore = pathname.startsWith('/select-store');
 
   // Public routes (no auth required)
   if (pathname === '/login' || isForgotPassword || isResetPassword) {
