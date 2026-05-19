@@ -104,7 +104,19 @@ export const variationTemplateRoutes: FastifyPluginAsync = async (app) => {
       orderBy: [{ tenantId: 'asc' }, { name: 'asc' }],
     });
 
-    return templates.map((t) => ({
+    // Dedup: prefer tenant template over global when same name exists
+    const deduped = templates.reduce((acc, t) => {
+      const existing = acc.find((x: any) => x.name === t.name);
+      if (!existing) {
+        acc.push(t);
+      } else if (t.tenantId !== null && existing.tenantId === null) {
+        // Replace global default with tenant-specific template
+        acc[acc.indexOf(existing)] = t;
+      }
+      return acc;
+    }, [] as typeof templates);
+
+    return deduped.map((t) => ({
       ...t,
       dimensions: t.dimensions.map((d) => ({
         ...d,
