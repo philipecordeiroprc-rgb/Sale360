@@ -1,46 +1,38 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
 
-interface PullToRefreshProps {
-  children: React.ReactNode;
-  /** If true, disable pull-to-refresh (e.g. on pages with modals) */
-  disabled?: boolean;
-}
+const THRESHOLD = 60;
+const MAX_PULL = 100;
 
-const THRESHOLD = 60; // px to pull before trigger
-const MAX_PULL = 100; // max pull distance
-
-export function PullToRefresh({ children, disabled }: PullToRefreshProps) {
+export function PullToRefresh({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
   const pulling = useRef(false);
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (disabled || refreshing) return;
-    // Only allow pull when at the very top
-    const el = containerRef.current;
-    if (!el || el.scrollTop > 0) return;
+    if (refreshing) return;
+    // Only allow pull when page is scrolled to the very top
+    if (window.scrollY > 0 || document.documentElement.scrollTop > 0) return;
+    // Only single-touch
+    if (e.touches.length > 1) return;
     startY.current = e.touches[0].clientY;
     pulling.current = true;
-  }, [disabled, refreshing]);
+  }, [refreshing]);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!pulling.current) return;
-    const currentY = e.touches[0].clientY;
-    const diff = currentY - startY.current;
+    const diff = e.touches[0].clientY - startY.current;
     if (diff <= 0) {
       setPullDistance(0);
       return;
     }
-    // Apply resistance — the further you pull, the harder it gets
-    const resisted = Math.min(diff * 0.4, MAX_PULL);
-    setPullDistance(resisted);
+    // Apply resistance
+    setPullDistance(Math.min(diff * 0.4, MAX_PULL));
   }, []);
 
   const handleTouchEnd = useCallback(async () => {
@@ -50,9 +42,7 @@ export function PullToRefresh({ children, disabled }: PullToRefreshProps) {
     if (pullDistance >= THRESHOLD && !refreshing) {
       setRefreshing(true);
       setPullDistance(0);
-      // Refresh the current route — this re-renders page components
       router.refresh();
-      // Small delay so user sees the spinner
       await new Promise((r) => setTimeout(r, 800));
       setRefreshing(false);
     } else {
@@ -61,31 +51,26 @@ export function PullToRefresh({ children, disabled }: PullToRefreshProps) {
   }, [pullDistance, refreshing, router]);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    el.addEventListener('touchstart', handleTouchStart, { passive: true });
-    el.addEventListener('touchmove', handleTouchMove, { passive: true });
-    el.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchMove, { passive: true });
+    document.addEventListener('touchend', handleTouchEnd);
 
     return () => {
-      el.removeEventListener('touchstart', handleTouchStart);
-      el.removeEventListener('touchmove', handleTouchMove);
-      el.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div ref={containerRef} className="relative h-full overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-      {/* Pull indicator */}
+    <>
+      {/* Pull indicator — fixed at top of viewport */}
       {(pullDistance > 0 || refreshing) && (
         <div
-          className="absolute top-0 left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
-          style={{ transform: `translateY(${refreshing ? 50 : pullDistance - 30}px)`, transition: refreshing ? 'none' : undefined }}
+          className="fixed top-12 md:top-0 left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
+          style={{ transform: `translateY(${refreshing ? 16 : pullDistance * 0.6}px)` }}
         >
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur border border-slate-700 shadow-lg ${
-            refreshing ? 'opacity-100' : ''
-          }`}>
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/90 backdrop-blur border border-slate-700 shadow-lg">
             <RefreshCw
               size={16}
               className={`text-indigo-400 ${refreshing ? 'animate-spin' : ''}`}
@@ -99,8 +84,7 @@ export function PullToRefresh({ children, disabled }: PullToRefreshProps) {
           </div>
         </div>
       )}
-
       {children}
-    </div>
+    </>
   );
 }
