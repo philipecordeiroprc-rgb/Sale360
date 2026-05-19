@@ -479,7 +479,7 @@ export const api = {
       if (params?.status) sp.set('status', params.status);
       if (params?.page) sp.set('page', String(params.page));
       const qs = sp.toString();
-      return request<any[]>(`/api/commands${qs ? `?${qs}` : ''}`);
+      return request<any>(`/api/commands${qs ? `?${qs}` : ''}`);
     },
     get(id: string) {
       return request<any>(`/api/commands/${id}`);
