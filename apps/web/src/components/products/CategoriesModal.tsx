@@ -294,13 +294,13 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
                       <span className="text-xs text-slate-400">{cat._count.products} produtos</span>
                       <button
                         onClick={() => handleEdit(cat)}
-                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white opacity-0 sm:opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 opacity-60 sm:opacity-60 transition-all"
+                        className="p-1.5 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                       >
                         <Edit2 size={14} />
                       </button>
                       <button
                         onClick={() => handleDelete(cat)}
-                        className="p-1.5 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 opacity-0 sm:opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 opacity-60 sm:opacity-60 transition-all"
+                        className="p-1.5 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
                       >
                         <Trash2 size={14} />
                       </button>
