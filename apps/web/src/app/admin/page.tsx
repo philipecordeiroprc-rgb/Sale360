@@ -80,10 +80,14 @@ export default function AdminPage() {
     setError('');
 
     try {
+      const payload = {
+        ...form,
+        trialEndsAt: form.trialEndsAt || undefined,
+      };
       if (editingId) {
-        await api.admin.tenants.update(editingId, form);
+        await api.admin.tenants.update(editingId, payload);
       } else {
-        await api.admin.tenants.create(form);
+        await api.admin.tenants.create(payload);
       }
       setShowModal(false);
       fetchTenants();
