@@ -710,6 +710,15 @@ export default function OrdersPage() {
                 <p className="text-[10px] text-slate-500 uppercase">Data</p>
                 <p className="text-white text-sm">{new Date(detailOrder.createdAt).toLocaleString('pt-BR')}</p>
               </div>
+              {detailOrder.dueDate && (
+                <div className={`rounded-lg p-3 ${new Date(detailOrder.dueDate) < new Date() ? 'bg-red-500/10 border border-red-500/20' : 'bg-amber-500/10 border border-amber-500/20'}`}>
+                  <p className="text-[10px] uppercase text-slate-500">Vencimento</p>
+                  <p className={`text-sm ${new Date(detailOrder.dueDate) < new Date() ? 'text-red-400' : 'text-amber-400'}`}>
+                    {new Date(detailOrder.dueDate).toLocaleDateString('pt-BR')}
+                    {new Date(detailOrder.dueDate) < new Date() && ' (Vencido)'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <table className="w-full text-xs">
