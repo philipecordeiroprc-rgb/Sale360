@@ -244,6 +244,7 @@ export default function OrdersPage() {
         total: totalWithDiscount,
         paymentMethod: selectedPayment.id,
         paymentStatus: selectedPayment.paymentStatus || 'PAID',
+        dueDate: selectedPayment.paymentStatus === 'PENDING' && dueDate ? dueDate : undefined,
       });
 
       show('Venda realizada!');
