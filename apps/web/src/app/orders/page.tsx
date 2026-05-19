@@ -279,19 +279,19 @@ export default function OrdersPage() {
   return (
     <div className="animate-slide-up">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Vendas</h1>
-          <p className="text-slate-400 text-sm mt-1">{total} vendas registradas</p>
+          <h1 className="text-xl font-bold text-white">Vendas</h1>
+          <p className="text-slate-400 text-sm mt-0.5">{total} vendas registradas</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-right">
-            <p className="text-xs text-slate-400">Faturamento Hoje</p>
-            <p className="text-xl font-bold text-emerald-400">R$ {todayRevenue.toFixed(2)}</p>
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-right">
+            <p className="text-[10px] text-slate-400">Faturamento Hoje</p>
+            <p className="text-lg font-bold text-emerald-400">R$ {todayRevenue.toFixed(2)}</p>
           </div>
           <button onClick={openSale}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-            <Plus size={18} /> Nova Venda
+            className="flex items-center gap-1.5 px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-medium text-sm transition-colors">
+            <Plus size={16} /> Nova Venda
           </button>
         </div>
       </div>
