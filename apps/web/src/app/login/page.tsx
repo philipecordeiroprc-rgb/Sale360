@@ -8,8 +8,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@sale360.app');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'password' | 'pin'>('password');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
