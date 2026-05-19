@@ -270,6 +270,19 @@ export default function OrdersPage() {
     }
   };
 
+  const handlePay = async (id: string) => {
+    if (!confirm('Confirmar recebimento do pagamento?')) return;
+    try {
+      const result = await api.orders.pay(id);
+      show(result.message || 'Pagamento recebido!');
+      loadOrders();
+      loadTodayRevenue();
+      if (detailOpen && detailOrder?.id === id) setDetailOpen(false);
+    } catch (err: any) {
+      show(err.message || 'Erro ao receber pagamento', 'error');
+    }
+  };
+
   const openDetail = async (id: string) => {
     try {
       const data = await api.orders.list({ search: id });
