@@ -220,6 +220,7 @@ export default function OrdersPage() {
     setCart([]);
     setDiscount('0');
     setSelectedPayment(PAYMENT_METHODS[0]);
+    setDueDate('');
     setSaleOpen(true);
   };
 
