@@ -342,7 +342,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           category: 'venda',
           description: `Venda #${orderNumber}`,
           amount: orderData.total,
-          dueDate: new Date(),
+          dueDate: orderData.dueDate ? new Date(orderData.dueDate) : new Date(),
           paidAt: orderData.paymentStatus === 'PAID' ? new Date() : null,
           orderId: o.id,
         },
