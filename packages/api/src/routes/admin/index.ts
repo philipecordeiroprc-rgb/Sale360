@@ -196,12 +196,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
-      pin: z.string().length(4).optional(),
+      pin: z.string().length(4).optional().nullable(),
+      name: z.string().min(1).optional(),
+      email: z.string().email().optional(),
     });
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Dados inválidos' });
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
     const tenantUser = await prisma.tenantUser.findUnique({
@@ -209,6 +211,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
+    // Update TenantUser role/pin
     const updated = await prisma.tenantUser.update({
       where: { id: tenantUser.id },
       data: {
@@ -217,6 +220,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
+
+    // Update user-level fields (name, email) if provided
+    if (parsed.data.name || parsed.data.email) {
+      const userUpdate: any = {};
+      if (parsed.data.name) userUpdate.name = parsed.data.name;
+      if (parsed.data.email) userUpdate.email = parsed.data.email;
+      await prisma.user.update({ where: { id: userId }, data: userUpdate });
+    }
 
     return updated;
   });
