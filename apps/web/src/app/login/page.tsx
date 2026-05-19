@@ -47,11 +47,17 @@ export default function LoginPage() {
         token: data.token,
         user: data.user,
         tenant: data.tenant,
+        tenants: data.tenants,
       });
 
-      const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
-      router.push(redirectTo);
-      router.refresh();
+      // If user has multiple tenants, let them choose
+      if (data.tenants && data.tenants.length > 1 && data.user.role !== 'SUPER_ADMIN') {
+        router.push('/select-store');
+      } else {
+        const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
+        router.push(redirectTo);
+        router.refresh();
+      }
     } catch (err) {
       setError('Erro de conexão. Verifique sua internet.');
     } finally {
