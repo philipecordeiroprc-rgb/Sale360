@@ -28,7 +28,6 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
       image_url TEXT,
       category_id TEXT,
       category_name TEXT,
-      category_color TEXT,
       is_fractional INTEGER DEFAULT 0,
       has_variations INTEGER DEFAULT 0,
       active INTEGER DEFAULT 1,
