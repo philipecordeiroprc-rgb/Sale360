@@ -148,10 +148,10 @@ export const api = {
     get(id: string) {
       return request<CategoryWithCount>(`/api/categories/${id}`);
     },
-    create(data: { name: string; color?: string; sortOrder?: number; variationTemplateId?: string }) {
+    create(data: { name: string; sortOrder?: number; variationTemplateId?: string }) {
       return request<CategoryWithCount>('/api/categories', { method: 'POST', body: JSON.stringify(data) });
     },
-    update(id: string, data: { name?: string; color?: string; sortOrder?: number; variationTemplateId?: string | null }) {
+    update(id: string, data: { name?: string; sortOrder?: number; variationTemplateId?: string | null }) {
       return request<CategoryWithCount>(`/api/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     },
     delete(id: string) {
