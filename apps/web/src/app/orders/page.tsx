@@ -347,6 +347,27 @@ export default function OrdersPage() {
             placeholder="Buscar venda..."
             className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-sm placeholder:text-slate-500 focus:border-indigo-500 outline-none" />
         </div>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+            className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
+          />
+          <span className="text-slate-500 text-xs">até</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+            className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
+          />
+          {(dateFrom || dateTo) && (
+            <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+              className="text-slate-400 hover:text-white p-1" title="Limpar datas">
+              <X size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Orders Table */}
