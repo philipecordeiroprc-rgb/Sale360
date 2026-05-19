@@ -215,27 +215,27 @@ export default function ProductsPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-3xl font-bold text-white">Produtos</h2>
-          <p className="text-slate-400 mt-1">
+          <h2 className="text-xl font-bold text-white">Produtos</h2>
+          <p className="text-slate-400 text-sm mt-0.5">
             {loading ? 'Carregando...' : `${total} produtos no catálogo`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 self-start">
           <button
             onClick={() => setCategoriesOpen(true)}
-            className="flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-4 py-3 rounded-xl font-medium transition-colors"
+            className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
           >
-            <Tags size={18} />
+            <Tags size={15} />
             Categorias
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors"
+            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
           >
-            <Plus size={20} />
-            Novo Produto
+            <Plus size={16} />
+            Novo
           </button>
         </div>
       </div>
