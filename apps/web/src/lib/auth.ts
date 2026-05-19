@@ -42,10 +42,11 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-export const useAuth = create<AuthState>((set) => ({
+export const useAuth = create<AuthState>((set, get) => ({
   token: null,
   user: null,
   tenant: null,
+  availableTenants: [],
   isAuthenticated: false,
   isSuperAdmin: false,
 
@@ -53,29 +54,32 @@ export const useAuth = create<AuthState>((set) => ({
     const token = getCookie('sale360_token');
     const userStr = getCookie('sale360_user');
     const tenantStr = getCookie('sale360_tenant');
+    const tenantsStr = getCookie('sale360_tenants');
 
     if (token && userStr) {
       try {
         const user = JSON.parse(userStr);
         const tenant = tenantStr ? JSON.parse(tenantStr) : null;
+        const availableTenants = tenantsStr ? JSON.parse(tenantsStr) : [];
         set({
           token,
           user,
           tenant,
+          availableTenants,
           isAuthenticated: true,
           isSuperAdmin: user.role === 'SUPER_ADMIN',
         });
       } catch {
-        // Invalid cookie data — clear
         document.cookie = 'sale360_token=; path=/; max-age=0';
         document.cookie = 'sale360_user=; path=/; max-age=0';
         document.cookie = 'sale360_tenant=; path=/; max-age=0';
+        document.cookie = 'sale360_tenants=; path=/; max-age=0';
       }
     }
   },
 
-  setAuth: ({ token, user, tenant }) => {
-    const maxAge = 60 * 60 * 24 * 7; // 7 days
+  setAuth: ({ token, user, tenant, tenants }) => {
+    const maxAge = 60 * 60 * 24 * 7;
     document.cookie = `sale360_token=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
     document.cookie = `sale360_user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${maxAge}; SameSite=Lax`;
     if (tenant) {
@@ -83,14 +87,57 @@ export const useAuth = create<AuthState>((set) => ({
     } else {
       document.cookie = 'sale360_tenant=; path=/; max-age=0';
     }
+    if (tenants && tenants.length > 0) {
+      document.cookie = `sale360_tenants=${encodeURIComponent(JSON.stringify(tenants))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      set({ availableTenants: tenants });
+    } else {
+      document.cookie = 'sale360_tenants=; path=/; max-age=0';
+      set({ availableTenants: [] });
+    }
     set({ token, user, tenant, isAuthenticated: true, isSuperAdmin: user.role === 'SUPER_ADMIN' });
+  },
+
+  setAvailableTenants: (tenants) => {
+    const maxAge = 60 * 60 * 24 * 7;
+    document.cookie = `sale360_tenants=${encodeURIComponent(JSON.stringify(tenants))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    set({ availableTenants: tenants });
+  },
+
+  switchTenant: async (tenantId) => {
+    const { availableTenants, token, user } = get();
+    const selected = availableTenants.find((t) => t.id === tenantId);
+    if (!selected) throw new Error('Empresa não encontrada');
+
+    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+    const res = await fetch(`${API_URL}/api/auth/switch-tenant`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ tenantId }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Erro ao trocar de empresa');
+    }
+
+    const data = await res.json();
+    get().setAuth({
+      token: data.token,
+      user: { ...user!, role: data.user.role, pin: data.user.pin },
+      tenant: data.tenant,
+      tenants: availableTenants,
+    });
   },
 
   logout: () => {
     document.cookie = 'sale360_token=; path=/; max-age=0';
     document.cookie = 'sale360_user=; path=/; max-age=0';
     document.cookie = 'sale360_tenant=; path=/; max-age=0';
-    set({ token: null, user: null, tenant: null, isAuthenticated: false, isSuperAdmin: false });
+    document.cookie = 'sale360_tenants=; path=/; max-age=0';
+    set({ token: null, user: null, tenant: null, availableTenants: [], isAuthenticated: false, isSuperAdmin: false });
     window.location.href = '/login';
   },
 }));
