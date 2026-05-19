@@ -92,7 +92,8 @@ export default function OrdersPage() {
   const loadTodayRevenue = async () => {
     try {
       const data = await api.orders.todaySummary();
-      setTodayRevenue(Number(data.todayRevenue || 0));
+      setTodayRevenue(Number(data.totalSales || 0));
+      setPendingRevenue(Number(data.pendingAmount || 0));
     } catch { /* ignore */ }
   };
 
