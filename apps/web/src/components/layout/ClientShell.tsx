@@ -6,6 +6,7 @@ import { Menu } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { Sidebar } from './Sidebar';
 import { PageTitle } from './PageTitle';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
