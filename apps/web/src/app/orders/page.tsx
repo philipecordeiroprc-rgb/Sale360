@@ -91,7 +91,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, page, search]);
+  }, [statusFilter, page, search, dateFrom, dateTo]);
 
   const loadTodayRevenue = async () => {
     try {
