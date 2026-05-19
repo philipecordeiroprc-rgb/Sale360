@@ -43,7 +43,16 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     } = request.query as Record<string, string>;
 
     const where: any = { tenantId: request.tenantId };
-    if (status) where.status = status;
+    if (status) {
+      // PAID/PENDING/PARTIAL/CREDIT_STORE → paymentStatus
+      // CANCELLED → status (OrderStatus)
+      if (['PAID', 'PENDING', 'PARTIAL', 'CREDIT_STORE'].includes(status)) {
+        where.paymentStatus = status;
+        where.status = { not: 'CANCELLED' };
+      } else {
+        where.status = status;
+      }
+    }
     if (source) where.source = source;
     if (customerId) where.customerId = customerId;
     if (startDate || endDate) {
