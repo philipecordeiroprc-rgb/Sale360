@@ -302,6 +302,12 @@ export default function OrdersPage() {
           <p className="text-slate-400 text-sm mt-0.5">{total} vendas registradas</p>
         </div>
         <div className="flex items-center gap-2">
+          {pendingRevenue > 0 && (
+            <div className="bg-slate-900 border border-amber-500/30 rounded-lg px-3 py-2 text-right">
+              <p className="text-[10px] text-amber-400">Fiado Pendente</p>
+              <p className="text-lg font-bold text-amber-400">R$ {pendingRevenue.toFixed(2)}</p>
+            </div>
+          )}
           <div className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-right">
             <p className="text-[10px] text-slate-400">Faturamento Hoje</p>
             <p className="text-lg font-bold text-emerald-400">R$ {todayRevenue.toFixed(2)}</p>
