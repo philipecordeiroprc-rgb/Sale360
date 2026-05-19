@@ -355,6 +355,17 @@ export default function TenantDetailPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-slate-400 text-sm mb-1">Término do Trial</label>
+              <input
+                type="date"
+                value={infoForm.trialEndsAt}
+                onChange={(e) => setInfoForm({ ...infoForm, trialEndsAt: e.target.value })}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
+              />
+              <p className="text-slate-500 text-xs mt-1">Deixe em branco para sem data de trial</p>
+            </div>
+
             <div className="pt-2 grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-slate-500">Produtos:</span>{' '}
@@ -367,12 +378,6 @@ export default function TenantDetailPage() {
               <div>
                 <span className="text-slate-500">Criada em:</span>{' '}
                 <span className="text-white">{new Date(tenant.createdAt).toLocaleDateString('pt-BR')}</span>
-              </div>
-              <div>
-                <span className="text-slate-500">Trial até:</span>{' '}
-                <span className="text-white">
-                  {tenant.trialEndsAt ? new Date(tenant.trialEndsAt).toLocaleDateString('pt-BR') : '—'}
-                </span>
               </div>
             </div>
 
