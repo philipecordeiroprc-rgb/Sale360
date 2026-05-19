@@ -407,22 +407,38 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-3 py-2 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        o.status === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
-                        o.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
-                        o.status === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-red-500/20 text-red-400'
+                        o.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
+                        o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400') :
+                        o.paymentStatus === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
+                        o.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
+                        'bg-slate-500/20 text-slate-400'
                       }`}>
-                        {o.status === 'PAID' ? 'Pago' :
-                         o.status === 'PENDING' ? 'Pendente' :
-                         o.status === 'PARTIAL' ? 'Parcial' :
-                         o.status === 'CANCELLED' ? 'Cancelado' : o.status}
+                        {o.paymentStatus === 'PAID' ? 'Pago' :
+                         o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'Vencido' : 'Pendente') :
+                         o.paymentStatus === 'PARTIAL' ? 'Parcial' :
+                         o.status === 'CANCELLED' ? 'Cancelado' : o.paymentStatus || o.status}
                       </span>
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs hidden lg:table-cell">
+                      {o.dueDate ? (
+                        <span className={new Date(o.dueDate) < new Date() ? 'text-red-400' : 'text-amber-400'}>
+                          {new Date(o.dueDate).toLocaleDateString('pt-BR')}
+                        </span>
+                      ) : (
+                        <span className="text-slate-600">—</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right text-xs text-slate-500 hidden lg:table-cell">
                       {new Date(o.createdAt).toLocaleDateString('pt-BR')}
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
+                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                          <button onClick={() => handlePay(o.id)}
+                            className="p-1.5 text-amber-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Receber pagamento">
+                            <Banknote size={16} />
+                          </button>
+                        )}
                         <button onClick={() => openDetail(o.id)}
                           className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition-colors" title="Ver">
                           <Eye size={16} />
