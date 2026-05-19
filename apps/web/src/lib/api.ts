@@ -194,6 +194,7 @@ export const api = {
       total: number;
       paymentMethod: string;
       paymentStatus?: string;
+      dueDate?: string;
       notes?: string;
       couponId?: string;
       couponDiscount?: number;
