@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import {
-  TrendingUp, DollarSign, ShoppingCart, Users, Package,
+  TrendingUp, DollarSign, ShoppingCart, Users, Package, Clock,
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
