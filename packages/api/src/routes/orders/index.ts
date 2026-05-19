@@ -287,6 +287,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           orderNumber,
           localId,
           createdAtDevice: createdAtDevice ? new Date(createdAtDevice) : null,
+          dueDate: orderData.dueDate ? new Date(orderData.dueDate) : null,
           syncStatus: 'SYNCED',
           items: { create: itemsData },
         },
