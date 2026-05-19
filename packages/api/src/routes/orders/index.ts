@@ -314,6 +314,24 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             lastPurchaseAt: new Date(),
           },
         });
+
+        // Fiado/credit: increment creditBalance and create LOAN transaction
+        if (orderData.paymentStatus === 'PENDING' || orderData.paymentStatus === 'CREDIT_STORE') {
+          const updatedCustomer = await tx.customer.update({
+            where: { id: orderData.customerId },
+            data: { creditBalance: { increment: orderData.total } },
+          });
+          await tx.creditTransaction.create({
+            data: {
+              customerId: orderData.customerId,
+              type: 'LOAN',
+              amount: orderData.total,
+              balanceAfter: updatedCustomer.creditBalance,
+              referenceId: o.id,
+              notes: `Venda fiado #${orderNumber}`,
+            },
+          });
+        }
       }
 
       // Register in cash flow
