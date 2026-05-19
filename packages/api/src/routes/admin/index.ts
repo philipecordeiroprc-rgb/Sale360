@@ -88,6 +88,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const { id } = request.params as { id: string };
     const schema = z.object({
       companyName: z.string().optional(),
+      slug: z.string().min(3, 'Slug deve ter no mínimo 3 caracteres').optional(),
       plan: z.enum(['PRO', 'GROW', 'PRIME']).optional(),
       status: z.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']).optional(),
       trialEndsAt: z.string().nullable().optional(),
@@ -95,7 +96,15 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Dados inválidos' });
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    // Check slug uniqueness if changing
+    if (parsed.data.slug) {
+      const existing = await prisma.tenant.findUnique({ where: { slug: parsed.data.slug } });
+      if (existing && existing.id !== id) {
+        return reply.status(400).send({ error: 'Já existe uma empresa com este slug.' });
+      }
     }
 
     const data: any = { ...parsed.data };
