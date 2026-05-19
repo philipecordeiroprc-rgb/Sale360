@@ -64,8 +64,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <h1 className="text-5xl font-black text-indigo-400 tracking-tight">S360</h1>
-          <p className="text-slate-400 mt-2 text-lg">PDV Inteligente</p>
+          <img
+            src="/icon-192.png"
+            alt="Sale360"
+            className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-lg shadow-indigo-500/20"
+          />
+          <h1 className="text-4xl font-black text-white tracking-tight">
+            Sale<span className="text-indigo-400">360</span>
+          </h1>
+          <p className="text-slate-400 mt-1 text-lg">PDV Inteligente</p>
         </div>
 
         {/* Form Card */}
