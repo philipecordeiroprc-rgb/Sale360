@@ -379,6 +379,7 @@ export default function OrdersPage() {
                   <th className="text-right px-3 py-2">Total</th>
                   <th className="text-center px-3 py-2 hidden md:table-cell">Pagamento</th>
                   <th className="text-center px-3 py-2">Status</th>
+                  <th className="text-center px-3 py-2 hidden lg:table-cell">Vencimento</th>
                   <th className="text-right px-3 py-2 hidden lg:table-cell">Data</th>
                   <th className="text-center px-3 py-2"></th>
                 </tr>
