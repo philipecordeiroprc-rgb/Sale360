@@ -122,7 +122,19 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* User */}
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t border-slate-800 space-y-2">
+          {/* Store switcher (multiple tenants) */}
+          {availableTenants.length > 1 && (
+            <Link
+              href="/select-store"
+              onClick={handleNav}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-[11px]"
+            >
+              <Store size={13} />
+              <span>Trocar empresa</span>
+            </Link>
+          )}
+
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[10px] shrink-0">
               {user ? getInitials(user.name) : '?'}
