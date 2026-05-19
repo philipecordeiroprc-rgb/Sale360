@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Fundo -->
+  <rect width="512" height="512" rx="112" fill="#6366F1"/>
+  <!-- Hexágono -->
+  <polygon points="256,80 420,164 420,332 256,416 92,332 92,164"
+           fill="none" stroke="#fff" stroke-width="18" stroke-linejoin="round"/>
+  <!-- Texto -->
+  <text x="256" y="290" text-anchor="middle" font-family="Inter, sans-serif" font-size="120" font-weight="900" fill="#fff" letter-spacing="-2">S3</text>
+</svg>
