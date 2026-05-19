@@ -344,8 +344,8 @@ export default function OrdersPage() {
         </div>
       ) : (
         <>
-          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-            <table className="w-full text-xs">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
+            <table className="w-full min-w-[700px] text-xs">
               <thead>
                 <tr className="text-slate-500 text-[11px] border-b border-slate-800">
                   <th className="text-left px-3 py-2">#</th>
