@@ -144,12 +144,6 @@ export default function LoginPage() {
             </a>
           </div>
 
-          {/* Credentials hint */}
-          <div className="mt-4 pt-3 border-t border-slate-800">
-            <p className="text-xs text-slate-400 text-center">
-              Demo: admin@sale360.app / admin123
-            </p>
-          </div>
         </div>
       </div>
     </div>
