@@ -345,9 +345,9 @@ export default function OrdersPage() {
       ) : (
         <>
           <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-slate-500 text-xs border-b border-slate-800">
+                <tr className="text-slate-500 text-[11px] border-b border-slate-800">
                   <th className="text-left px-3 py-2">#</th>
                   <th className="text-left px-3 py-2">Cliente</th>
                   <th className="text-center px-3 py-2 hidden md:table-cell">Itens</th>
@@ -661,9 +661,9 @@ export default function OrdersPage() {
               </div>
             </div>
 
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="text-slate-500 text-xs border-b border-slate-800">
+                <tr className="text-slate-500 text-[11px] border-b border-slate-800">
                   <th className="text-left py-2">Produto</th>
                   <th className="text-right py-2">Qtd</th>
                   <th className="text-right py-2">Preço</th>
