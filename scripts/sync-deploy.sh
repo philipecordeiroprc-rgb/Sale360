@@ -39,6 +39,7 @@ SYNC_DIRS=(
   "packages/core/src"
   "packages/core/package.json"
   "apps/web/src"
+  "apps/web/public"
   "apps/web/package.json"
   "apps/web/next.config.*"
   "apps/web/tsconfig.json"
