@@ -757,6 +757,16 @@ export default function OrdersPage() {
                 </tr>
               </tfoot>
             </table>
+
+            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+              <button
+                onClick={() => handlePay(detailOrder.id)}
+                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                <Banknote size={16} />
+                Receber Pagamento (R$ {Number(detailOrder.total).toFixed(2)})
+              </button>
+            )}
           </div>
         ) : (
           <div className="text-center py-8 text-slate-400">Carregando...</div>
