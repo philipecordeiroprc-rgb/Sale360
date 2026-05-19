@@ -225,7 +225,7 @@ export function PDVScreen() {
             style={styles.productCard}
             onPress={() => handleAddProduct(item)}
           >
-            <View style={[styles.productImg, { backgroundColor: item.category?.color || '#334155' }]}>
+            <View style={[styles.productImg, { backgroundColor: '#334155' }]}>
               <Text style={styles.productEmoji}>
                 {item.unit === 'KG' ? '⚖️' : item.unit === 'L' ? '🫗' : '📦'}
               </Text>
