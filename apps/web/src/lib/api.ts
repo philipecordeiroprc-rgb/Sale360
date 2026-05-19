@@ -472,6 +472,28 @@ export const api = {
       return request<{ success: boolean }>(`/api/variation-templates/${id}`, { method: 'DELETE' });
     },
   },
+
+  commands: {
+    list(params?: { status?: string; page?: number }) {
+      const sp = new URLSearchParams();
+      if (params?.status) sp.set('status', params.status);
+      if (params?.page) sp.set('page', String(params.page));
+      const qs = sp.toString();
+      return request<any[]>(`/api/commands${qs ? `?${qs}` : ''}`);
+    },
+    get(id: string) {
+      return request<any>(`/api/commands/${id}`);
+    },
+    create(data: { customerName?: string; customerPhone?: string; tableNumber?: number }) {
+      return request<any>('/api/commands', { method: 'POST', body: JSON.stringify(data) });
+    },
+    update(id: string, data: { customerName?: string; customerPhone?: string; tableNumber?: number }) {
+      return request<any>(`/api/commands/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+    },
+    close(id: string) {
+      return request<any>(`/api/commands/${id}/close`, { method: 'POST' });
+    },
+  },
 };
 
 export interface CategoryWithCount {
