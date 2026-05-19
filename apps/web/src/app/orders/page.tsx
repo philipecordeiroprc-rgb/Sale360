@@ -64,6 +64,7 @@ export default function OrdersPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState('0');
   const [selectedPayment, setSelectedPayment] = useState(PAYMENT_METHODS[0]);
+  const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Detail modal
