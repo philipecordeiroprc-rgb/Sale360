@@ -39,18 +39,18 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       {/* Mobile header bar */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center px-4 z-30 md:hidden">
+      <div className="fixed top-0 left-0 right-0 h-12 bg-slate-900 border-b border-slate-800 flex items-center px-3 z-30 md:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+          className="p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
           aria-label="Abrir menu"
         >
-          <Menu size={24} />
+          <Menu size={20} />
         </button>
-        <h1 className="ml-3 text-lg font-bold text-indigo-400">SALE360</h1>
+        <h1 className="ml-2 text-base font-bold text-indigo-400">SALE360</h1>
       </div>
 
-      <main className="flex-1 p-4 md:p-8 min-h-screen md:ml-64 mt-14 md:mt-0 w-full max-w-full overflow-x-hidden">
+      <main className="flex-1 p-3 md:p-5 min-h-screen md:ml-52 mt-12 md:mt-0 w-full max-w-full overflow-x-hidden">
         <PageTitle />
         {children}
       </main>
