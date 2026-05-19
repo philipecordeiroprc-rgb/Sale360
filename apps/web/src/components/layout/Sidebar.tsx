@@ -20,7 +20,6 @@ const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
   { href: '/customers', label: 'Clientes', icon: Users, roles: ['OWNER', 'CASHIER'] },
   { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
-  { href: '/commands', label: 'Comandas', icon: ClipboardList, roles: ['OWNER', 'CASHIER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
   { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },
 ];
