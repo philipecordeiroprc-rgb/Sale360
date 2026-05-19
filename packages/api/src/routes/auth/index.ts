@@ -151,21 +151,39 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Credenciais inválidas' });
     }
 
-    const tenantUser = await prisma.tenantUser.findFirst({
-      where: { userId: user.id, pin },
+    // Find all tenants for this user
+    const tenantUsers = await prisma.tenantUser.findMany({
+      where: { userId: user.id },
       include: { tenant: true },
+      orderBy: { tenant: { companyName: 'asc' } },
     });
 
-    if (!tenantUser) {
+    if (tenantUsers.length === 0) {
+      return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
+    }
+
+    // Match by PIN
+    const matched = tenantUsers.find((tu) => tu.pin === pin);
+    if (!matched) {
       return reply.status(401).send({ error: 'PIN incorreto' });
     }
 
+    const tenants = tenantUsers.map((tu) => ({
+      id: tu.tenant.id,
+      slug: tu.tenant.slug,
+      companyName: tu.tenant.companyName,
+      plan: tu.tenant.plan,
+      status: tu.tenant.status,
+      role: tu.role,
+      pin: tu.pin,
+    }));
+
     if (deviceId) {
       await prisma.device.upsert({
-        where: { tenantId_name: { tenantId: tenantUser.tenantId, name: deviceId } },
+        where: { tenantId_name: { tenantId: matched.tenantId, name: deviceId } },
         update: { lastSyncAt: new Date() },
         create: {
-          tenantId: tenantUser.tenantId,
+          tenantId: matched.tenantId,
           name: deviceId,
           type: 'mobile',
         },
@@ -174,19 +192,24 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     const token = generateToken({
       userId: user.id,
-      tenantId: tenantUser.tenantId,
+      tenantId: matched.tenantId,
       deviceId,
-      role: tenantUser.role,
+      role: matched.role,
     });
+    const refreshToken = generateRefreshToken(user.id);
 
     return {
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: tenantUser.role },
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: matched.role, pin: matched.pin },
       tenant: {
-        id: tenantUser.tenant.id,
-        companyName: tenantUser.tenant.companyName,
-        plan: tenantUser.tenant.plan,
+        id: matched.tenant.id,
+        slug: matched.tenant.slug,
+        companyName: matched.tenant.companyName,
+        plan: matched.tenant.plan,
+        status: matched.tenant.status,
       },
+      tenants,
     };
   });
 
