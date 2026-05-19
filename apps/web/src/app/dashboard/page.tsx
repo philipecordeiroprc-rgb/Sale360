@@ -56,98 +56,98 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-slide-up">
+    <div className="space-y-4 animate-slide-up">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-white">
+          <h2 className="text-xl font-bold text-white">
             {tenant?.companyName || 'Dashboard'}
           </h2>
-          <p className="text-slate-400 mt-1">Resumo das operacoes de hoje</p>
+          <p className="text-slate-400 text-sm mt-0.5">Resumo das operacoes de hoje</p>
         </div>
       </div>
 
       {/* Stats Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 animate-pulse">
-              <div className="h-12 w-12 bg-slate-800 rounded-xl mb-4" />
-              <div className="h-4 bg-slate-800 rounded w-1/2 mb-2" />
-              <div className="h-6 bg-slate-800 rounded w-1/3" />
+            <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-4 animate-pulse">
+              <div className="h-10 w-10 bg-slate-800 rounded-lg mb-3" />
+              <div className="h-3.5 bg-slate-800 rounded w-1/2 mb-1.5" />
+              <div className="h-5 bg-slate-800 rounded w-1/3" />
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {statCards.map((card) => (
             <div
               key={card.id}
-              className="bg-slate-900 border border-slate-800 rounded-2xl p-6 hover:border-slate-500 transition-all"
+              className="bg-slate-900 border border-slate-800 rounded-xl p-4 hover:border-slate-500 transition-all"
             >
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div
-                  className="w-12 h-12 rounded-xl flex items-center justify-center"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: card.color + '20' }}
                 >
-                  <card.icon size={24} color={card.color} />
+                  <card.icon size={20} color={card.color} />
                 </div>
               </div>
-              <p className="text-slate-400 text-sm">{card.label}</p>
-              <p className="text-2xl font-bold text-white mt-1">{card.value}</p>
+              <p className="text-slate-400 text-xs">{card.label}</p>
+              <p className="text-lg font-bold text-white mt-0.5">{card.value}</p>
             </div>
           ))}
         </div>
       )}
 
       {/* Recent Orders */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Vendas Recentes</h3>
-          <span className="text-sm text-slate-500">{recentOrders.length} pedidos</span>
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-white">Vendas Recentes</h3>
+          <span className="text-xs text-slate-500">{recentOrders.length} pedidos</span>
         </div>
 
         {recentOrders.length === 0 ? (
-          <div className="p-12 text-center">
-            <ShoppingCart size={40} className="mx-auto text-slate-600 mb-3" />
-            <p className="text-slate-400">Nenhuma venda registrada</p>
-            <p className="text-slate-500 text-sm mt-1">As vendas aparecerao aqui</p>
+          <div className="p-8 text-center">
+            <ShoppingCart size={32} className="mx-auto text-slate-600 mb-2" />
+            <p className="text-sm text-slate-400">Nenhuma venda registrada</p>
+            <p className="text-xs text-slate-500 mt-0.5">As vendas aparecerao aqui</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 text-xs uppercase tracking-wider">
-                  <th className="text-left p-4 font-medium">Pedido</th>
-                  <th className="text-left p-4 font-medium">Cliente</th>
-                  <th className="text-center p-4 font-medium">Itens</th>
-                  <th className="text-right p-4 font-medium">Total</th>
-                  <th className="text-center p-4 font-medium">Pagamento</th>
-                  <th className="text-right p-4 font-medium">Hora</th>
+                <tr className="border-b border-slate-800 text-slate-400 text-[11px] uppercase tracking-wider">
+                  <th className="text-left px-3 py-2 font-medium">Pedido</th>
+                  <th className="text-left px-3 py-2 font-medium">Cliente</th>
+                  <th className="text-center px-3 py-2 font-medium">Itens</th>
+                  <th className="text-right px-3 py-2 font-medium">Total</th>
+                  <th className="text-center px-3 py-2 font-medium">Pagamento</th>
+                  <th className="text-right px-3 py-2 font-medium">Hora</th>
                 </tr>
               </thead>
               <tbody>
                 {recentOrders.map((o: any) => (
                   <tr key={o.id} className="border-b border-slate-800/50 hover:bg-slate-800/50 transition-colors">
-                    <td className="p-4">
+                    <td className="px-3 py-2">
                       <span className="text-indigo-400 font-mono text-sm">#{o.orderNumber}</span>
                     </td>
-                    <td className="p-4 text-white text-sm">
+                    <td className="px-3 py-2 text-white text-sm">
                         {o.customer?.name || o.customerName ? (
                           <span>
                             {o.customer?.name || o.customerName}
                             {!o.customer?.id && o.customerName && (
-                              <span className="ml-1.5 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Avulso</span>
+                              <span className="ml-1 text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full">Avulso</span>
                             )}
                           </span>
                         ) : '—'}
                       </td>
-                    <td className="p-4 text-center text-slate-400 text-sm">{o.items?.length || 0}</td>
-                    <td className="p-4 text-right text-white font-semibold text-sm">R$ {Number(o.total).toFixed(2)}</td>
-                    <td className="p-4 text-center">
-                      <span className="px-2 py-1 bg-slate-800 rounded-md text-xs text-white">{o.paymentMethod}</span>
+                    <td className="px-3 py-2 text-center text-slate-400 text-sm">{o.items?.length || 0}</td>
+                    <td className="px-3 py-2 text-right text-white font-semibold text-sm">R$ {Number(o.total).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-center">
+                      <span className="px-1.5 py-0.5 bg-slate-800 rounded-md text-[11px] text-white">{o.paymentMethod}</span>
                     </td>
-                    <td className="p-4 text-right text-slate-400 text-xs">
+                    <td className="px-3 py-2 text-right text-slate-400 text-xs">
                       {new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </td>
                   </tr>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: 'Nova Venda', emoji: '💰', color: '#34D399', href: '/orders' },
           { label: 'Adicionar Produto', emoji: '📦', color: '#6366F1', href: '/products' },
@@ -169,15 +169,15 @@ export default function DashboardPage() {
           <a
             key={action.label}
             href={action.href}
-            className="flex flex-col items-center gap-3 p-6 bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-500 transition-all group"
+            className="flex flex-col items-center gap-2 p-4 bg-slate-900 border border-slate-800 rounded-xl hover:border-slate-500 transition-all group"
           >
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-transform group-hover:scale-110"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-transform group-hover:scale-110"
               style={{ backgroundColor: action.color + '20' }}
             >
               {action.emoji}
             </div>
-            <span className="text-sm text-white font-medium">{action.label}</span>
+            <span className="text-xs text-white font-medium">{action.label}</span>
           </a>
         ))}
       </div>
