@@ -278,12 +278,12 @@ export async function saveCategoriesLocally(
   categories: any[],
 ) {
   const stmt = await database.prepareAsync(
-    `INSERT OR REPLACE INTO categories (id, name, color, sort_order)
-     VALUES (?, ?, ?, ?)`,
+    `INSERT OR REPLACE INTO categories (id, name, sort_order)
+     VALUES (?, ?, ?)`,
   );
 
   for (const c of categories) {
-    await stmt.executeAsync([c.id, c.name, c.color || null, c.sortOrder || 0]);
+    await stmt.executeAsync([c.id, c.name, c.sortOrder || 0]);
   }
 
   await stmt.finalizeAsync();
