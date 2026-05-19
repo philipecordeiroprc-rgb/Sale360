@@ -46,6 +46,8 @@ export default function DashboardPage() {
 
   const totalSales = summary?.totalSales || 0;
   const orderCount = summary?.count || 0;
+  const pendingCount = summary?.pendingCount || 0;
+  const pendingAmount = summary?.pendingAmount || 0;
   const ticketMedio = orderCount > 0 ? totalSales / orderCount : 0;
 
   const statCards = [
@@ -53,6 +55,7 @@ export default function DashboardPage() {
     { id: 'orders', label: 'Pedidos Hoje', value: String(orderCount), icon: ShoppingCart, color: '#6366F1' },
     { id: 'ticket', label: 'Ticket Medio', value: `R$ ${ticketMedio.toFixed(2)}`, icon: TrendingUp, color: '#FBBF24' },
     { id: 'customers', label: 'Novos Clientes', value: String(newCustomers), icon: Users, color: '#EC4899' },
+    ...(pendingCount > 0 ? [{ id: 'pending', label: `Fiado (${pendingCount})`, value: `R$ ${pendingAmount.toFixed(2)}`, icon: Clock, color: '#F59E0B' }] : []),
   ];
 
   return (
