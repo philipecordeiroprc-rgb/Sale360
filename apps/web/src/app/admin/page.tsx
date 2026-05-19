@@ -44,7 +44,7 @@ export default function AdminPage() {
   const [error, setError] = useState('');
 
   // Form
-  const [form, setForm] = useState({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL' });
+  const [form, setForm] = useState({ companyName: '', slug: '', plan: 'PRO', status: 'TRIAL', trialEndsAt: '' });
 
   const fetchTenants = async () => {
     try {
