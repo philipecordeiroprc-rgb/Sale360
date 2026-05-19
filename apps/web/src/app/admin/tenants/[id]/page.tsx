@@ -150,6 +150,8 @@ export default function TenantDetailPage() {
     try {
       if (editingUserId) {
         await api.admin.tenants.users.update(id, editingUserId, {
+          name: userForm.name,
+          email: userForm.email,
           role: userForm.role,
           pin: userForm.pin || undefined,
         });
