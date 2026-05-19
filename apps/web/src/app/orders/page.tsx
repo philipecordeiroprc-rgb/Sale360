@@ -556,7 +556,7 @@ export default function OrdersPage() {
                 {cart.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-white truncate">{item.productName}</p>
+                      <p className="text-xs text-white truncate">{item.productName}</p>
                       <p className="text-xs text-slate-500">R$ {item.unitPrice.toFixed(2)} x {item.quantity}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
