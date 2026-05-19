@@ -431,7 +431,7 @@ export default function OrdersPage() {
 
       {/* ========== SALE MODAL ========== */}
       <Modal open={saleOpen} onClose={() => setSaleOpen(false)} title="Nova Venda" size="lg">
-        <div className="space-y-5">
+        <div className="space-y-3">
           {/* ── Customer ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Cliente</h3>
