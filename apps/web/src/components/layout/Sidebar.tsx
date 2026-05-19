@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
-  ClipboardList, DollarSign, Settings, LogOut,
+  DollarSign, Settings, LogOut,
   Truck, ShoppingBag, Layers, Tag, X,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
