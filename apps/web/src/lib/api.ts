@@ -422,7 +422,7 @@ export const api = {
         add(tenantId: string, data: { email: string; name: string; password: string; role: string; pin?: string }) {
           return request<any>(`/api/admin/tenants/${tenantId}/users`, { method: 'POST', body: JSON.stringify(data) });
         },
-        update(tenantId: string, userId: string, data: { role?: string; pin?: string }) {
+        update(tenantId: string, userId: string, data: { role?: string; pin?: string; name?: string; email?: string }) {
           return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
         },
         remove(tenantId: string, userId: string) {
