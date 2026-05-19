@@ -94,7 +94,10 @@ export default function TenantDetailPage() {
   const handleInfoSave = async () => {
     setInfoSaving(true);
     try {
-      await api.admin.tenants.update(id, infoForm);
+      await api.admin.tenants.update(id, {
+        ...infoForm,
+        trialEndsAt: infoForm.trialEndsAt || null,
+      });
       show('Loja atualizada!');
       loadTenant();
     } catch (err: any) {
