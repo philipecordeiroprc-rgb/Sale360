@@ -36,6 +36,11 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Allow store selector for authenticated users
+  if (isSelectStore) {
+    return NextResponse.next();
+  }
+
   // SUPER_ADMIN redirect to /admin from non-admin pages
   if (isSuperAdmin && !isAdminRoute) {
     return NextResponse.redirect(new URL('/admin', request.url));
