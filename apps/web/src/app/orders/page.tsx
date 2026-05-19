@@ -348,23 +348,23 @@ export default function OrdersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-slate-500 text-xs border-b border-slate-800">
-                  <th className="text-left px-4 py-3">#</th>
-                  <th className="text-left px-4 py-3">Cliente</th>
-                  <th className="text-center px-4 py-3 hidden md:table-cell">Itens</th>
-                  <th className="text-right px-4 py-3 hidden sm:table-cell">Subtotal</th>
-                  <th className="text-right px-4 py-3 hidden sm:table-cell">Desc.</th>
-                  <th className="text-right px-4 py-3">Total</th>
-                  <th className="text-center px-4 py-3 hidden md:table-cell">Pagamento</th>
-                  <th className="text-center px-4 py-3">Status</th>
-                  <th className="text-right px-4 py-3 hidden lg:table-cell">Data</th>
-                  <th className="text-center px-4 py-3"></th>
+                  <th className="text-left px-3 py-2">#</th>
+                  <th className="text-left px-3 py-2">Cliente</th>
+                  <th className="text-center px-3 py-2 hidden md:table-cell">Itens</th>
+                  <th className="text-right px-3 py-2 hidden sm:table-cell">Subtotal</th>
+                  <th className="text-right px-3 py-2 hidden sm:table-cell">Desc.</th>
+                  <th className="text-right px-3 py-2">Total</th>
+                  <th className="text-center px-3 py-2 hidden md:table-cell">Pagamento</th>
+                  <th className="text-center px-3 py-2">Status</th>
+                  <th className="text-right px-3 py-2 hidden lg:table-cell">Data</th>
+                  <th className="text-center px-3 py-2"></th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((o: any) => (
                   <tr key={o.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                    <td className="px-4 py-3 text-indigo-400 font-mono text-sm font-semibold">#{o.orderNumber}</td>
-                    <td className="px-4 py-3 text-white text-sm">
+                    <td className="px-3 py-2 text-indigo-400 font-mono text-sm font-semibold">#{o.orderNumber}</td>
+                    <td className="px-3 py-2 text-white text-sm">
                         {o.customer?.name || o.customerName ? (
                           <span>
                             {o.customer?.name || o.customerName}
@@ -374,14 +374,14 @@ export default function OrdersPage() {
                           </span>
                         ) : '—'}
                       </td>
-                    <td className="px-4 py-3 text-center text-slate-400 text-sm hidden md:table-cell">{o.items?.length || 0}</td>
-                    <td className="px-4 py-3 text-right text-slate-400 hidden sm:table-cell">R$ {Number(o.subtotal).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-right text-red-400 hidden sm:table-cell">{Number(o.discount) > 0 ? `R$ ${Number(o.discount).toFixed(2)}` : '—'}</td>
-                    <td className="px-4 py-3 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
-                    <td className="px-4 py-3 text-center hidden md:table-cell">
+                    <td className="px-3 py-2 text-center text-slate-400 text-sm hidden md:table-cell">{o.items?.length || 0}</td>
+                    <td className="px-3 py-2 text-right text-slate-400 hidden sm:table-cell">R$ {Number(o.subtotal).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right text-red-400 hidden sm:table-cell">{Number(o.discount) > 0 ? `R$ ${Number(o.discount).toFixed(2)}` : '—'}</td>
+                    <td className="px-3 py-2 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-center hidden md:table-cell">
                       <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{o.paymentMethod}</span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         o.status === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
                         o.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
@@ -394,10 +394,10 @@ export default function OrdersPage() {
                          o.status === 'CANCELLED' ? 'Cancelado' : o.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-xs text-slate-500 hidden lg:table-cell">
+                    <td className="px-3 py-2 text-right text-xs text-slate-500 hidden lg:table-cell">
                       {new Date(o.createdAt).toLocaleDateString('pt-BR')}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => openDetail(o.id)}
                           className="p-1.5 text-slate-400 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition-colors" title="Ver">
@@ -705,7 +705,7 @@ export default function OrdersPage() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium ${
+        <div className={`fixed top-4 right-4 z-50 px-3 py-2 rounded-xl text-sm font-medium ${
           toast.type === 'error' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'}`}>
           {toast.message}
         </div>
