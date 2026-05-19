@@ -27,6 +27,7 @@ const createOrderSchema = z.object({
   createdAtDevice: z.string().optional(),
   couponId: z.string().optional(),
   couponDiscount: z.number().optional(),
+  dueDate: z.string().optional(), // vencimento para fiado
 });
 
 export const orderRoutes: FastifyPluginAsync = async (app) => {
