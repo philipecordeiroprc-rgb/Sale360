@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { AuthHydrator } from '@/components/layout/AuthHydrator';
 import { ClientShell } from '@/components/layout/ClientShell';
+import { ServiceWorkerRegister } from '@/components/ServiceWorkerRegister';
 import './globals.css';
 
 export const metadata: Metadata = {
