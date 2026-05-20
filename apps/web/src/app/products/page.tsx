@@ -71,9 +71,39 @@ export default function ProductsPage() {
 
   // Load products
   const loadProducts = useCallback(async () => {
+    setLoading(true);
+    setError('');
+
+    // If clearly offline, skip API call and load from IndexedDB immediately
+    if (!navigator.onLine) {
+      try {
+        const cached = await getProducts();
+        let results = cached;
+        if (search) {
+          const q = search.toLowerCase();
+          results = results.filter((p: any) =>
+            p.name?.toLowerCase().includes(q) ||
+            p.sku?.toLowerCase().includes(q) ||
+            p.barcode?.toString().toLowerCase().includes(q)
+          );
+        }
+        if (selectedCategory !== 'all') {
+          results = results.filter((p: any) => p.categoryId === selectedCategory);
+        }
+        if (variationName) {
+          results = results.filter((p: any) =>
+            (p.variations || []).some((v: any) => v.name === variationName)
+          );
+        }
+        setProducts(results);
+        setTotal(results.length);
+        if (results.length === 0) setError('Nenhum produto em cache. Conecte-se para carregar os dados.');
+      } catch { setError('Erro ao acessar dados offline.'); }
+      setLoading(false);
+      return;
+    }
+
     try {
-      setLoading(true);
-      setError('');
       const params: any = {};
       if (search) params.search = search;
       if (selectedCategory !== 'all') params.categoryId = selectedCategory;
@@ -82,6 +112,10 @@ export default function ProductsPage() {
       const data = await api.products.list(params);
       setProducts(data.products);
       setTotal(data.total);
+      // Cache the full product list to IndexedDB (for offline use)
+      if (!search && selectedCategory === 'all' && !variationName && data.products.length > 0) {
+        cacheProducts(data.products).catch(() => {});
+      }
       // Collect unique variation names from all products (for filter dropdown)
       if (!search && !variationName && selectedCategory === 'all') {
         const names = new Set<string>();
