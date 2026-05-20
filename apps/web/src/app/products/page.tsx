@@ -467,14 +467,24 @@ export default function ProductsPage() {
                   const totalStock = hasVariations
                     ? product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)
                     : Number(product.stockQty);
-                  // Alert: yellow when at or below lowStockAt, red when zero
-                  const lowAt = hasVariations
+                  // Stock alert levels
+                  const stockMin = product.lowStockAt != null ? Number(product.lowStockAt) : 0;
+                  // Check if any variation is below its minimum
+                  const anyBelow = hasVariations
                     ? (product.variations || []).some((v: any) => {
                         const vStock = Number(v.stockQty);
-                        const vLow = v.lowStockAt != null ? Number(v.lowStockAt) : (product.lowStockAt != null ? Number(product.lowStockAt) : null);
-                        return vLow != null && vStock > 0 && vStock <= vLow;
+                        const vLow = v.lowStockAt != null ? Number(v.lowStockAt) : stockMin;
+                        return vLow > 0 && vStock > 0 && vStock < vLow;
                       })
-                    : (product.lowStockAt != null && totalStock > 0 && totalStock <= Number(product.lowStockAt));
+                    : (stockMin > 0 && totalStock > 0 && totalStock < stockMin);
+                  // Check if at minimum exactly
+                  const anyAtMin = !anyBelow && hasVariations
+                    ? (product.variations || []).some((v: any) => {
+                        const vStock = Number(v.stockQty);
+                        const vLow = v.lowStockAt != null ? Number(v.lowStockAt) : stockMin;
+                        return vLow > 0 && vStock === vLow;
+                      })
+                    : (stockMin > 0 && totalStock === stockMin);
                   const inactive = !product.active;
 
                   return (
