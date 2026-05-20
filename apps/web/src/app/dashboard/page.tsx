@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { getPendingOrders, getProducts, getCustomers } from '@/lib/offline-db';
 
 export default function DashboardPage() {
   const { tenant } = useAuth();
