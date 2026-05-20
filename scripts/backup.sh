@@ -210,7 +210,7 @@ if [ -d /home/opc/sale360/.git ]; then
     cd /home/opc/sale360
     git add -A 2>> "$LOG_FILE"
     git commit -m "backup: ${TIMESTAMP}" 2>> "$LOG_FILE" || true
-    if git push origin master 2>> "$LOG_FILE"; then
+    if git push origin main 2>> "$LOG_FILE"; then
         ok "GitHub push concluído"
         GIT_PUSH_OK=1
     else
