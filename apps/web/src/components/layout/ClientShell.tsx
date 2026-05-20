@@ -13,6 +13,7 @@ import { useSync } from '@/hooks/useSync';
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isSuperAdmin } = useAuth();
+  const { sync, isSyncing, isOnline, pendingCount } = useSync();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const isAdminRoute = pathname.startsWith('/admin');
