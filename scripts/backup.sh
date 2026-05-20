@@ -286,6 +286,7 @@ log "━━━━━━━━━━━━━━━━━━━━━━━━━
 log "🎯 Backup concluído: ${BACKUP_NAME}"
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 log "   Local:  ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
+log "   GitHub: ${GIT_PUSH_OK:+✅ Push OK}${GIT_PUSH_OK:-⚠️  Falhou}"
 if [ "$OCI_UPLOAD_OK" = "1" ]; then
     log "   OCI:    ✅ Upload OK"
 else
