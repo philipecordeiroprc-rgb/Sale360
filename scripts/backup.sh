@@ -194,7 +194,24 @@ ok "Backup compactado: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
 # Limpar diretório temporário (sudo necessário para arquivos SSL copiados com sudo)
 sudo rm -rf "$BACKUP_PATH" 2>/dev/null || rm -rf "$BACKUP_PATH" 2>/dev/null || true
 
-# ---- Upload OCI Object Storage ----
+# ---- 10. Git Push para GitHub ----
+log "🔀 Enviando código para GitHub..."
+GIT_PUSH_OK=""
+if [ -d /home/opc/sale360/.git ]; then
+    cd /home/opc/sale360
+    git add -A 2>> "$LOG_FILE"
+    git commit -m "backup: ${TIMESTAMP}" 2>> "$LOG_FILE" || true
+    if git push origin master 2>> "$LOG_FILE"; then
+        ok "GitHub push concluído"
+        GIT_PUSH_OK=1
+    else
+        warn "GitHub push falhou (verificar remote/autenticação)"
+    fi
+else
+    warn "Repositório git não inicializado"
+fi
+
+# ---- 11. Upload OCI Object Storage ----
 log "☁️  Enviando para OCI Object Storage..."
 OCI_UPLOAD_OK=""
 if oci os object put \
