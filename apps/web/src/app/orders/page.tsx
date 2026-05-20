@@ -524,6 +524,16 @@ export default function OrdersPage() {
       {/* ========== SALE MODAL ========== */}
       <Modal open={saleOpen} onClose={() => setSaleOpen(false)} title="Nova Venda" size="lg">
         <div className="space-y-3">
+          {/* Offline banner */}
+          {!isOnline && (
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl px-4 py-2.5 flex items-center gap-2.5">
+              <WifiOff size={15} className="text-amber-400 shrink-0" />
+              <p className="text-xs text-amber-300">
+                Modo offline. A venda sera salva localmente e enviada quando houver conexao.
+              </p>
+            </div>
+          )}
+
           {/* ── Customer ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Cliente</h3>
