@@ -173,123 +173,20 @@ export default function OrdersPage() {
     setUseWalkIn(false);
   };
 
-  const searchProducts = async (q: string) => {
-    setProductSearch(q);
-    if (q.length < 1) { setProductResults([]); return; }
-    // If clearly offline, skip API call entirely (avoids waiting for timeout)
-    if (!navigator.onLine) {
-      const cached = await getProducts();
-      const qLower = q.toLowerCase();
-      setProductResults(cached.filter((p: any) =>
-        p.active !== false && (
-          p.name?.toLowerCase().includes(qLower) ||
-          p.sku?.toLowerCase().includes(qLower) ||
-          p.barcode?.toString().toLowerCase().includes(qLower)
-        )
-      ));
-      return;
-    }
-    try {
-      const data = await api.products.list({ search: q, active: true });
-      setProductResults(data.products || []);
-      // Merge into IndexedDB for offline use (upsert, doesn't clear)
-      if (data.products?.length > 0) {
-        mergeProducts(data.products).catch(() => {});
-      }
-    } catch {
-      try {
-        const cached = await getProducts();
-        const qLower = q.toLowerCase();
-        const results = cached.filter((p: any) =>
-          p.active !== false && (
-            p.name?.toLowerCase().includes(qLower) ||
-            p.sku?.toLowerCase().includes(qLower) ||
-            p.barcode?.toString().toLowerCase().includes(qLower)
-          )
-        );
-        console.log('[Offline] Produtos carregados do cache:', results.length);
-        setProductResults(results);
-      } catch {
-        setProductResults([]);
-      }
-    }
-  };
-
-  const selectProduct = (p: any) => {
-    setSelectedProduct(p);
-    setSelectedVariation(null);
-    setProductSearch(p.name);
-    setProductResults([]);
-    setQuantity('1');
-    if (p.variations?.length > 0) {
-      setShowVariationPicker(true);
-    }
-  };
-
-  // Available stock for currently selected product/variation
-  const getAvailableStock = (): number => {
-    if (!selectedProduct) return 0;
-    if (selectedProduct.variations?.length > 0 && selectedVariation) {
-      return Number(selectedVariation.stockQty || 0);
-    }
-    return Number(selectedProduct.stockQty || 0);
-  };
-
-  // How many of this product/variation are already in the cart
-  const getCartQty = (): number => {
-    return cart
-      .filter(c =>
-        c.productId === selectedProduct?.id &&
-        c.variationId === (selectedVariation?.id || undefined)
-      )
-      .reduce((sum, c) => sum + c.quantity, 0);
-  };
-
-  const addToCart = () => {
-    if (!selectedProduct) return;
-    const qty = parseFloat(quantity);
-    if (qty <= 0) { show('Quantidade inválida', 'error'); return; }
-
-    // Validate stock
-    const available = getAvailableStock();
-    const alreadyInCart = getCartQty();
-    if (qty + alreadyInCart > available) {
-      show(`Estoque insuficiente. Disponível: ${available - alreadyInCart}`, 'error');
-      return;
-    }
-
-    const price = Number(selectedProduct.price || 0);
-    const itemName = selectedVariation
-      ? `${selectedProduct.name} - ${selectedVariation.name}`
-      : selectedProduct.name;
-
-    // Check if already in cart
+  const addToCart = (item: CartItem) => {
+    // Check if already in cart and merge quantities
     const existingIdx = cart.findIndex(c =>
-      c.productId === selectedProduct.id &&
-      c.variationId === (selectedVariation?.id || undefined)
+      c.productId === item.productId &&
+      c.variationId === (item.variationId || undefined)
     );
     if (existingIdx >= 0) {
       const updated = [...cart];
-      updated[existingIdx].quantity += qty;
-      updated[existingIdx].total = updated[existingIdx].quantity * price;
+      updated[existingIdx].quantity += item.quantity;
+      updated[existingIdx].total = updated[existingIdx].quantity * item.unitPrice;
       setCart(updated);
     } else {
-      setCart([...cart, {
-        productId: selectedProduct.id,
-        variationId: selectedVariation?.id || undefined,
-        variationName: selectedVariation?.name,
-        productName: itemName,
-        quantity: qty,
-        unitPrice: price,
-        total: qty * price,
-      }]);
+      setCart([...cart, item]);
     }
-    // Reset selection
-    setSelectedProduct(null);
-    setSelectedVariation(null);
-    setProductSearch('');
-    setQuantity('1');
-    setShowVariationPicker(false);
   };
 
   const removeFromCart = (idx: number) => setCart(cart.filter((_, i) => i !== idx));
