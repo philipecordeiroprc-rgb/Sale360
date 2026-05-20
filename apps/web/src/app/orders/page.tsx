@@ -600,82 +600,55 @@ export default function OrdersPage() {
             )}
           </div>
 
-          {/* ── Product ── */}
+          {/* ── Produtos ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
-            <div className="relative mb-3">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input value={productSearch} onChange={(e) => searchProducts(e.target.value)}
-                placeholder="Buscar produto..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              {productResults.length > 0 && (
-                <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-48 overflow-y-auto z-20">
-                  {productResults.map((p: any) => (
-                    <button key={p.id} onClick={() => selectProduct(p)}
-                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600 flex justify-between">
-                      <span>{p.name}</span>
-                      <span className="text-xs text-slate-500">R$ {Number(p.price).toFixed(2)} — Est: {Number(p.stockQty)}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-sm font-semibold text-white flex-1">Produtos</h3>
+              <button
+                onClick={() => setScannerOpen(true)}
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors"
+                title="Escanear código de barras"
+              >
+                <Scan size={16} />
+              </button>
             </div>
 
-            {/* Selected product */}
-            {selectedProduct && (
-              <div className="bg-slate-900 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-white text-sm font-medium">{selectedProduct.name}</p>
-                  <p className="text-emerald-400 text-sm font-semibold">R$ {Number(selectedProduct.price).toFixed(2)}</p>
-                </div>
-
-                {/* Variation picker */}
-                {selectedProduct.variations?.length > 0 && (
-                  <div className="mb-2">
-                    <label className="block text-xs text-slate-400 mb-1">Variação</label>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedProduct.variations.map((v: any) => {
-                        const vStock = Number(v.stockQty || 0);
-                        const outOfStock = vStock <= 0;
-                        return (
-                          <button key={v.id}
-                            onClick={() => !outOfStock && setSelectedVariation(v)}
-                            disabled={outOfStock}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                              selectedVariation?.id === v.id
-                                ? 'bg-indigo-500 text-white'
-                                : outOfStock
-                                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                            }`}>
-                            {v.name}{v.priceModifier > 0 ? ` (+R$${Number(v.priceModifier).toFixed(2)})` : ''} — Est: {vStock}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quantity */}
-                <div className="flex items-center gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Qtd</label>
-                    <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-                      min="0.001" step="any"
-                      className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Disp: {getAvailableStock() - getCartQty()}
-                    </p>
-                  </div>
-                  <button onClick={addToCart}
-                    disabled={getAvailableStock() <= 0}
-                    className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors">
-                    <Plus size={14} className="inline mr-1" /> Adicionar
-                  </button>
-                </div>
-              </div>
+            {scannerOpen ? (
+              <BarcodeScanner
+                isOpen={scannerOpen}
+                onClose={() => setScannerOpen(false)}
+                onDetected={(product) => {
+                  setScannerOpen(false);
+                  setQuickAddProduct(product);
+                  setQuickAddOpen(true);
+                }}
+                onError={(msg) => show(msg, 'error')}
+              />
+            ) : (
+              <ProductGrid
+                onProductClick={(product) => {
+                  setQuickAddProduct(product);
+                  setQuickAddOpen(true);
+                }}
+                cart={cart}
+                isOnline={isOnline}
+                productSearch={productGridSearch}
+                onProductSearchChange={setProductGridSearch}
+              />
             )}
           </div>
+
+          <QuickAddSheet
+            open={quickAddOpen}
+            product={quickAddProduct}
+            onClose={() => { setQuickAddOpen(false); setQuickAddProduct(null); }}
+            onAdd={(item) => {
+              addToCart(item);
+              setQuickAddOpen(false);
+              setQuickAddProduct(null);
+            }}
+            cartItems={cart}
+          />
 
           {/* ── Cart ── */}
           {cart.length > 0 && (
