@@ -5,6 +5,7 @@ import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info } fro
 import { Modal } from '@/components/ui/Modal';
 import { type VariationData } from '@/components/products/VariationEditor';
 import api from '@/lib/api';
+import { getProducts } from '@/lib/offline-db';
 
 const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
   DRAFT: { label: 'Rascunho', color: 'bg-slate-600' },
