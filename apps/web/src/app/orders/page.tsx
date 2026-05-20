@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff, Ticket } from 'lucide-react';
+import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff, Ticket, Scan } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
 import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeProducts, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { ProductGrid } from '@/components/products/ProductGrid';
+import { QuickAddSheet } from '@/components/products/QuickAddSheet';
+import { BarcodeScanner } from '@/components/products/BarcodeScanner';
 
 const PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
