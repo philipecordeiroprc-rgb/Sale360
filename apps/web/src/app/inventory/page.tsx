@@ -322,9 +322,9 @@ export default function InventoryPage() {
                     ].filter(Boolean).join(' · ');
 
                     return (
-                      <tbody key={group.key}>
+                      <>
                         {/* Summary row */}
-                        <tr
+                        <tr key={group.key}
                           onClick={() => toggleGroup(group.key)}
                           className={`border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer ${stockBgClass}`}>
                           <td className="px-3 py-3">
@@ -380,7 +380,7 @@ export default function InventoryPage() {
                             <td className="px-3 py-2"></td>
                           </tr>
                         ))}
-                      </tbody>
+                      </>
                     );
                   })}
                 </tbody>
