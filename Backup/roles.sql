@@ -2,7 +2,7 @@
 -- PostgreSQL database cluster dump
 --
 
-\restrict HNnB16zhKk99PRTsgOKR4X5WfqIoXk0bIO7Tntfisne5EUsmTPRiZi5yNSuz8xB
+\restrict 2IRE9kDjqlxLWRk80x2jDCGEV1Nt7shdTypefGc00RxC41qbhEomfYthdqThvS6
 
 SET default_transaction_read_only = off;
 
@@ -42,7 +42,7 @@ GRANT pg_write_all_data TO neon_superuser WITH INHERIT TRUE GRANTED BY cloud_adm
 
 
 
-\unrestrict HNnB16zhKk99PRTsgOKR4X5WfqIoXk0bIO7Tntfisne5EUsmTPRiZi5yNSuz8xB
+\unrestrict 2IRE9kDjqlxLWRk80x2jDCGEV1Nt7shdTypefGc00RxC41qbhEomfYthdqThvS6
 
 --
 -- PostgreSQL database cluster dump complete

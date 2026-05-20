@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 32IYdl0I1ADG79zhi7ppI6M9hl9R6KraLuXGXIjHocebfUTy0Aqk1bq3F4kQrqn
+\restrict nNWzy6NAd86jzPUfZlC6xK0iXNMha3QhMEpZBa2j8bZsyV9vIkVww5GVLqPOuac
 
 -- Dumped from database version 17.10 (322a063)
 -- Dumped by pg_dump version 17.10
@@ -845,8 +845,8 @@ INSERT INTO public.customers (id, "tenantId", name, phone, email, document, "cre
 
 INSERT INTO public.devices (id, "tenantId", name, type, "pushToken", "lastSyncAt", "createdAt") VALUES ('cmpdjfh4o0027kdwbnw8h7zkt', 'cmpbh7yfp0000uylo0bdk6o7y', 'web_1779249863304_qs0lik', 'mobile', NULL, '2026-05-20 04:06:17.591', '2026-05-20 04:04:23.544');
 INSERT INTO public.devices (id, "tenantId", name, type, "pushToken", "lastSyncAt", "createdAt") VALUES ('cmpdjgdcv002hkdwbetjmz9nx', 'cmpbh7yfp0000uylo0bdk6o7y', 'web_1779249905190_h22o5s', 'mobile', NULL, '2026-05-20 04:06:34.044', '2026-05-20 04:05:05.312');
-INSERT INTO public.devices (id, "tenantId", name, type, "pushToken", "lastSyncAt", "createdAt") VALUES ('cmpdjpfaq002tkdwb2t9pdwf4', 'cmpcsv29u0000kd30i9w2arj4', 'web_1779249905190_h22o5s', 'mobile', NULL, '2026-05-20 04:42:46.053', '2026-05-20 04:12:07.73');
 INSERT INTO public.devices (id, "tenantId", name, type, "pushToken", "lastSyncAt", "createdAt") VALUES ('cmpdgqkkv000ykdwbutw8oyfd', 'cmpcsv29u0000kd30i9w2arj4', 'web_1779245343145_uk9nd7', 'mobile', NULL, '2026-05-20 13:23:48.046', '2026-05-20 02:49:02.383');
+INSERT INTO public.devices (id, "tenantId", name, type, "pushToken", "lastSyncAt", "createdAt") VALUES ('cmpdjpfaq002tkdwb2t9pdwf4', 'cmpcsv29u0000kd30i9w2arj4', 'web_1779249905190_h22o5s', 'mobile', NULL, '2026-05-20 14:17:36.886', '2026-05-20 04:12:07.73');
 
 
 --
@@ -1885,5 +1885,5 @@ ALTER TABLE ONLY public.variation_templates
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 32IYdl0I1ADG79zhi7ppI6M9hl9R6KraLuXGXIjHocebfUTy0Aqk1bq3F4kQrqn
+\unrestrict nNWzy6NAd86jzPUfZlC6xK0iXNMha3QhMEpZBa2j8bZsyV9vIkVww5GVLqPOuac
 

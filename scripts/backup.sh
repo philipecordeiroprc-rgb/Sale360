@@ -155,29 +155,29 @@ log "🔧 [8/9] Configurações de runtime..."
 mkdir -p "${BACKUP_PATH}/config"
 
 # Node & Package Manager versions
-node --version > "${BACKUP_PATH}/config/node-version.txt" 2>/dev/null
-pnpm --version > "${BACKUP_PATH}/config/pnpm-version.txt" 2>/dev/null
-npm --version > "${BACKUP_PATH}/config/npm-version.txt" 2>/dev/null
+node --version > "${BACKUP_PATH}/config/node-version.txt" 2>/dev/null || true
+/usr/local/bin/pnpm --version > "${BACKUP_PATH}/config/pnpm-version.txt" 2>/dev/null || true
+npm --version > "${BACKUP_PATH}/config/npm-version.txt" 2>/dev/null || true
 
 # Package files
-cp /home/opc/sale360/package.json "${BACKUP_PATH}/config/root-package.json" 2>/dev/null
-cp /home/opc/sale360/pnpm-lock.yaml "${BACKUP_PATH}/config/pnpm-lock.yaml" 2>/dev/null
-cp /home/opc/sale360/pnpm-workspace.yaml "${BACKUP_PATH}/config/pnpm-workspace.yaml" 2>/dev/null
-cp /home/opc/sale360/turbo.json "${BACKUP_PATH}/config/turbo.json" 2>/dev/null
-cp /home/opc/sale360/tsconfig.base.json "${BACKUP_PATH}/config/tsconfig.base.json" 2>/dev/null
+cp /home/opc/sale360/package.json "${BACKUP_PATH}/config/root-package.json" 2>/dev/null || true
+cp /home/opc/sale360/pnpm-lock.yaml "${BACKUP_PATH}/config/pnpm-lock.yaml" 2>/dev/null || true
+cp /home/opc/sale360/pnpm-workspace.yaml "${BACKUP_PATH}/config/pnpm-workspace.yaml" 2>/dev/null || true
+cp /home/opc/sale360/turbo.json "${BACKUP_PATH}/config/turbo.json" 2>/dev/null || true
+cp /home/opc/sale360/tsconfig.base.json "${BACKUP_PATH}/config/tsconfig.base.json" 2>/dev/null || true
 
 # DB env
 cp /home/opc/sale360/packages/db/.env "${BACKUP_PATH}/config/db.env" 2>/dev/null || true
 
 # NODE_ENV e variáveis do sistema
-env | sort > "${BACKUP_PATH}/config/environment.txt" 2>/dev/null
+env | sort > "${BACKUP_PATH}/config/environment.txt" 2>/dev/null || true
 
 # Host info
-hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null
-uname -a > "${BACKUP_PATH}/config/kernel.txt" 2>/dev/null
+hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null || true
+uname -a > "${BACKUP_PATH}/config/kernel.txt" 2>/dev/null || true
 
 # Lista de pacotes instalados (rpm/dnf)
-rpm -qa --queryformat '%{NAME} %{VERSION}-%{RELEASE}\n' | sort > "${BACKUP_PATH}/config/rpm-packages.txt" 2>/dev/null
+rpm -qa --queryformat '%{NAME} %{VERSION}-%{RELEASE}\n' 2>/dev/null | sort > "${BACKUP_PATH}/config/rpm-packages.txt" 2>/dev/null || true
 
 ok "Configurações copiadas"
 
