@@ -357,6 +357,12 @@ export default function OrdersPage() {
             lastAttempt: 0,
             error: null,
           });
+          // Decrement local stock for each item
+          for (const item of cart) {
+            if (item.productId) {
+              decrementLocalStock(item.productId, item.variationId, item.quantity).catch(() => {});
+            }
+          }
           show('Venda salva offline. Sera sincronizada quando houver conexao.', 'success');
           setSaleOpen(false);
           loadOrders();
