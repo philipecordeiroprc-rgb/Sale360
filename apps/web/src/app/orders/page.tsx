@@ -343,6 +343,18 @@ export default function OrdersPage() {
     }
   };
 
+  const handleConfirmOnline = async (id: string) => {
+    if (!confirm('Confirmar pedido online? O estoque será baixado e o pedido marcado como pago.')) return;
+    try {
+      const result = await api.orders.confirm(id);
+      show(result.message || 'Pedido confirmado!');
+      loadOrders();
+      loadTodayRevenue();
+    } catch (err: any) {
+      show(err.message || 'Erro ao confirmar pedido', 'error');
+    }
+  };
+
   const openDetail = async (id: string) => {
     try {
       const data = await api.orders.list({ search: id });
