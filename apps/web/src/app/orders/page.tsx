@@ -345,6 +345,9 @@ export default function OrdersPage() {
     setShowVariationPicker(false);
     setCart([]);
     setDiscount('0');
+    setCouponCode('');
+    setCouponData(null);
+    setCouponError('');
     setSelectedPayment(PAYMENT_METHODS[0]);
     setDueDate('');
     setSaleOpen(true);
