@@ -127,11 +127,21 @@ export default function OrdersPage() {
   const searchCustomers = async (q: string) => {
     setCustomerSearch(q);
     if (q.length < 1) { setCustomerResults([]); return; }
+    // If clearly offline, skip API call entirely (avoids waiting for timeout)
+    if (!navigator.onLine) {
+      const cached = await getCustomers();
+      const qLower = q.toLowerCase();
+      setCustomerResults(cached.filter((c: any) =>
+        c.name?.toLowerCase().includes(qLower) ||
+        c.email?.toLowerCase().includes(qLower) ||
+        c.phone?.toLowerCase().includes(qLower)
+      ));
+      return;
+    }
     try {
       const data = await api.customers.list({ search: q });
       setCustomerResults(data.customers || []);
     } catch {
-      // Offline fallback: search from IndexedDB cache
       try {
         const cached = await getCustomers();
         const qLower = q.toLowerCase();
