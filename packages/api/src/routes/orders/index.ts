@@ -504,7 +504,8 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       for (const item of order.items) {
         if (item.productId) {
           // FIFO: consume from oldest batches
-          let remaining = item.quantity;
+          const qty = Number(item.quantity);
+          let remaining = qty;
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -549,15 +550,15 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           if ((item as any).variationId) {
             await tx.productVariation.update({
               where: { id: (item as any).variationId },
-              data: { stockQty: { decrement: item.quantity } },
+              data: { stockQty: { decrement: qty } },
             });
           }
           await tx.product.update({
             where: { id: item.productId },
-            data: { stockQty: { decrement: item.quantity } },
+            data: { stockQty: { decrement: qty } },
           });
 
-          const costPrice = totalCostAcc / item.quantity;
+          const costPrice = totalCostAcc / qty;
           await tx.orderItem.update({
             where: { id: item.id },
             data: {
