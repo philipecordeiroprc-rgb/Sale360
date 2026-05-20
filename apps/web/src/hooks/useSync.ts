@@ -167,6 +167,14 @@ export function useSync(): UseSyncReturn {
     return { pulled, pushed, errors };
   }, [isOnline, refreshCount]);
 
+  // Initial sync on mount (populates IndexedDB cache for offline use)
+  useEffect(() => {
+    if (!initialSyncDone.current && isOnline) {
+      initialSyncDone.current = true;
+      sync();
+    }
+  }, [isOnline, sync]);
+
   // Auto-sync on reconnection
   useEffect(() => {
     if (wasOffline) {
