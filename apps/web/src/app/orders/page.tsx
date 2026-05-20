@@ -532,7 +532,13 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
-                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                          <button onClick={() => handleConfirmOnline(o.id)}
+                            className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
+                            <CheckCircle size={16} />
+                          </button>
+                        )}
+                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && o.source !== 'ONLINE' && (
                           <button onClick={() => handlePay(o.id)}
                             className="p-1.5 text-amber-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Receber pagamento">
                             <Banknote size={16} />
