@@ -985,6 +985,15 @@ export default function OrdersPage() {
                     <td className="py-1 text-right text-red-400">- R$ {Number(detailOrder.discount).toFixed(2)}</td>
                   </tr>
                 )}
+                {Number(detailOrder.couponDiscount) > 0 && (
+                  <tr className="text-sm">
+                    <td colSpan={3} className="py-1 text-right text-indigo-400">
+                      <Ticket size={12} className="inline mr-1" />
+                      Cupom {detailOrder.coupon?.code || ''}
+                    </td>
+                    <td className="py-1 text-right text-indigo-400">- R$ {Number(detailOrder.couponDiscount).toFixed(2)}</td>
+                  </tr>
+                )}
                 <tr className="text-sm font-semibold">
                   <td colSpan={3} className="py-2 text-right text-white">Total</td>
                   <td className="py-2 text-right text-emerald-400">R$ {Number(detailOrder.total).toFixed(2)}</td>
