@@ -112,7 +112,21 @@ export default function OrdersPage() {
     try {
       const data = await api.customers.list({ search: q });
       setCustomerResults(data.customers || []);
-    } catch { setCustomerResults([]); }
+    } catch {
+      // Offline fallback: search from IndexedDB cache
+      try {
+        const cached = await getCustomers();
+        const qLower = q.toLowerCase();
+        const results = cached.filter((c: any) =>
+          c.name?.toLowerCase().includes(qLower) ||
+          c.email?.toLowerCase().includes(qLower) ||
+          c.phone?.toLowerCase().includes(qLower)
+        );
+        setCustomerResults(results);
+      } catch {
+        setCustomerResults([]);
+      }
+    }
   };
 
   const selectCustomer = (c: any) => {
