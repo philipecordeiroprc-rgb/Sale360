@@ -293,7 +293,43 @@ export default function OrdersPage() {
 
   const removeFromCart = (idx: number) => setCart(cart.filter((_, i) => i !== idx));
   const subtotal = cart.reduce((sum, i) => sum + i.total, 0);
-  const totalWithDiscount = subtotal - (parseFloat(discount) || 0);
+  const couponDiscount = couponData?.discountAmount || 0;
+  const totalWithDiscount = subtotal - (parseFloat(discount) || 0) - couponDiscount;
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError('');
+    setValidatingCoupon(true);
+    try {
+      const productIds = cart.map(item => item.productId).filter(Boolean) as string[];
+      const categoryIds: string[] = [];
+      // Try to get categoryIds from cached products
+      try {
+        const cached = await getProducts();
+        for (const item of cart) {
+          const prod = cached.find((p: any) => p.id === item.productId);
+          if (prod?.categoryId) categoryIds.push(prod.categoryId);
+        }
+      } catch {}
+      const data = await api.coupons.validate({
+        code: couponCode.trim(),
+        orderSubtotal: subtotal,
+        productIds,
+        categoryIds: [...new Set(categoryIds)],
+      });
+      if (data.valid) {
+        setCouponData(data);
+        setCouponError('');
+      } else {
+        setCouponError(data.error || 'Cupom inválido');
+      }
+    } catch (err: any) {
+      setCouponError(err.message || 'Erro ao validar cupom');
+      setCouponData(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
 
   const openSale = () => {
     setCustomerSearch('');
