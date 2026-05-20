@@ -120,6 +120,20 @@ export function getCustomers(): Promise<any[]> {
   return withStore('customers', 'readonly', (s) => s.getAll());
 }
 
+export function mergeCustomers(customers: any[]): Promise<void> {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('customers', 'readwrite');
+      const store = tx.objectStore('customers');
+      for (const c of customers) {
+        store.put({ ...c, _cachedAt: Date.now() });
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  });
+}
+
 export function clearCustomers(): Promise<void> {
   return withStore('customers', 'readwrite', (s) => s.clear());
 }
