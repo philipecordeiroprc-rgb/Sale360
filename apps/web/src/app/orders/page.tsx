@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff, Ticket, Scan } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
-import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeProducts, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
+import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import { QuickAddSheet } from '@/components/products/QuickAddSheet';
