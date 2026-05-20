@@ -548,12 +548,21 @@ export default function ProductsPage() {
                         </div>
                       </td>
 
-                      {/* Average Cost */}
+                      {/* Average Total Cost (costPrice + operationalCost) */}
                       <td className="px-4 py-3 text-right">
                         {(() => {
                           const cost = Number(product.costPrice || 0);
-                          return cost > 0 ? (
-                            <span className="text-slate-300 font-mono text-sm">R$ {cost.toFixed(2)}</span>
+                          const ops = Number(product.operationalCost || 0);
+                          const total = cost + ops;
+                          return total > 0 ? (
+                            <div>
+                              <span className="text-slate-300 font-mono text-sm">R$ {total.toFixed(2)}</span>
+                              {ops > 0 && (
+                                <span className="text-[10px] text-slate-500 block">
+                                  +R$ {ops.toFixed(2)} oper.
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-slate-600 text-xs">—</span>
                           );
@@ -561,7 +570,7 @@ export default function ProductsPage() {
                       </td>
 
                       {/* Margin (realizada nas vendas) */}
-                      <td className="px-4 py-3 text-right hidden xl:table-cell">
+                      <td className="px-4 py-3 text-right hidden lg:table-cell">
                         {(() => {
                           const avgMargin = product.avgMargin;
                           if (avgMargin != null) {
