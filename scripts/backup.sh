@@ -206,7 +206,7 @@ if oci os object put \
     --force \
     2>> "$LOG_FILE"; then
     ok "Upload OCI concluído"
-    OCI_UPLOAD_OK=true
+    OCI_UPLOAD_OK=1
 else
     warn "Upload OCI falhou (verificar IAM policy) — backup local preservado"
 fi
