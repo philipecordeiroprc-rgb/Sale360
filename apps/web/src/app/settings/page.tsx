@@ -613,6 +613,7 @@ export default function SettingsPage() {
       {/* Tab Content */}
       {activeTab === 'taxas' && <TaxasTab />}
       {activeTab === 'usuarios' && <UsuariosTab />}
+      {activeTab === 'catalogo' && <CatalogoTab />}
       {activeTab === 'senha' && <MinhaSenhaTab />}
 
       {/* Toast */}
