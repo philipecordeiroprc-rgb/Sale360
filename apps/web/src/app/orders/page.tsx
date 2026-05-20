@@ -817,6 +817,47 @@ export default function OrdersPage() {
                       className="w-24 px-2 py-1 bg-slate-800 border border-slate-700 rounded text-white text-sm text-right focus:border-indigo-500 outline-none" />
                   </div>
                 </div>
+                {/* Coupon code */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Ticket size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                      <input
+                        value={couponCode}
+                        onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
+                        onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+                        placeholder="Código do cupom..."
+                        disabled={!!couponData}
+                        className="w-full pl-8 pr-3 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs placeholder:text-slate-500 focus:border-indigo-500 outline-none disabled:opacity-50"
+                      />
+                    </div>
+                    {couponData ? (
+                      <button
+                        onClick={() => { setCouponData(null); setCouponCode(''); setCouponError(''); }}
+                        className="px-2 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+                      >
+                        <X size={14} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={applyCoupon}
+                        disabled={!couponCode.trim() || validatingCoupon}
+                        className="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-xs font-medium transition-colors"
+                      >
+                        {validatingCoupon ? '...' : 'Aplicar'}
+                      </button>
+                    )}
+                  </div>
+                  {couponData && (
+                    <p className="text-[10px] text-emerald-400 flex items-center gap-1">
+                      <Ticket size={10} />
+                      Cupom {couponData.code}: {couponData.discountType === 'PERCENTAGE' ? `${couponData.discountValue}%` : `R$ ${couponData.discountValue.toFixed(2)}`} = -R$ {couponData.discountAmount.toFixed(2)}
+                    </p>
+                  )}
+                  {couponError && (
+                    <p className="text-[10px] text-red-400">{couponError}</p>
+                  )}
+                </div>
                 <div className="flex justify-between font-semibold pt-1 border-t border-slate-700">
                   <span className="text-white">Total</span>
                   <span className="text-emerald-400 text-lg">R$ {totalWithDiscount.toFixed(2)}</span>
