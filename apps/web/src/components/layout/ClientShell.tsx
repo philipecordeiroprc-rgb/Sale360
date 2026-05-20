@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth';
 import { Sidebar } from './Sidebar';
 import { PageTitle } from './PageTitle';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
+import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
+import { useSync } from '@/hooks/useSync';
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
