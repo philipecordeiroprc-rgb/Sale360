@@ -818,7 +818,8 @@ export default function OrdersPage() {
                   </div>
                 </div>
                 {/* Coupon code */}
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 border-t border-slate-700 pt-2">
+                  <span className="text-slate-400 text-xs">Cupom de desconto</span>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <Ticket size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500" />
