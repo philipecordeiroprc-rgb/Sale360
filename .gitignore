@@ -1,0 +1,11 @@
+node_modules/
+.next/
+dist/
+generated/
+.turbo/
+*.log
+.env
+.env.local
+*.tar.gz
+backups/
+deploy-*.tar.gz

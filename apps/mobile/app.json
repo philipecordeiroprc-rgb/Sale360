@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Sale360 PDV",
+    "slug": "sale360",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "sale360",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F172A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.sale360.pdv",
+      "infoPlist": {
+        "NSCameraUsageDescription": "A câmera é usada para escanear códigos de barras dos produtos."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F172A"
+      },
+      "package": "app.sale360.pdv",
+      "permissions": ["CAMERA", "INTERNET"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-barcode-scanner",
+      "expo-secure-store",
+      "expo-local-authentication"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

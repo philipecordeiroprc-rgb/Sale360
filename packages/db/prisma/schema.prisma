@@ -1,0 +1,791 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// MULTI-TENANCY
+// ============================================================
+
+model Tenant {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  companyName String
+  plan        Plan     @default(PRO)
+  status      Status   @default(TRIAL)
+  trialEndsAt     DateTime?
+  featureOverrides Json?
+  createdAt       DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users        TenantUser[]
+  devices      Device[]
+  products     Product[]
+  customers    Customer[]
+  orders       Order[]
+  cashFlows    CashFlow[]
+  integrations Integration[]
+  categories   Category[]
+  variationTemplates VariationTemplate[]
+  commands     TableCommand[]
+  suppliers    Supplier[]
+  purchases    Purchase[]
+  inventoryBatches  InventoryBatch[]
+  inventoryMovements  InventoryMovement[]
+  paymentMethodConfigs PaymentMethodConfig[]
+  coupons      Coupon[]
+
+  @@map("tenants")
+}
+
+model TenantUser {
+  id       String   @id @default(cuid())
+  tenantId String
+  userId   String
+  role     UserRole @default(CASHIER)
+  pin      String   // PIN rápido para login no PDV (4 dígitos)
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@map("tenant_users")
+}
+
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  name      String
+  password  String       // bcrypt
+  avatarUrl String?
+  role      PlatformRole @default(USER)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  tenants             TenantUser[]
+  orders              Order[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@map("password_reset_tokens")
+}
+
+model Device {
+  id         String   @id @default(cuid())
+  tenantId   String
+  name       String   // "Caixa 1", "Celular João"
+  type       String   // "mobile", "desktop", "web"
+  pushToken  String?  // Expo push token
+  lastSyncAt DateTime?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@map("devices")
+}
+
+// ============================================================
+// CATÁLOGO DE PRODUTOS
+// ============================================================
+
+model Product {
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  description String?   // IA pode gerar
+  sku         String?
+  barcode     String?
+  price       Decimal   @default(0) @db.Decimal(10, 2)
+  costPrice   Decimal?  @db.Decimal(10, 2)
+  unit        Unit      @default(UN)
+  stockQty    Decimal   @default(0) @db.Decimal(10, 3)
+  lowStockAt  Decimal?  @db.Decimal(10, 3) // alerta de estoque baixo
+  imageUrl    String?
+  active      Boolean   @default(true)
+  isFractional  Boolean @default(false) // vende por grama/kg/metro
+  hasVariations Boolean @default(false)
+  categoryId  String?
+  aiGenerated Boolean   @default(false) // descrição gerada por IA
+  taxRate     Decimal?  @db.Decimal(5, 2) // percentual de imposto/taxa (%)
+  operationalCost Decimal? @db.Decimal(10, 2) // custo fixo (embalagem, frete)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category    Category?          @relation(fields: [categoryId], references: [id])
+  variations  ProductVariation[]
+  orderItems  OrderItem[]
+  commissions CommissionItem[]
+  purchaseItems PurchaseItem[]
+  batches      InventoryBatch[]
+  movements    InventoryMovement[]
+  couponProducts CouponProduct[]
+
+  @@index([tenantId, active])
+  @@index([tenantId, barcode])
+  @@index([tenantId, categoryId])
+  @@map("products")
+}
+
+model ProductVariation {
+  id          String  @id @default(cuid())
+  productId   String
+  name        String  // "Tamanho P", "Cor Azul"
+  priceModifier Decimal @default(0) @db.Decimal(10, 2)
+  stockQty    Decimal @default(0) @db.Decimal(10, 3)
+  lowStockAt  Decimal? @db.Decimal(10, 3)
+  sku         String?
+  barcode     String?
+
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  purchaseItems   PurchaseItem[]
+  batches         InventoryBatch[]
+  movements       InventoryMovement[]
+  orderItems      OrderItem[]
+
+  @@map("product_variations")
+}
+
+model Category {
+  id                   String    @id @default(cuid())
+  tenantId             String
+  name                 String
+  color                String?    // #hex para UI
+  sortOrder            Int       @default(0)
+  variationTemplateId  String?
+
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  variationTemplate VariationTemplate? @relation(fields: [variationTemplateId], references: [id], onDelete: SetNull)
+  products          Product[]
+  couponCategories  CouponCategory[]
+
+  @@unique([tenantId, name])
+  @@map("categories")
+}
+
+// ============================================================
+// VARIAÇÕES - TEMPLATES POR CATEGORIA
+// ============================================================
+
+model VariationTemplate {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  name      String   // "Vestuário Adulto", "Volume (Líquidos)", "Peso (Granel)"
+  createdAt DateTime @default(now())
+
+  tenant     Tenant?              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dimensions VariationDimension[]
+  categories Category[]
+
+  @@map("variation_templates")
+}
+
+model VariationDimension {
+  id         String        @id @default(cuid())
+  templateId String
+  type       DimensionType
+  label      String        // "Tamanho", "Cor", "Volume", "Peso"
+  options    String        @db.Text  // JSON array: ["PP","P","M","G","GG"], ["Vermelho","Azul"], ["200ml","350ml","1L"]
+  orderIndex Int          @default(0)
+
+  template VariationTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("variation_dimensions")
+}
+
+// ============================================================
+// FORNECEDORES, COMPRAS & ESTOQUE (PEPS/FIFO)
+// ============================================================
+
+model Supplier {
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  cnpj           String?  @unique
+  ie             String?  // Inscrição Estadual
+  email          String?
+  phone          String?
+  whatsapp       String?
+  contactName    String?
+  address        String?
+  addressNumber  String?
+  complement     String?
+  neighborhood   String?
+  city           String?
+  state          String?
+  zipCode        String?
+  notes          String?
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
+
+  @@index([tenantId, active])
+  @@index([tenantId, name])
+  @@map("suppliers")
+}
+
+model Purchase {
+  id             String         @id @default(cuid())
+  tenantId       String
+  supplierId     String
+  customerId     String?
+  orderNumber    Int            // sequencial por tenant
+  status         PurchaseStatus @default(DRAFT)
+  notes          String?
+  subtotal       Decimal        @db.Decimal(10, 2)
+  discount       Decimal        @default(0) @db.Decimal(10, 2)
+  total          Decimal        @db.Decimal(10, 2)
+  receivedAt     DateTime?      // data que a mercadoria entrou no estoque (ordenação PEPS)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  supplier Supplier       @relation(fields: [supplierId], references: [id])
+  customer Customer?      @relation(fields: [customerId], references: [id])
+  items    PurchaseItem[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, orderNumber])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id          String  @id @default(cuid())
+  purchaseId  String
+  productId   String?
+  variationId String?
+  productName String  // snapshot
+  quantity    Decimal @db.Decimal(10, 3)
+  unitCost    Decimal @db.Decimal(10, 2) // custo unitário DESTA compra
+  total       Decimal @db.Decimal(10, 2) // quantity * unitCost
+  salePrice       Decimal? @db.Decimal(10, 2) // preço de venda sugerido
+  operationalCost Decimal? @db.Decimal(10, 2) // custo operacional (embalagem, frete)
+  taxRatePct      Decimal? @db.Decimal(5, 2)  // taxa cartão (%)
+  marginPct       Decimal? @db.Decimal(5, 2)  // margem de lucro (%)
+
+  purchase  Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+
+  @@map("purchase_items")
+}
+
+model InventoryBatch {
+  id             String   @id @default(cuid())
+  tenantId       String
+  productId      String?
+  variationId    String?  // null para produto principal
+  purchaseItemId String?  // null para estoque inicial
+  quantity       Decimal  @db.Decimal(10, 3) // qtd original recebida
+  remainingQty   Decimal  @db.Decimal(10, 3) // qtd restante a vender
+  unitCost       Decimal  @db.Decimal(10, 2) // custo unitário deste lote
+  receivedAt     DateTime // data de entrada no estoque (ordenação PEPS)
+  createdAt      DateTime @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+  movements InventoryMovement[]
+
+  @@index([tenantId, productId, receivedAt])
+  @@index([tenantId, variationId, receivedAt])
+  @@map("inventory_batches")
+}
+
+model InventoryMovement {
+  id          String       @id @default(cuid())
+  tenantId    String
+  productId   String?
+  variationId String?
+  type        MovementType
+  quantity    Decimal      @db.Decimal(10, 3) // positivo=entrada, negativo=saída
+  unitCost    Decimal?     @db.Decimal(10, 2) // custo unitário no momento
+  totalCost   Decimal?     @db.Decimal(10, 2) // quantity * unitCost
+  batchId     String?      // lote consumido/criado
+  orderId     String?      // vínculo com venda
+  purchaseId  String?      // vínculo com compra
+  notes       String?
+  createdAt   DateTime     @default(now())
+
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product   Product?          @relation(fields: [productId], references: [id])
+  variation ProductVariation? @relation(fields: [variationId], references: [id])
+  batch     InventoryBatch?   @relation(fields: [batchId], references: [id])
+
+  @@index([tenantId, productId, createdAt])
+  @@index([tenantId, variationId, createdAt])
+  @@index([tenantId, batchId])
+  @@index([tenantId, orderId])
+  @@index([tenantId, type])
+  @@map("inventory_movements")
+}
+
+// ============================================================
+// CONFIGURAÇÕES
+// ============================================================
+
+model PaymentMethodConfig {
+  id            String @id @default(cuid())
+  tenantId      String
+  paymentMethod String // "cash", "pix", "debit", "credit", "credit_store"
+  taxRate       Decimal @db.Decimal(5, 2) // taxa % (0 para dinheiro/Pix)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, paymentMethod])
+  @@map("payment_method_configs")
+}
+
+// ============================================================
+// CLIENTES & FIDELIZAÇÃO
+// ============================================================
+
+model Customer {
+  id             String   @id @default(cuid())
+  tenantId       String
+  name           String
+  phone          String?
+  email          String?
+  document       String?  // CPF/CNPJ
+  creditBalance  Decimal  @default(0) @db.Decimal(10, 2)
+  totalPurchases Int      @default(0)
+  totalSpent     Decimal  @default(0) @db.Decimal(10, 2)
+  lastPurchaseAt DateTime?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders            Order[]
+  purchases         Purchase[]        // compras associadas
+  creditTransactions CreditTransaction[]
+
+  @@index([tenantId, phone])
+  @@map("customers")
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  customerId  String
+  type        CreditType
+  amount      Decimal  @db.Decimal(10, 2)
+  balanceAfter Decimal  @db.Decimal(10, 2)
+  referenceId String?  // orderId ou paymentId
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@map("credit_transactions")
+}
+
+// ============================================================
+// MESAS & COMANDA DIGITAL
+// ============================================================
+
+model TableCommand {
+  id              String    @id @default(cuid())
+  tenantId        String
+  tableNumber     String
+  status          CmdStatus @default(OPEN)
+  customerName    String?
+  customerPhone   String?
+  openedAt        DateTime  @default(now())
+  closedAt        DateTime?
+  subtotal        Decimal   @default(0) @db.Decimal(10, 2)
+  discount        Decimal   @default(0) @db.Decimal(10, 2)
+  total           Decimal   @default(0) @db.Decimal(10, 2)
+  paymentMethod   String?
+  paymentReceived Decimal?  @db.Decimal(10, 2)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items  CommandItem[]
+
+  @@index([tenantId, status])
+  @@map("table_commands")
+}
+
+model CommandItem {
+  id          String  @id @default(cuid())
+  commandId   String
+  productId   String?
+  productName String  // snapshot do nome (resiste a rename)
+  quantity    Decimal @db.Decimal(10, 3)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
+  notes       String?
+
+  command TableCommand @relation(fields: [commandId], references: [id], onDelete: Cascade)
+
+  @@map("command_items")
+}
+
+// ============================================================
+// VENDAS (ORDERS)
+// ============================================================
+
+model Order {
+  id            String    @id @default(cuid())
+  tenantId      String
+  deviceId      String?
+  userId        String?   // vendedor
+  customerId    String?
+  customerName  String?   // nome avulso (quando cliente não é cadastrado)
+  orderNumber   Int       // sequencial por tenant
+  localId       String?   // ID local do dispositivo offline
+  status        OrderStatus @default(COMPLETED)
+  source        OrderSource @default(PDV)
+  subtotal      Decimal   @db.Decimal(10, 2)
+  discount      Decimal   @default(0) @db.Decimal(10, 2)
+  total         Decimal   @db.Decimal(10, 2)
+  paidAmount    Decimal   @default(0) @db.Decimal(10, 2)
+  paymentMethod String    // "pix", "credit", "debit", "cash", "credit_store"
+  paymentStatus PaymentStatus @default(PAID)
+  dueDate       DateTime?   // data de vencimento para vendas fiado
+  syncStatus    SyncStatus @default(SYNCED)
+  couponId      String?
+  couponDiscount Decimal?  @db.Decimal(10, 2) // desconto aplicado pelo cupom
+  notes         String?
+  createdAtDevice DateTime? // timestamp real da venda (offline)
+  createdAt       DateTime  @default(now())
+
+  tenant   Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user     User?      @relation(fields: [userId], references: [id])
+  customer Customer?  @relation(fields: [customerId], references: [id])
+  coupon   Coupon?    @relation(fields: [couponId], references: [id])
+  delivery Delivery?
+  items    OrderItem[]
+
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@index([tenantId, orderNumber])
+  @@index([tenantId, syncStatus])
+  @@index([tenantId, customerId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String?
+  productName String  // snapshot
+  quantity    Decimal @db.Decimal(10, 3)
+  unitPrice   Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
+  costPrice   Decimal? @db.Decimal(10, 2) // custo unitário na venda (PEPS)
+  totalCost   Decimal? @db.Decimal(10, 2) // quantity * costPrice (CMV)
+  taxRate     Decimal? @db.Decimal(5, 2)  // taxa cartão (%) no momento da venda
+
+  variationId String?
+
+  order     Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product?           @relation(fields: [productId], references: [id])
+  variation ProductVariation?  @relation(fields: [variationId], references: [id])
+
+  @@map("order_items")
+}
+
+// ============================================================
+// DELIVERY
+// ============================================================
+
+model Delivery {
+  id            String    @id @default(cuid())
+  orderId       String    @unique
+  address       String
+  neighborhood  String?
+  city          String?
+  zipCode       String?
+  deliveryFee   Decimal?  @db.Decimal(10, 2)
+  status        DeliveryStatus @default(PENDING)
+  driverName    String?
+  driverPhone   String?
+  pickupAt      DateTime?
+  deliveredAt   DateTime?
+  estimatedTime Int?      // minutos
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("deliveries")
+}
+
+// ============================================================
+// FLUXO DE CAIXA
+// ============================================================
+
+model CashFlow {
+  id            String    @id @default(cuid())
+  tenantId      String
+  type          CashType
+  category      String    // "venda", "insumo", "aluguel", "imposto", etc
+  description   String
+  amount        Decimal   @db.Decimal(10, 2)
+  isRecurrent   Boolean   @default(false)
+  recurrenceDay Int?      // dia do mês (1-31)
+  dueDate       DateTime
+  paidAt        DateTime?
+  orderId       String?   // link com venda que originou
+  createdAt     DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, dueDate])
+  @@index([tenantId, type])
+  @@map("cash_flows")
+}
+
+// ============================================================
+// INTEGRAÇÕES
+// ============================================================
+
+model Integration {
+  id         String   @id @default(cuid())
+  tenantId   String
+  provider   Provider // "mercadopago", "whatsapp", "ifood", "google_shopping"
+  accessToken String?  // encrypted
+  refreshToken String?
+  webhookUrl  String?
+  isActive    Boolean @default(true)
+  config      Json?    // config específica da integração
+  lastSyncAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, provider])
+  @@map("integrations")
+}
+
+// ============================================================
+// COMISSÕES (garçons / vendedores)
+// ============================================================
+
+model CommissionItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  productId String?
+  rate      Decimal  @db.Decimal(5, 2) // percentual
+  createdAt DateTime @default(now())
+
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("commission_items")
+}
+
+// ============================================================
+// CUPONS DE DESCONTO
+// ============================================================
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model Coupon {
+  id            String       @id @default(cuid())
+  tenantId      String
+  code          String
+  description   String?
+  discountType  DiscountType
+  discountValue Decimal      @db.Decimal(10, 2)
+  minOrderValue Decimal?     @db.Decimal(10, 2)
+  maxDiscount   Decimal?     @db.Decimal(10, 2)
+  usageLimit    Int?
+  usageCount    Int          @default(0)
+  validFrom     DateTime?
+  validUntil    DateTime?
+  active        Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products   CouponProduct[]
+  categories CouponCategory[]
+  orders     Order[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("coupons")
+}
+
+model CouponProduct {
+  couponId  String
+  productId String
+
+  coupon  Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, productId])
+  @@map("coupon_products")
+}
+
+model CouponCategory {
+  couponId   String
+  categoryId String
+
+  coupon   Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([couponId, categoryId])
+  @@map("coupon_categories")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Plan {
+  PRO
+  GROW
+  PRIME
+}
+
+enum Status {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  CASHIER
+}
+
+enum Unit {
+  UN   // unidade
+  KG   // quilo
+  G    // grama
+  L    // litro
+  ML   // mililitro
+  M    // metro
+  PC   // peça
+  CX   // caixa
+  PAR  // par
+  FD   // fardo
+  PCT  // pacote
+  M2   // metro quadrado
+}
+
+enum OrderStatus {
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  PENDING // offline ainda não sincronizada
+}
+
+enum OrderSource {
+  PDV
+  ONLINE
+  WHATSAPP
+  DELIVERY
+  COMAND
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  PARTIAL
+  CREDIT_STORE // fiado da casa
+}
+
+enum SyncStatus {
+  SYNCED
+  PENDING
+  CONFLICT
+  FAILED
+}
+
+enum CreditType {
+  LOAN       // fiado concedido
+  PAYMENT    // pagamento de fiado
+  PURCHASE   // compra usando crédito
+  TOPUP      // recarga de crédito
+  ADJUSTMENT // ajuste manual
+}
+
+enum CmdStatus {
+  OPEN
+  CLOSED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  PENDING
+  PREPARING
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum CashType {
+  IN
+  OUT
+}
+
+enum Provider {
+  MERCADOPAGO
+  WHATSAPP
+  IFOOD
+  GOOGLE_SHOPPING
+  INSTAGRAM
+  FACEBOOK
+  CORREIOS
+}
+
+enum DimensionType {
+  TAMANHO_LETRA    // PP, P, M, G, GG, XG, XGG
+  TAMANHO_NUMERO   // 2, 4, 6, 8... 34, 35, 36... 46
+  COR              // Vermelho, Azul, Preto, Branco...
+  VOLUME           // 200ml, 350ml, 1L, 2L...
+  PESO             // 50g, 100g, 500g, 1kg...
+  PERSONALIZADO    // Livre - definido pelo lojista
+}
+
+enum PurchaseStatus {
+  DRAFT
+  CONFIRMED
+  RECEIVED
+  CANCELLED
+}
+
+enum MovementType {
+  INITIAL_STOCK
+  PURCHASE_IN
+  PURCHASE_CANCEL
+  SALE_OUT
+  SALE_CANCEL
+  ADJUSTMENT_IN
+  ADJUSTMENT_OUT
+  TRANSFER
+}
+
+enum PlatformRole {
+  USER
+  SUPER_ADMIN
+}
