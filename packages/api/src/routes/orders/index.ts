@@ -88,6 +88,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         items: true,
         customer: true,
         user: { select: { id: true, name: true } },
+        coupon: { select: { id: true, code: true } },
         delivery: true,
       },
     });
