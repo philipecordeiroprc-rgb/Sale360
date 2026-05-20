@@ -167,6 +167,7 @@ export default function PurchasesPage() {
     setDiscount('0');
     setProductSearch('');
     setProductResults([]);
+    setScannerOpen(false);
     const sups = await loadSuppliers();
     setSuppliers(sups);
     setFormOpen(true);
