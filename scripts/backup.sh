@@ -196,7 +196,7 @@ sudo rm -rf "$BACKUP_PATH" 2>/dev/null || rm -rf "$BACKUP_PATH" 2>/dev/null || t
 
 # ---- Upload OCI Object Storage ----
 log "☁️  Enviando para OCI Object Storage..."
-OCI_UPLOAD_OK=false
+OCI_UPLOAD_OK=""
 if oci os object put \
     --auth instance_principal \
     --bucket-name "$OCI_BUCKET" \
