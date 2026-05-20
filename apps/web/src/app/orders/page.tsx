@@ -167,11 +167,23 @@ export default function OrdersPage() {
   const searchProducts = async (q: string) => {
     setProductSearch(q);
     if (q.length < 1) { setProductResults([]); return; }
+    // If clearly offline, skip API call entirely (avoids waiting for timeout)
+    if (!navigator.onLine) {
+      const cached = await getProducts();
+      const qLower = q.toLowerCase();
+      setProductResults(cached.filter((p: any) =>
+        p.active !== false && (
+          p.name?.toLowerCase().includes(qLower) ||
+          p.sku?.toLowerCase().includes(qLower) ||
+          p.barcode?.toString().toLowerCase().includes(qLower)
+        )
+      ));
+      return;
+    }
     try {
       const data = await api.products.list({ search: q, active: true });
       setProductResults(data.products || []);
     } catch {
-      // Offline fallback: search from IndexedDB cache
       try {
         const cached = await getProducts();
         const qLower = q.toLowerCase();
@@ -182,6 +194,7 @@ export default function OrdersPage() {
             p.barcode?.toString().toLowerCase().includes(qLower)
           )
         );
+        console.log('[Offline] Produtos carregados do cache:', results.length);
         setProductResults(results);
       } catch {
         setProductResults([]);
