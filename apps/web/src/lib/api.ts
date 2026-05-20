@@ -115,6 +115,9 @@ export const api = {
     get(id: string) {
       return request<Product>(`/api/products/${id}`);
     },
+    getByBarcode(code: string) {
+      return request<Product>(`/api/products/barcode/${encodeURIComponent(code)}`);
+    },
     create(data: CreateProductInput) {
       return request<Product>('/api/products', { method: 'POST', body: JSON.stringify(data) });
     },
