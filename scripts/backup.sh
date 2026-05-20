@@ -78,19 +78,21 @@ else
     warn "Roles dump falhou (não crítico)"
 fi
 
-# ---- 2. Prisma Migrations ----
-log "📐 [2/9] Migrações Prisma..."
+# ---- 2. Prisma Schema & Migrations ----
+log "📐 [2/9] Schema & Migrações Prisma..."
+
+# Schema Prisma (sempre presente)
+cp /home/opc/sale360/packages/db/prisma/schema.prisma "${BACKUP_PATH}/schema.prisma" 2>/dev/null && \
+    ok "Schema Prisma copiado" || warn "Schema Prisma não encontrado"
+
+# Migrations (se existirem — projeto pode usar db push)
 MIGRATIONS_DIR="/home/opc/sale360/packages/db/prisma/migrations"
 if [ -d "$MIGRATIONS_DIR" ]; then
     cp -r "$MIGRATIONS_DIR" "${BACKUP_PATH}/prisma-migrations"
-    ok "Migrações copiadas ($(find "${BACKUP_PATH}/prisma-migrations" -name '*.sql' | wc -l) arquivos SQL)"
+    ok "Migrações copiadas ($(find "${BACKUP_PATH}/prisma-migrations" -name '*.sql' 2>/dev/null | wc -l) arquivos SQL)"
 else
-    warn "Diretório de migrações não encontrado"
+    log "Sem migrations (projeto usa db push) — schema e dump SQL já bastam"
 fi
-
-# Schema Prisma
-cp /home/opc/sale360/packages/db/prisma/schema.prisma "${BACKUP_PATH}/schema.prisma" 2>/dev/null && \
-    ok "Schema Prisma copiado" || warn "Schema Prisma não encontrado"
 
 # ---- 3. Source Code (completo) ----
 log "📦 [3/9] Código fonte da aplicação..."
