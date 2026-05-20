@@ -113,6 +113,7 @@ async function buildApp() {
 
   // Public routes (no auth required)
   await app.register(authRoutes, { prefix: '/api/auth' });
+  await app.register(publicRoutes, { prefix: '/api/public' });
 
   // Authenticated routes
   await app.register(async (api) => {
