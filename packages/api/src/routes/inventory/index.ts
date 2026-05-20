@@ -27,7 +27,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       prisma.inventoryBatch.findMany({
         where,
         include: {
-          product: { select: { id: true, name: true, unit: true, sku: true } },
+          product: { select: { id: true, name: true, unit: true, sku: true, stockQty: true, lowStockAt: true } },
           variation: { select: { id: true, name: true } },
         },
         orderBy: { receivedAt: 'asc' },
