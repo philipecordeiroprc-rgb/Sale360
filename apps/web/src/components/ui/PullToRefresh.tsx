@@ -48,12 +48,15 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
       setRefreshing(true);
       setPullDistance(0);
       router.refresh();
+      if (onRefresh) {
+        await onRefresh();
+      }
       await new Promise((r) => setTimeout(r, 800));
       setRefreshing(false);
     } else {
       setPullDistance(0);
     }
-  }, [pullDistance, refreshing, router]);
+  }, [pullDistance, refreshing, router, onRefresh]);
 
   useEffect(() => {
     document.addEventListener('touchstart', handleTouchStart, { passive: true });
