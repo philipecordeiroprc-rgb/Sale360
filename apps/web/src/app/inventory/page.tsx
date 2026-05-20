@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Search, Package, ArrowUpDown, Layers, RefreshCw } from 'lucide-react';
+import { Search, Package, ArrowUpDown, Layers, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
 
@@ -25,6 +25,20 @@ function useToast() {
   return { toast, show };
 }
 
+interface BatchGroup {
+  key: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  unit: string;
+  stockQty: number;
+  lowStockAt: number;
+  variationId: string | null;
+  variationName: string | null;
+  batches: any[];
+  totalRemaining: number;
+}
+
 export default function InventoryPage() {
   const [tab, setTab] = useState<'batches' | 'movements'>('batches');
   const [batches, setBatches] = useState<any[]>([]);
@@ -41,6 +55,9 @@ export default function InventoryPage() {
   const [batchProducts, setBatchProducts] = useState<any[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [movTypeFilter, setMovTypeFilter] = useState('');
+
+  // Expandable batch groups
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Adjust
   const [adjustOpen, setAdjustOpen] = useState(false);
@@ -103,6 +120,15 @@ export default function InventoryPage() {
     setPage(1);
   };
 
+  const toggleGroup = (key: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   const handleAdjust = async () => {
     if (!adjustProductId || !adjustQty || Number(adjustQty) === 0) return;
     setSaving(true);
@@ -124,6 +150,58 @@ export default function InventoryPage() {
   };
 
   const formatCurrency = (v: any) => `R$ ${Number(v || 0).toFixed(2)}`;
+
+  // Stock level coloring
+  const stockColor = (stock: number, min: number | null): string => {
+    if (!min || min <= 0 || stock > min) return 'text-white';
+    if (stock < min) return 'text-red-400';
+    return 'text-amber-400'; // stock == min
+  };
+
+  const stockBg = (stock: number, min: number | null): string => {
+    if (!min || min <= 0 || stock > min) return '';
+    if (stock < min) return 'bg-red-500/10';
+    return 'bg-amber-500/10'; // stock == min
+  };
+
+  const stockBadge = (stock: number, min: number | null) => {
+    if (!min || min <= 0 || stock > min) return null;
+    if (stock < min) {
+      return <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 font-medium">Baixo</span>;
+    }
+    return <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-medium">Mínimo</span>;
+  };
+
+  // Group batches by product+variation
+  const groupBatches = (): BatchGroup[] => {
+    const map = new Map<string, BatchGroup>();
+    for (const b of batches) {
+      const key = `${b.productId}__${b.variationId || 'none'}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productId: b.productId,
+          productName: b.product?.name || '—',
+          sku: b.product?.sku || '',
+          unit: b.product?.unit || '',
+          stockQty: Number(b.product?.stockQty || 0),
+          lowStockAt: Number(b.product?.lowStockAt || 0),
+          variationId: b.variationId || null,
+          variationName: b.variation?.name || null,
+          batches: [],
+          totalRemaining: 0,
+        });
+      }
+      const group = map.get(key)!;
+      group.batches.push(b);
+      group.totalRemaining += Number(b.remainingQty || 0);
+      // Use the product's actual stockQty (more accurate than sum of batches)
+    }
+    return Array.from(map.values());
+  };
+
+  // Short batch ID for display
+  const shortId = (id: string) => '#' + id.substring(0, 6).toUpperCase();
 
   return (
     <div className="animate-slide-up">
@@ -219,35 +297,92 @@ export default function InventoryPage() {
               <p className="text-slate-400">{selectedProductId ? 'Produto sem lotes' : 'Nenhum lote de estoque'}</p>
             </div>
           ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead>
                   <tr className="text-slate-500 text-xs border-b border-slate-800">
-                    <th className="text-left px-4 py-3">Produto</th>
-                    <th className="text-left px-4 py-3">Variação</th>
-                    <th className="text-right px-4 py-3">Qtd Original</th>
-                    <th className="text-right px-4 py-3">Qtd Restante</th>
-                    <th className="text-right px-4 py-3">Custo Un.</th>
-                    <th className="text-right px-4 py-3">Valor Restante</th>
-                    <th className="text-right px-4 py-3">Recebido em</th>
+                    <th className="text-left px-3 py-3 w-8"></th>
+                    <th className="text-left px-3 py-3">Produto</th>
+                    <th className="text-left px-3 py-3">Variação</th>
+                    <th className="text-right px-3 py-3">Estoque Total</th>
+                    <th className="text-right px-3 py-3 hidden sm:table-cell">Est. Mínimo</th>
+                    <th className="text-right px-3 py-3 hidden sm:table-cell">Lotes</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {batches.map((b: any) => (
-                    <tr key={b.id} className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-3 text-white font-medium">{b.product?.name || '—'}</td>
-                      <td className="px-4 py-3 text-slate-400">{b.variation?.name || '—'}</td>
-                      <td className="px-4 py-3 text-right text-slate-400">{b.quantity}</td>
-                      <td className="px-4 py-3 text-right text-white font-mono">{b.remainingQty}</td>
-                      <td className="px-4 py-3 text-right text-slate-400">{formatCurrency(b.unitCost)}</td>
-                      <td className="px-4 py-3 text-right text-slate-400">
-                        {formatCurrency(Number(b.remainingQty) * Number(b.unitCost))}
-                      </td>
-                      <td className="px-4 py-3 text-right text-xs text-slate-500">
-                        {new Date(b.receivedAt).toLocaleDateString('pt-BR')}
-                      </td>
-                    </tr>
-                  ))}
+                  {groupBatches().map((group) => {
+                    const expanded = expandedGroups.has(group.key);
+                    const stockColorClass = stockColor(group.stockQty, group.lowStockAt);
+                    const stockBgClass = stockBg(group.stockQty, group.lowStockAt);
+                    const badge = stockBadge(group.stockQty, group.lowStockAt);
+                    const productLabel = [
+                      group.productName,
+                      group.sku ? group.sku : null,
+                      group.unit ? group.unit : null,
+                    ].filter(Boolean).join(' · ');
+
+                    return (
+                      <tbody key={group.key}>
+                        {/* Summary row */}
+                        <tr
+                          onClick={() => toggleGroup(group.key)}
+                          className={`border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer ${stockBgClass}`}>
+                          <td className="px-3 py-3">
+                            {expanded
+                              ? <ChevronDown size={16} className="text-slate-400" />
+                              : <ChevronRight size={16} className="text-slate-500" />}
+                          </td>
+                          <td className="px-3 py-3">
+                            <span className={`font-medium text-sm ${stockColorClass}`}>
+                              {productLabel}
+                            </span>
+                            {badge}
+                          </td>
+                          <td className="px-3 py-3 text-slate-400 text-sm">
+                            {group.variationName || '—'}
+                          </td>
+                          <td className={`px-3 py-3 text-right font-mono font-semibold text-sm ${stockColorClass}`}>
+                            {group.stockQty}
+                          </td>
+                          <td className="px-3 py-3 text-right text-slate-500 text-sm hidden sm:table-cell">
+                            {group.lowStockAt > 0 ? group.lowStockAt : '—'}
+                          </td>
+                          <td className="px-3 py-3 text-right text-slate-500 text-sm hidden sm:table-cell">
+                            {group.batches.length}
+                          </td>
+                        </tr>
+
+                        {/* Expanded: individual batches */}
+                        {expanded && group.batches.map((b: any) => (
+                          <tr key={b.id} className="border-b border-slate-800/30 bg-slate-950/50 hover:bg-slate-800/20 transition-colors">
+                            <td className="px-3 py-2"></td>
+                            <td className="px-3 py-2" colSpan={2}>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
+                                  {shortId(b.id)}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  Recebido {new Date(b.receivedAt).toLocaleDateString('pt-BR')}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <div className="flex flex-col items-end gap-0.5">
+                                <span className="text-xs text-slate-300 font-mono">{b.remainingQty} / {b.quantity}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  {formatCurrency(b.unitCost)} un.
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2 text-right text-xs text-slate-500 hidden sm:table-cell">
+                              {formatCurrency(Number(b.remainingQty) * Number(b.unitCost))}
+                            </td>
+                            <td className="px-3 py-2"></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -271,8 +406,8 @@ export default function InventoryPage() {
               <p className="text-slate-400">Nenhuma movimentação encontrada</p>
             </div>
           ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
+            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto">
+              <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="text-slate-500 text-xs border-b border-slate-800">
                     <th className="text-left px-4 py-3">Data</th>
@@ -369,10 +504,14 @@ export default function InventoryPage() {
             <button onClick={() => setAdjustOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button onClick={handleAdjust}
               disabled={saving || !adjustProductId || !adjustQty || Number(adjustQty) === 0}
-              className={`px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 ${
-                Number(adjustQty) > 0 ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'
-              } text-white`}>
-              {saving ? 'Ajustando...' : Number(adjustQty) > 0 ? `+${adjustQty}` : adjustQty}
+              className={`px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 text-white ${
+                !adjustQty || Number(adjustQty) === 0
+                  ? 'bg-indigo-500 hover:bg-indigo-600'
+                  : Number(adjustQty) > 0
+                    ? 'bg-emerald-500 hover:bg-emerald-600'
+                    : 'bg-red-500 hover:bg-red-600'
+              }`}>
+              {saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </div>
