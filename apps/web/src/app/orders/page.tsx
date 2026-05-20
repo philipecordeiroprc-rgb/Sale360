@@ -48,6 +48,7 @@ export default function OrdersPage() {
   const { toast, show } = useToast();
   const searchTimer = useRef<NodeJS.Timeout>(undefined);
   const [search, setSearch] = useState('');
+  const { isOnline } = useNetworkStatus();
 
   // Sale modal
   const [saleOpen, setSaleOpen] = useState(false);
