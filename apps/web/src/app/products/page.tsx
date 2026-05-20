@@ -676,12 +676,18 @@ export default function ProductsPage() {
                       {/* Stock */}
                       <td className="px-4 py-3">
                         <span className={`text-sm font-semibold ${
-                          totalStock <= 0 ? 'text-red-400' : lowAt ? 'text-amber-400' : 'text-emerald-400'
+                          totalStock <= 0 ? 'text-red-400'
+                            : anyBelow ? 'text-red-400'
+                            : anyAtMin ? 'text-amber-400'
+                            : 'text-emerald-400'
                         }`}>
                           {totalStock > 0 ? `${totalStock}` : '0'}
                         </span>
-                        {lowAt && (
-                          <span className="text-[10px] text-amber-400 ml-1">baixo</span>
+                        {totalStock > 0 && anyBelow && (
+                          <span className="text-[10px] px-1 py-0.5 rounded bg-red-500/20 text-red-400 ml-1 font-medium">Baixo</span>
+                        )}
+                        {anyAtMin && (
+                          <span className="text-[10px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 ml-1 font-medium">Mínimo</span>
                         )}
                       </td>
 
