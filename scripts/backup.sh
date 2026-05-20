@@ -29,8 +29,8 @@ DB_USER=$(echo "$DB_URL" | sed -n 's|.*://\([^:]*\):.*|\1|p')
 DB_PASS=$(echo "$DB_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
 
 export PGPASSWORD="$DB_PASS"
-PG_DUMP="/usr/pgsql-16/bin/pg_dump"
-PG_DUMPALL="/usr/pgsql-16/bin/pg_dumpall"
+PG_DUMP="/usr/pgsql-17/bin/pg_dump"
+PG_DUMPALL="/usr/pgsql-17/bin/pg_dumpall"
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 ok()  { log "✅ $*"; }
