@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import { authRoutes } from './routes/auth/index.js';
 import { productRoutes } from './routes/products/index.js';
 import { orderRoutes } from './routes/orders/index.js';
@@ -18,8 +19,12 @@ import { inventoryRoutes } from './routes/inventory/index.js';
 import { reportRoutes } from './routes/reports/index.js';
 import { paymentConfigRoutes } from './routes/payment-configs/index.js';
 import { couponRoutes } from './routes/coupons/index.js';
+import { catalogSettingsRoutes } from './routes/catalog-settings/index.js';
+import { publicRoutes } from './routes/public/index.js';
 import { adminRoutes } from './routes/admin/index.js';
 import { authMiddleware } from './middleware/auth.js';
+import path from 'path';
+import fsSync from 'fs';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
