@@ -7,5 +7,7 @@ generated/
 .env
 .env.local
 *.tar.gz
-backups/
 deploy-*.tar.gz
+
+# Backup folder: keep SQL dumps, ignore tarballs
+Backup/*.tar.gz
