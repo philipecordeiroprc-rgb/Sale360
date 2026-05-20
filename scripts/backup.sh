@@ -160,11 +160,11 @@ node --version > "${BACKUP_PATH}/config/node-version.txt" 2>/dev/null || true
 npm --version > "${BACKUP_PATH}/config/npm-version.txt" 2>/dev/null || true
 
 # Package files
-cp /home/opc/sale360/package.json "${BACKUP_PATH}/config/root-package.json" 2>/dev/null
-cp /home/opc/sale360/pnpm-lock.yaml "${BACKUP_PATH}/config/pnpm-lock.yaml" 2>/dev/null
-cp /home/opc/sale360/pnpm-workspace.yaml "${BACKUP_PATH}/config/pnpm-workspace.yaml" 2>/dev/null
-cp /home/opc/sale360/turbo.json "${BACKUP_PATH}/config/turbo.json" 2>/dev/null
-cp /home/opc/sale360/tsconfig.base.json "${BACKUP_PATH}/config/tsconfig.base.json" 2>/dev/null
+cp /home/opc/sale360/package.json "${BACKUP_PATH}/config/root-package.json" 2>/dev/null || true
+cp /home/opc/sale360/pnpm-lock.yaml "${BACKUP_PATH}/config/pnpm-lock.yaml" 2>/dev/null || true
+cp /home/opc/sale360/pnpm-workspace.yaml "${BACKUP_PATH}/config/pnpm-workspace.yaml" 2>/dev/null || true
+cp /home/opc/sale360/turbo.json "${BACKUP_PATH}/config/turbo.json" 2>/dev/null || true
+cp /home/opc/sale360/tsconfig.base.json "${BACKUP_PATH}/config/tsconfig.base.json" 2>/dev/null || true
 
 # DB env
 cp /home/opc/sale360/packages/db/.env "${BACKUP_PATH}/config/db.env" 2>/dev/null || true
