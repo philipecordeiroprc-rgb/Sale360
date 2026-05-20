@@ -561,7 +561,7 @@ function MinhaSenhaTab() {
 // Settings Page (with tabs)
 // ============================================================
 
-type Tab = 'taxas' | 'usuarios' | 'senha';
+type Tab = 'taxas' | 'usuarios' | 'catalogo' | 'senha';
 
 const TABS: { key: Tab; label: string; icon: any }[] = [
   { key: 'taxas', label: 'Taxas', icon: Percent },
