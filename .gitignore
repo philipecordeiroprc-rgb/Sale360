@@ -9,5 +9,5 @@ generated/
 *.tar.gz
 deploy-*.tar.gz
 
-# Backup folder: keep SQL dumps, ignore tarballs
-Backup/*.tar.gz
+# Permite backups na pasta Backup/
+!Backup/*.tar.gz
