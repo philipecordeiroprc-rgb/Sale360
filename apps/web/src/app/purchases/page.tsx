@@ -132,7 +132,18 @@ export default function PurchasesPage() {
     try {
       const data = await api.products.list({ search: q });
       setProductResults(data.products || []);
-    } catch { setProductResults([]); }
+    } catch {
+      // Offline fallback: search from IndexedDB cache
+      try {
+        const cached = await getProducts();
+        const qLower = q.toLowerCase();
+        setProductResults(cached.filter((p: any) =>
+          p.name?.toLowerCase().includes(qLower) ||
+          p.sku?.toLowerCase().includes(qLower) ||
+          p.barcode?.toString().toLowerCase().includes(qLower)
+        ));
+      } catch { setProductResults([]); }
+    }
   };
 
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
