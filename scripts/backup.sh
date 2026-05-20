@@ -177,7 +177,7 @@ hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null || true
 uname -a > "${BACKUP_PATH}/config/kernel.txt" 2>/dev/null || true
 
 # Lista de pacotes instalados (rpm/dnf)
-rpm -qa --queryformat '%{NAME} %{VERSION}-%{RELEASE}\n' | sort > "${BACKUP_PATH}/config/rpm-packages.txt" 2>/dev/null
+rpm -qa --queryformat '%{NAME} %{VERSION}-%{RELEASE}\n' 2>/dev/null | sort > "${BACKUP_PATH}/config/rpm-packages.txt" 2>/dev/null || true
 
 ok "Configurações copiadas"
 
