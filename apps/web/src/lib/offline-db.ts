@@ -82,6 +82,41 @@ export function getProduct(id: string): Promise<any | null> {
   return withStore('products', 'readonly', (s) => s.get(id));
 }
 
+/**
+ * Decrement stock locally after an offline sale.
+ * If variationId is provided, decrements the variation's stockQty.
+ * Otherwise, decrements the product's stockQty.
+ */
+export async function decrementLocalStock(
+  productId: string,
+  variationId: string | undefined,
+  quantity: number,
+): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('products', 'readwrite');
+    const store = tx.objectStore('products');
+    const getReq = store.get(productId);
+    getReq.onsuccess = () => {
+      const product = getReq.result;
+      if (!product) return resolve();
+      if (variationId && product.variations?.length) {
+        product.variations = product.variations.map((v: any) => {
+          if (v.id === variationId) {
+            return { ...v, stockQty: Math.max(0, (Number(v.stockQty) || 0) - quantity) };
+          }
+          return v;
+        });
+      } else {
+        product.stockQty = Math.max(0, (Number(product.stockQty) || 0) - quantity);
+      }
+      store.put(product);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export function mergeProducts(products: any[]): Promise<void> {
   return openDB().then((db) => {
     return new Promise((resolve, reject) => {
