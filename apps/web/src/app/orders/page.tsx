@@ -90,7 +90,25 @@ export default function OrdersPage() {
       setOrders(data.orders);
       setTotal(data.total);
     } catch (err: any) {
-      setError(err.message || 'Erro ao carregar vendas');
+      // Offline fallback: show pending orders from IndexedDB
+      try {
+        const pending = await getPendingOrders();
+        const offlineOrders = pending.map(po => ({
+          ...po.data,
+          id: po.localId,
+          _offline: true,
+          _localId: po.localId,
+          status: 'PENDING',
+          createdAt: new Date(po.createdAt).toISOString(),
+        }));
+        setOrders(offlineOrders);
+        setTotal(offlineOrders.length);
+        if (offlineOrders.length === 0) {
+          setError('Voce esta offline. Nenhuma venda pendente.');
+        }
+      } catch {
+        setError(err.message || 'Erro ao carregar vendas');
+      }
     } finally {
       setLoading(false);
     }
