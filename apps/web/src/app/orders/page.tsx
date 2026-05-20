@@ -235,12 +235,10 @@ export default function OrdersPage() {
     setSelectedCustomer(null);
     setWalkInName('');
     setUseWalkIn(false);
-    setProductSearch('');
-    setProductResults([]);
-    setSelectedProduct(null);
-    setSelectedVariation(null);
-    setQuantity('1');
-    setShowVariationPicker(false);
+    setProductGridSearch('');
+    setQuickAddProduct(null);
+    setQuickAddOpen(false);
+    setScannerOpen(false);
     setCart([]);
     setDiscount('0');
     setCouponCode('');
