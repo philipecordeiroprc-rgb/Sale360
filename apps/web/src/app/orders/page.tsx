@@ -142,7 +142,23 @@ export default function OrdersPage() {
     try {
       const data = await api.products.list({ search: q, active: true });
       setProductResults(data.products || []);
-    } catch { setProductResults([]); }
+    } catch {
+      // Offline fallback: search from IndexedDB cache
+      try {
+        const cached = await getProducts();
+        const qLower = q.toLowerCase();
+        const results = cached.filter((p: any) =>
+          p.active !== false && (
+            p.name?.toLowerCase().includes(qLower) ||
+            p.sku?.toLowerCase().includes(qLower) ||
+            p.barcode?.toString().toLowerCase().includes(qLower)
+          )
+        );
+        setProductResults(results);
+      } catch {
+        setProductResults([]);
+      }
+    }
   };
 
   const selectProduct = (p: any) => {
