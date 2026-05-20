@@ -78,6 +78,15 @@ else
     warn "Roles dump falhou (não crítico)"
 fi
 
+# ---- 1.5. Copiar dumps SQL para Backup/ (versionamento GitHub) ----
+log "📤 [1.5/9] Copiando dumps SQL para Backup/..."
+mkdir -p /home/opc/sale360/Backup
+cp "${DB_DIR}/schema.sql" /home/opc/sale360/Backup/schema.sql 2>/dev/null && \
+    ok "Schema SQL copiado para Backup/" || warn "Falha ao copiar schema.sql"
+cp "${DB_DIR}/full-data.sql" /home/opc/sale360/Backup/full-data.sql 2>/dev/null && \
+    ok "Full data SQL copiado para Backup/" || warn "Falha ao copiar full-data.sql"
+cp "${DB_DIR}/roles.sql" /home/opc/sale360/Backup/roles.sql 2>/dev/null || true
+
 # ---- 2. Prisma Schema & Migrations ----
 log "📐 [2/9] Schema & Migrações Prisma..."
 
@@ -201,7 +210,7 @@ if [ -d /home/opc/sale360/.git ]; then
     cd /home/opc/sale360
     git add -A 2>> "$LOG_FILE"
     git commit -m "backup: ${TIMESTAMP}" 2>> "$LOG_FILE" || true
-    if git push origin master 2>> "$LOG_FILE"; then
+    if git push origin main 2>> "$LOG_FILE"; then
         ok "GitHub push concluído"
         GIT_PUSH_OK=1
     else
