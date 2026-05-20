@@ -9,7 +9,7 @@ const MAX_PULL = 100;
 
 interface PullToRefreshProps {
   children: ReactNode;
-  onRefresh?: () => Promise<void>;
+  onRefresh?: () => Promise<any>;
 }
 
 export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
