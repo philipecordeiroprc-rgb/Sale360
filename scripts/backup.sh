@@ -170,7 +170,7 @@ cp /home/opc/sale360/tsconfig.base.json "${BACKUP_PATH}/config/tsconfig.base.jso
 cp /home/opc/sale360/packages/db/.env "${BACKUP_PATH}/config/db.env" 2>/dev/null || true
 
 # NODE_ENV e variáveis do sistema
-env | sort > "${BACKUP_PATH}/config/environment.txt" 2>/dev/null
+env | sort > "${BACKUP_PATH}/config/environment.txt" 2>/dev/null || true
 
 # Host info
 hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null
