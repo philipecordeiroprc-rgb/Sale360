@@ -57,7 +57,27 @@ export default function CustomersPage() {
       setCustomers(data.customers);
       setTotal(data.total);
     } catch (err: any) {
-      setError(err.message || 'Erro ao carregar clientes');
+      // Offline fallback: load from IndexedDB cache
+      try {
+        const cached = await getCustomers();
+        if (search) {
+          const q = search.toLowerCase();
+          const filtered = cached.filter((c: any) =>
+            c.name?.toLowerCase().includes(q) ||
+            c.email?.toLowerCase().includes(q) ||
+            c.phone?.toLowerCase().includes(q) ||
+            c.document?.toLowerCase().includes(q)
+          );
+          setCustomers(filtered);
+          setTotal(filtered.length);
+        } else {
+          setCustomers(cached);
+          setTotal(cached.length);
+        }
+        if (cached.length === 0) setError('Voce esta offline. Nenhum cliente em cache.');
+      } catch {
+        setError(err.message || 'Erro ao carregar clientes');
+      }
     } finally {
       setLoading(false);
     }
