@@ -6,19 +6,25 @@ import path from 'path';
 import { createWriteStream } from 'fs';
 
 const updateSchema = z.object({
-  storeName: z.string().nullish(),
-  storePhone: z.string().nullish(),
-  document: z.string().nullish(),
-  companyName: z.string().nullish(),
-  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullish(),
-  displayMode: z.enum(['grid', 'list']).nullish(),
-  outOfStockBehavior: z.enum(['hide', 'show_disabled', 'show']).nullish(),
-  acceptOrders: z.boolean().nullish(),
-  receiveWhatsApp: z.boolean().nullish(),
-  whatsAppNumber: z.string().nullish(),
-  postOrderMessage: z.string().nullish(),
-  active: z.boolean().nullish(),
+  storeName: z.string().optional(),
+  storePhone: z.string().optional(),
+  document: z.string().optional(),
+  companyName: z.string().optional(),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  displayMode: z.enum(['grid', 'list']).optional(),
+  outOfStockBehavior: z.enum(['hide', 'show_disabled', 'show']).optional(),
+  acceptOrders: z.boolean().optional(),
+  receiveWhatsApp: z.boolean().optional(),
+  whatsAppNumber: z.string().optional(),
+  postOrderMessage: z.string().optional(),
+  active: z.boolean().optional(),
 });
+
+function stripNulls(obj: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, v]) => v !== null),
+  );
+}
 
 const paymentMethodsSchema = z.object({
   methods: z.array(z.object({
