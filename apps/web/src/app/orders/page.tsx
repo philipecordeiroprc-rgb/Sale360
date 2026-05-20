@@ -497,18 +497,26 @@ export default function OrdersPage() {
                       <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{o.paymentMethod}</span>
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        o.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
-                        o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400') :
-                        o.paymentStatus === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
-                        o.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
-                        'bg-slate-500/20 text-slate-400'
-                      }`}>
-                        {o.paymentStatus === 'PAID' ? 'Pago' :
-                         o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'Vencido' : 'Pendente') :
-                         o.paymentStatus === 'PARTIAL' ? 'Parcial' :
-                         o.status === 'CANCELLED' ? 'Cancelado' : o.paymentStatus || o.status}
-                      </span>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          o.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
+                          o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400') :
+                          o.paymentStatus === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
+                          o.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
+                          'bg-slate-500/20 text-slate-400'
+                        }`}>
+                          {o.paymentStatus === 'PAID' ? 'Pago' :
+                           o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'Vencido' : 'Pendente') :
+                           o.paymentStatus === 'PARTIAL' ? 'Parcial' :
+                           o.status === 'CANCELLED' ? 'Cancelado' : o.paymentStatus || o.status}
+                        </span>
+                        {o.source === 'ONLINE' && (
+                          <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-1 rounded-full flex items-center gap-0.5">
+                            <Link2 size={10} />
+                            Link
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-center text-xs hidden lg:table-cell">
                       {o.dueDate ? (
