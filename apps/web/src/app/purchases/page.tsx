@@ -660,14 +660,27 @@ export default function PurchasesPage() {
                   </div>
                   {/* Linha de resumo */}
                   {totalCost(currentItem) > 0 && currentItem.salePrice > 0 && (
-                    <div className="mt-2 text-xs text-slate-400 text-center">
-                      Custo total: <span className="text-white font-medium">R$ {totalCost(currentItem).toFixed(2)}</span>
-                      <span className="mx-2">|</span>
-                      Markup: <span className="text-indigo-400 font-semibold">{((currentItem.salePrice / totalCost(currentItem) - 1) * 100).toFixed(1)}%</span>
-                      <span className="mx-2">|</span>
-                      Lucro bruto: <span className="text-emerald-400 font-semibold">R$ {(currentItem.salePrice - totalCost(currentItem)).toFixed(2)}</span>
-                      <span className="mx-2">|</span>
-                      Margem real: <span className="text-emerald-400 font-semibold">{(((currentItem.salePrice - totalCost(currentItem)) / currentItem.salePrice) * 100).toFixed(1)}%</span>
+                    <div className="mt-2 space-y-1">
+                      <div className="text-xs text-slate-400 text-center">
+                        <span className="text-slate-500">Margem</span>{' '}
+                        <span className="text-emerald-400 font-semibold">{(((currentItem.salePrice - costWithTax(currentItem)) / currentItem.salePrice) * 100).toFixed(1)}%</span>
+                        <span className="mx-2 text-slate-700">|</span>
+                        <span className="text-slate-500">Markup</span>{' '}
+                        <span className="text-indigo-400 font-semibold">{((currentItem.salePrice / totalCost(currentItem) - 1) * 100).toFixed(1)}%</span>
+                        <span className="mx-2 text-slate-700">|</span>
+                        <span className="text-slate-500">Custo total</span>{' '}
+                        <span className="text-white font-medium">R$ {costWithTax(currentItem).toFixed(2)}</span>
+                        <span className="mx-2 text-slate-700">|</span>
+                        <span className="text-slate-500">Lucro est.</span>{' '}
+                        <span className="text-emerald-400 font-semibold">R$ {(currentItem.salePrice - costWithTax(currentItem)).toFixed(2)}</span>
+                      </div>
+                      {/* Legenda */}
+                      <div className="flex items-center justify-center gap-1 text-[10px] text-slate-600">
+                        <Info size={10} />
+                        <span><strong>Margem</strong> = % do preço que é lucro (já com taxa).</span>
+                        <span className="mx-1 text-slate-700">|</span>
+                        <span><strong>Markup</strong> = % que o preço está acima do custo base (sem taxa).</span>
+                      </div>
                     </div>
                   )}
                 </div>
