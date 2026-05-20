@@ -130,8 +130,13 @@ export default function ProductsPage() {
     try {
       const data = await api.categories.list();
       setCategories(data);
-    } catch { /* silently fail */ }
-  }, []);
+    } catch {
+      // Offline fallback: load categories from IndexedDB
+      try {
+        const cached = await getCategories();
+        setCategories(cached);
+      } catch { /* silently fail */ }
+    }
 
   useEffect(() => { loadCategories(); }, [loadCategories]);
 
