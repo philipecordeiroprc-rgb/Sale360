@@ -57,6 +57,7 @@ export function useSync(): UseSyncReturn {
   const { isOnline, wasOffline, consumeOfflineFlag } = useNetworkStatus();
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const initialSyncDone = useRef(false);
 
   // Refresh pending count
   const refreshCount = useCallback(() => {
