@@ -141,6 +141,10 @@ export default function OrdersPage() {
     try {
       const data = await api.customers.list({ search: q });
       setCustomerResults(data.customers || []);
+      // Merge into IndexedDB for offline use
+      if (data.customers?.length > 0) {
+        mergeCustomers(data.customers).catch(() => {});
+      }
     } catch {
       try {
         const cached = await getCustomers();
