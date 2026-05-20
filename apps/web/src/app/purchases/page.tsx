@@ -39,8 +39,14 @@ const emptyItem: PurchaseItemData = {
   variations: [],
 };
 
-// Custo total (unitário + operacional)
+// Custo total (unitário + operacional, sem taxa)
 const totalCost = (item: PurchaseItemData): number => item.costPrice + item.operationalCost;
+
+// Custo total com taxa (unitário + operacional + taxa estimada)
+const costWithTax = (item: PurchaseItemData): number => {
+  const taxAmount = item.salePrice > 0 ? item.salePrice * (item.taxRatePct / 100) : 0;
+  return item.costPrice + item.operationalCost + taxAmount;
+};
 
 // Calcula preço de venda: (custo total) / (1 - taxa% - margem%)
 const calcSalePrice = (item: PurchaseItemData): number => {
