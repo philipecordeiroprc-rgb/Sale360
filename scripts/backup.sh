@@ -269,7 +269,11 @@ log "━━━━━━━━━━━━━━━━━━━━━━━━━
 log "🎯 Backup concluído: ${BACKUP_NAME}"
 log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 log "   Local:  ${BACKUP_DIR}/${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
-log "   OCI:    ${OCI_UPLOAD_OK:+✅ Upload OK}${OCI_UPLOAD_OK:-⚠️  Falhou}"
+if [ "$OCI_UPLOAD_OK" = "1" ]; then
+    log "   OCI:    ✅ Upload OK"
+else
+    log "   OCI:    ⚠️  Falhou (verificar IAM policy)"
+fi
 log "   Log:    ${LOG_FILE}"
 log "   Retenção: ${RETENTION_DAYS} dias"
 echo ""
