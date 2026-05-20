@@ -237,32 +237,55 @@ export default function OrdersPage() {
       show('Selecione ou informe o cliente', 'error'); return;
     }
     setSaving(true);
+
+    const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const orderData = {
+      customerId: selectedCustomer?.id || undefined,
+      customerName: useWalkIn && walkInName.trim() ? walkInName.trim() : undefined,
+      items: cart.map(item => ({
+        productId: item.productId,
+        variationId: item.variationId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        total: item.total,
+      })),
+      subtotal,
+      discount: parseFloat(discount) || 0,
+      total: totalWithDiscount,
+      paymentMethod: selectedPayment.id,
+      paymentStatus: selectedPayment.paymentStatus || 'PAID',
+      dueDate: selectedPayment.paymentStatus === 'PENDING' && dueDate ? dueDate : undefined,
+      localId,
+    };
+
     try {
-      await api.orders.create({
-        customerId: selectedCustomer?.id || undefined,
-        customerName: useWalkIn && walkInName.trim() ? walkInName.trim() : undefined,
-        items: cart.map(item => ({
-          productId: item.productId,
-          variationId: item.variationId,
-          productName: item.productName,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          total: item.total,
-        })),
-        subtotal,
-        discount: parseFloat(discount) || 0,
-        total: totalWithDiscount,
-        paymentMethod: selectedPayment.id,
-        paymentStatus: selectedPayment.paymentStatus || 'PAID',
-        dueDate: selectedPayment.paymentStatus === 'PENDING' && dueDate ? dueDate : undefined,
-      });
+      await api.orders.create(orderData);
 
       show('Venda realizada!');
       setSaleOpen(false);
       loadOrders();
       loadTodayRevenue();
     } catch (err: any) {
-      show(err.message || 'Erro ao criar venda', 'error');
+      // Network error — save offline
+      if (!navigator.onLine || err.message === 'Failed to fetch' || err.name === 'TypeError') {
+        try {
+          await addPendingOrder({
+            localId,
+            data: orderData,
+            status: 'pending',
+            createdAt: Date.now(),
+            lastAttempt: 0,
+            error: null,
+          });
+          show('Venda salva offline. Sera sincronizada quando houver conexao.', 'success');
+          setSaleOpen(false);
+        } catch {
+          show('Erro ao salvar venda offline', 'error');
+        }
+      } else {
+        show(err.message || 'Erro ao criar venda', 'error');
+      }
     } finally {
       setSaving(false);
     }
