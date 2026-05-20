@@ -28,7 +28,10 @@ async function request<T>(
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.error || `Erro ${res.status}`);
+    const msg = data.details
+      ? `${data.error}: ${JSON.stringify(data.details)}`
+      : (data.error || `Erro ${res.status}`);
+    throw new Error(msg);
   }
 
   return data as T;
