@@ -7,7 +7,12 @@ import { RefreshCw } from 'lucide-react';
 const THRESHOLD = 60;
 const MAX_PULL = 100;
 
-export function PullToRefresh({ children }: { children: ReactNode }) {
+interface PullToRefreshProps {
+  children: ReactNode;
+  onRefresh?: () => Promise<void>;
+}
+
+export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
   const router = useRouter();
   const [pullDistance, setPullDistance] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
