@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Search, Edit2, Trash2, Phone, Mail, FileText, Eye, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
+import { getCustomers } from '@/lib/offline-db';
 
 interface FormData {
   name: string;
