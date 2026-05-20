@@ -68,6 +68,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           items: true,
           customer: { select: { id: true, name: true, phone: true } },
           user: { select: { id: true, name: true } },
+          coupon: { select: { id: true, code: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
