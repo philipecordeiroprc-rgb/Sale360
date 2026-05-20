@@ -173,8 +173,8 @@ cp /home/opc/sale360/packages/db/.env "${BACKUP_PATH}/config/db.env" 2>/dev/null
 env | sort > "${BACKUP_PATH}/config/environment.txt" 2>/dev/null || true
 
 # Host info
-hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null
-uname -a > "${BACKUP_PATH}/config/kernel.txt" 2>/dev/null
+hostnamectl > "${BACKUP_PATH}/config/host-info.txt" 2>/dev/null || true
+uname -a > "${BACKUP_PATH}/config/kernel.txt" 2>/dev/null || true
 
 # Lista de pacotes instalados (rpm/dnf)
 rpm -qa --queryformat '%{NAME} %{VERSION}-%{RELEASE}\n' | sort > "${BACKUP_PATH}/config/rpm-packages.txt" 2>/dev/null
