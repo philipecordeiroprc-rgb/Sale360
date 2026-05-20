@@ -225,6 +225,9 @@ export const api = {
     pay(id: string, data?: { paidAmount?: number }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
+    confirm(id: string) {
+      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST' });
+    },
   },
 
   // Suppliers
