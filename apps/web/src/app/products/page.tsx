@@ -161,15 +161,24 @@ export default function ProductsPage() {
 
   // Load categories
   const loadCategories = useCallback(async () => {
-    try {
-      const data = await api.categories.list();
-      setCategories(data);
-    } catch {
-      // Offline fallback: load categories from IndexedDB
+    // If clearly offline, skip API call
+    if (!navigator.onLine) {
       try {
         const cached = await getCategories();
         setCategories(cached);
-      } catch { /* silently fail */ }
+      } catch { /* empty cache */ }
+      return;
+    }
+    try {
+      const data = await api.categories.list();
+      setCategories(data);
+      // Cache for offline use
+      if (data.length > 0) cacheCategories(data).catch(() => {});
+    } catch {
+      try {
+        const cached = await getCategories();
+        setCategories(cached);
+      } catch { /* empty cache */ }
     }
   }, []);
 
