@@ -71,9 +71,35 @@ async function buildApp() {
   // Plugins
   await app.register(cors, { origin: true, credentials: true });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
   // Health check (no auth — for uptime monitoring)
   app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+
+  // Serve uploaded files (logos, banners) — public
+  const uploadDir = path.resolve(process.cwd(), '../uploads');
+  app.get('/api/public/uploads/*', async (request, reply) => {
+    const requestedPath = request.params['*'] || '';
+    // Prevent path traversal
+    if (requestedPath.includes('..') || requestedPath.includes('/')) {
+      return reply.status(400).send({ error: 'Invalid path' });
+    }
+    const filePath = path.join(uploadDir, requestedPath);
+    if (!filePath.startsWith(uploadDir)) {
+      return reply.status(400).send({ error: 'Invalid path' });
+    }
+    try {
+      await fsSync.promises.access(filePath);
+    } catch {
+      return reply.status(404).send({ error: 'File not found' });
+    }
+    const ext = path.extname(requestedPath).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp',
+    };
+    reply.type(mimeTypes[ext] || 'application/octet-stream');
+    return reply.send(fsSync.createReadStream(filePath));
+  });
 
   // Global error handler — catch all unhandled route errors
   app.setErrorHandler((error: any, _request, reply) => {
