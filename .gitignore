@@ -1,52 +1,13 @@
-# Dependencies
 node_modules/
-.pnpm-store/
-
-# Build
-dist/
 .next/
-build/
-
-# Env
+dist/
+generated/
+.turbo/
+*.log
 .env
 .env.local
-.env.*.local
+*.tar.gz
+deploy-*.tar.gz
 
-# IDE
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Prisma
-packages/db/generated/
-
-# SQLite local
-*.sqlite
-*.sqlite-journal
-
-# Debug
-*.log
-npm-debug.log*
-
-# TypeScript
-*.tsbuildinfo
-
-# Turbo
-.turbo/
-
-# Backups locais (contêm .env, SSL, etc.)
-backups/
-
-# Expo
-.expo/
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
+# Permite backups na pasta Backup/
+!Backup/*.tar.gz
