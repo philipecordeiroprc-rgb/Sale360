@@ -42,8 +42,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // SUPER_ADMIN redirect to /admin from non-admin pages
-  if (isSuperAdmin && !isAdminRoute) {
+  // SUPER_ADMIN redirect to /admin from non-admin pages (allow catalog)
+  if (isSuperAdmin && !isAdminRoute && !isCatalogRoute) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 
