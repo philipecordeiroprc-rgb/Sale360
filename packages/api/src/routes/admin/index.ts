@@ -88,7 +88,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const { id } = request.params as { id: string };
     const schema = z.object({
       companyName: z.string().optional(),
-      slug: z.string().min(3, 'Slug deve ter no mínimo 3 caracteres').optional(),
+      slug: z.string().min(3, 'Slug deve ter no mínimo 3 caracteres').regex(/^[a-z0-9-]+$/, 'Slug deve conter apenas letras minúsculas, números e hífens').transform((s) => s.toLowerCase()).optional(),
       plan: z.enum(['PRO', 'GROW', 'PRIME']).optional(),
       status: z.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']).optional(),
       trialEndsAt: z.string().nullable().optional(),
