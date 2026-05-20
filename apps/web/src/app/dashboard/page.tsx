@@ -39,7 +39,26 @@ export default function DashboardPage() {
         setNewCustomers(newToday);
 
         setProductCount(productsData.total || 0);
-      } catch { /* ignore */ }
+      } catch {
+        // Offline fallback: load from IndexedDB cache
+        try {
+          const [products, customers, pending] = await Promise.all([
+            getProducts(),
+            getCustomers(),
+            getPendingOrders(),
+          ]);
+          setSummary({ totalSales: 0, count: 0, pendingCount: pending.length, pendingAmount: 0 });
+          setRecentOrders(pending.map(po => ({
+            ...po.data,
+            id: po.localId,
+            _offline: true,
+            createdAt: new Date(po.createdAt).toISOString(),
+            orderNumber: po.localId.slice(-6),
+          })));
+          setNewCustomers(customers.length);
+          setProductCount(products.length);
+        } catch { /* completamente offline, sem cache */ }
+      }
       finally { setLoading(false); }
     }
     load();
