@@ -79,7 +79,7 @@ async function buildApp() {
   // Serve uploaded files (logos, banners) — public
   const uploadDir = path.resolve(process.cwd(), '../uploads');
   app.get('/api/public/uploads/*', async (request, reply) => {
-    const requestedPath = request.params['*'] || '';
+    const requestedPath = (request.params as Record<string, string>)['*'] || '';
     // Prevent path traversal
     if (requestedPath.includes('..') || requestedPath.includes('/')) {
       return reply.status(400).send({ error: 'Invalid path' });
