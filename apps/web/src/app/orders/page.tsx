@@ -69,6 +69,10 @@ export default function OrdersPage() {
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState('0');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponData, setCouponData] = useState<any>(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(PAYMENT_METHODS[0]);
   const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
