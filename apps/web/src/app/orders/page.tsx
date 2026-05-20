@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
-import { addPendingOrder, getProducts, getCustomers, getPendingOrders, cacheProducts, cacheCustomers } from '@/lib/offline-db';
+import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeProducts, mergeCustomers } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 const PAYMENT_METHODS = [
