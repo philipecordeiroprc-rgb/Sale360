@@ -189,8 +189,8 @@ tar czf "${BACKUP_NAME}.tar.gz" "$BACKUP_NAME" 2>> "$LOG_FILE"
 BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
 ok "Backup compactado: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
 
-# Limpar diretório temporário
-rm -rf "$BACKUP_PATH"
+# Limpar diretório temporário (sudo necessário para arquivos SSL copiados com sudo)
+sudo rm -rf "$BACKUP_PATH" 2>/dev/null || rm -rf "$BACKUP_PATH" 2>/dev/null || true
 
 # ---- Upload OCI Object Storage ----
 log "☁️  Enviando para OCI Object Storage..."
