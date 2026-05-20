@@ -39,6 +39,9 @@ npm-debug.log*
 # Turbo
 .turbo/
 
+# Backups locais (contêm .env, SSL, etc.)
+backups/
+
 # Expo
 .expo/
 *.jks
