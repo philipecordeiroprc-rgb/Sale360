@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store } from 'lucide-react';
-import CatalogoTab from './CatalogoTab';
+import { CatalogoTab } from './CatalogoTab';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
