@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, Camera, Scan, Keyboard } from 'lucide-react';
+import { X, Camera, Scan, Keyboard, AlertTriangle } from 'lucide-react';
 import api from '@/lib/api';
 
 interface BarcodeScannerProps {
@@ -13,23 +13,94 @@ interface BarcodeScannerProps {
 }
 
 export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: BarcodeScannerProps) {
+  const viewportRef = useRef<HTMLDivElement | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const usbInputRef = useRef<HTMLInputElement | null>(null);
+  const stoppedRef = useRef(false);
+  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   const [status, setStatus] = useState<'loading' | 'scanning' | 'error' | 'notfound'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
   const [scannedCode, setScannedCode] = useState('');
 
-  // Camera scanner
+  const isSecureContext = typeof window !== 'undefined' && window.isSecureContext;
+
+  const classifyError = useCallback((err: any): string => {
+    const msg = err?.message || String(err);
+
+    // Check for secure context / HTTPS first
+    if (!isSecureContext) {
+      return 'Este site não está servido em HTTPS. O acesso à câmera exige uma conexão segura (HTTPS ou localhost).' +
+        '\n\nSoluções:\n• Acesse via localhost no desenvolvimento\n• Configure HTTPS no servidor de produção';
+    }
+
+    if (msg.includes('NotAllowed') || msg.includes('Permission') || msg.includes('permission')) {
+      return 'Permissão de câmera negada. Libere o acesso à câmera nas configurações do navegador e tente novamente.';
+    }
+    if (msg.includes('NotFound') || msg.includes('no cameras') || msg.includes('No camera')) {
+      return 'Nenhuma câmera encontrada neste dispositivo. Use o input manual para códigos de barras.';
+    }
+    if (msg.includes('NotReadable') || msg.includes('not readable') || msg.includes('in use')) {
+      return 'Não foi possível acessar a câmera. Verifique se outro aplicativo está usando a câmera e tente novamente.';
+    }
+    if (msg.includes('streaming') || msg.includes('Streaming') || msg.includes('not supported')) {
+      return `Falha ao iniciar o streaming da câmera.\n\nCausas comuns:\n• Site não está em HTTPS (atual: ${window.location.protocol}//)\n• Navegador não suporta acesso à câmera\n• Câmera já em uso por outro app\n• Driver de câmera ausente no dispositivo`;
+    }
+
+    return `Erro ao iniciar câmera: ${msg}`;
+  }, [isSecureContext]);
+
+  const lookupBarcode = useCallback(async (code: string) => {
+    try {
+      const product = await api.products.getByBarcode(code);
+      if (!stoppedRef.current) {
+        // Stop scanner before calling onDetected
+        if (scannerRef.current?.isScanning) {
+          await scannerRef.current.stop().catch(() => {});
+        }
+        onDetected(product);
+      }
+    } catch {
+      if (!stoppedRef.current) {
+        setStatus('notfound');
+        setErrorMsg(`Produto não encontrado para o código: ${code}`);
+      }
+    }
+  }, [onDetected]);
+
+  // Camera lifecycle
   useEffect(() => {
     if (!isOpen) return;
 
-    const scannerId = 'barcode-scanner-viewport';
-    let scanner: Html5Qrcode | null = null;
-    let stopped = false;
+    stoppedRef.current = false;
 
     const startCamera = async () => {
+      // Wait for viewport element to be visible with dimensions
+      const viewport = viewportRef.current;
+      if (!viewport) {
+        if (!stoppedRef.current) {
+          retryTimerRef.current = setTimeout(startCamera, 100);
+        }
+        return;
+      }
+
+      const rect = viewport.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        // Element exists but has no size yet (animation still running)
+        if (!stoppedRef.current) {
+          retryTimerRef.current = setTimeout(startCamera, 150);
+        }
+        return;
+      }
+
+      // Clear any pending retry
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+
       try {
-        scanner = new Html5Qrcode(scannerId);
+        const scanner = new Html5Qrcode('barcode-scanner-viewport');
         scannerRef.current = scanner;
 
         setStatus('loading');
@@ -37,11 +108,15 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
           { facingMode: 'environment' },
           {
             fps: 10,
-            qrbox: { width: 250, height: 150 },
+            qrbox: (viewfinderWidth, viewfinderHeight) => {
+              // Dynamic qrbox based on actual viewport size
+              const boxSize = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
+              return { width: Math.floor(boxSize), height: Math.floor(boxSize * 0.6) };
+            },
             aspectRatio: 1.777,
           },
           async (decodedText) => {
-            if (stopped) return;
+            if (stoppedRef.current) return;
             setScannedCode(decodedText);
             await lookupBarcode(decodedText);
           },
@@ -49,89 +124,67 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
             // scan failure per frame — ignore
           }
         );
-        if (!stopped) setStatus('scanning');
+        if (!stoppedRef.current) setStatus('scanning');
       } catch (err: any) {
-        if (stopped) return;
-        const msg = err?.message || String(err);
-        if (msg.includes('NotAllowed') || msg.includes('permission')) {
-          setErrorMsg('Permissão de câmera negada. Use o input manual ou libere nas configurações do navegador.');
-        } else if (msg.includes('NotFound') || msg.includes('no cameras')) {
-          setErrorMsg('Nenhuma câmera encontrada neste dispositivo.');
-        } else {
-          setErrorMsg(`Erro ao iniciar câmera: ${msg}`);
-        }
+        if (stoppedRef.current) return;
+        const msg = classifyError(err);
+        setErrorMsg(msg);
         setStatus('error');
       }
     };
 
-    const lookupBarcode = async (code: string) => {
-      try {
-        const product = await api.products.getByBarcode(code);
-        if (!stopped) {
-          stopScanner();
-          onDetected(product);
-        }
-      } catch {
-        if (!stopped) {
-          setStatus('notfound');
-          setErrorMsg(`Produto não encontrado para o código: ${code}`);
-        }
-      }
-    };
+    // Initial delay to let the modal animation complete (200ms animation + buffer)
+    const initialTimer = setTimeout(startCamera, 300);
 
-    const stopScanner = async () => {
-      if (scanner && scanner.isScanning) {
-        try {
-          await scanner.stop();
-        } catch {}
-      }
-    };
-
-    // Small delay to ensure DOM is ready
-    setTimeout(startCamera, 200);
-
-    // Stop on tab visibility change
+    // Pause scanner when tab is hidden, resume when visible
     const handleVisibility = () => {
-      if (document.hidden && scanner && scanner.isScanning) {
+      const scanner = scannerRef.current;
+      if (!scanner) return;
+      if (document.hidden && scanner.isScanning) {
         scanner.stop().catch(() => {});
-      } else if (!document.hidden && scanner && !scanner.isScanning && !stopped) {
+      } else if (!document.hidden && !scanner.isScanning && !stoppedRef.current) {
         startCamera();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      stopped = true;
+      stoppedRef.current = true;
+      clearTimeout(initialTimer);
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
       document.removeEventListener('visibilitychange', handleVisibility);
-      if (scanner) {
-        scanner.stop().catch(() => {});
-        scanner.clear();
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(() => {});
+        scannerRef.current.clear();
+        scannerRef.current = null;
       }
     };
-  }, [isOpen]);
+  }, [isOpen, classifyError, lookupBarcode]);
 
   // Focus USB input when opened
   useEffect(() => {
     if (!isOpen) return;
     const timer = setTimeout(() => {
       usbInputRef.current?.focus();
-    }, 100);
+    }, 500); // Longer delay to account for modal animation
     return () => clearTimeout(timer);
   }, [isOpen]);
 
   const handleUsbInput = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      const code = (e.target as HTMLInputElement).value.trim();
+      const input = e.target as HTMLInputElement;
+      const code = input.value.trim();
       if (!code) return;
-      (e.target as HTMLInputElement).value = '';
+      input.value = '';
       setScannedCode(code);
-      try {
-        const product = await api.products.getByBarcode(code);
-        onDetected(product);
-      } catch {
-        setStatus('notfound');
-        setErrorMsg(`Produto não encontrado para o código: ${code}`);
+      // Stop camera if running (USB takes priority)
+      if (scannerRef.current?.isScanning) {
+        await scannerRef.current.stop().catch(() => {});
       }
+      await lookupBarcode(code);
     }
   };
 
@@ -139,18 +192,29 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     setStatus('loading');
     setErrorMsg('');
     setScannedCode('');
-    // Re-trigger camera by toggling
+    stoppedRef.current = false;
+
+    // Clean up previous scanner instance
     if (scannerRef.current) {
       scannerRef.current.clear();
       scannerRef.current = null;
     }
-    // Force re-mount of camera view
+
+    // Clear viewport and restart
+    const viewport = viewportRef.current;
+    if (viewport) {
+      viewport.innerHTML = '';
+    }
+
+    // Delay to let DOM settle
     setTimeout(() => {
-      const viewport = document.getElementById('barcode-scanner-viewport');
-      if (viewport) viewport.innerHTML = '';
-      // Restart via effect re-trigger
-      setStatus('loading');
-    }, 50);
+      if (!stoppedRef.current) {
+        // Trigger camera restart by re-rendering status
+        setStatus('loading');
+      }
+    }, 100);
+
+    // The main effect will pick up the new status and restart
   };
 
   if (!isOpen) return null;
@@ -165,9 +229,11 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
         </div>
         <button
           onClick={() => {
+            stoppedRef.current = true;
             if (scannerRef.current) {
               scannerRef.current.stop().catch(() => {});
               scannerRef.current.clear();
+              scannerRef.current = null;
             }
             onClose();
           }}
@@ -177,8 +243,25 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
         </button>
       </div>
 
+      {/* Secure context warning */}
+      {!isSecureContext && (
+        <div className="mx-4 mt-3 px-3 py-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-start gap-2.5">
+          <AlertTriangle size={16} className="text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs text-amber-300 font-medium">HTTPS necessário para câmera</p>
+            <p className="text-[10px] text-amber-400/70 mt-0.5">
+              O navegador bloqueia a câmera em sites HTTP. Use o leitor USB (input já ativo) ou acesse via HTTPS.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Camera viewport */}
-      <div id="barcode-scanner-viewport" className="w-full aspect-video bg-slate-950 relative" />
+      <div
+        ref={viewportRef}
+        id="barcode-scanner-viewport"
+        className="w-full aspect-video bg-slate-950 relative"
+      />
 
       {/* Hidden USB scanner input */}
       <input
@@ -212,7 +295,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       {status === 'error' && (
         <div className="px-4 py-4 flex flex-col items-center gap-3">
           <Camera size={24} className="text-red-400" />
-          <p className="text-sm text-red-400 text-center">{errorMsg}</p>
+          <p className="text-sm text-red-400 text-center whitespace-pre-line">{errorMsg}</p>
           <div className="flex gap-2">
             <button
               onClick={retry}
