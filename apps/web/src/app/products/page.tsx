@@ -9,6 +9,7 @@ import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
+import { getProducts, getCategories } from '@/lib/offline-db';
 
 interface FormData {
   name: string;
