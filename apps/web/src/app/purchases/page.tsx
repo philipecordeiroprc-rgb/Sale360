@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { type VariationData } from '@/components/products/VariationEditor';
 import api from '@/lib/api';
