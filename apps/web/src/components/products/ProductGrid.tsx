@@ -264,7 +264,7 @@ export function ProductGrid({ onProductClick, cart, isOnline, productSearch, onP
                 }`}
               >
                 {/* Image / placeholder */}
-                <div className="h-24 sm:h-28 bg-slate-800 flex items-center justify-center">
+                <div className="relative h-24 sm:h-28 bg-slate-800 flex items-center justify-center">
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}
