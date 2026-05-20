@@ -376,8 +376,8 @@ export default function ProductsPage() {
                   <th className="text-left px-4 py-3 font-medium hidden md:table-cell">Cód/SKU</th>
                   <th className="text-left px-4 py-3 font-medium hidden lg:table-cell">Categoria</th>
                   <th className="text-right px-4 py-3 font-medium">Preço</th>
-                  <th className="text-right px-4 py-3 font-medium">Custo Médio</th>
-                  <th className="text-right px-4 py-3 font-medium hidden xl:table-cell">Margem</th>
+                  <th className="text-right px-4 py-3 font-medium">Custo Total Méd</th>
+                  <th className="text-right px-4 py-3 font-medium hidden lg:table-cell">Margem</th>
                   <th className="text-left px-4 py-3 font-medium">Estoque</th>
                   <th className="text-right px-4 py-3 font-medium w-28">Ações</th>
                 </tr>
