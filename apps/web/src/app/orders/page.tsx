@@ -183,6 +183,10 @@ export default function OrdersPage() {
     try {
       const data = await api.products.list({ search: q, active: true });
       setProductResults(data.products || []);
+      // Cache returned products for offline use (best-effort)
+      if (data.products?.length > 0) {
+        cacheProducts(data.products).catch(() => {});
+      }
     } catch {
       try {
         const cached = await getProducts();
