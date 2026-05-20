@@ -897,7 +897,16 @@ export default function OrdersPage() {
               </tfoot>
             </table>
 
-            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+              <button
+                onClick={() => { handleConfirmOnline(detailOrder.id); setDetailOpen(false); setDetailOrder(null); }}
+                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                <CheckCircle size={16} />
+                Confirmar Pedido Online (Baixar Estoque)
+              </button>
+            )}
+            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && detailOrder.source !== 'ONLINE' && (
               <button
                 onClick={() => handlePay(detailOrder.id)}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
