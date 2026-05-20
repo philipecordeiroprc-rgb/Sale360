@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { type VariationData } from '@/components/products/VariationEditor';
+import { BarcodeScanner } from '@/components/products/BarcodeScanner';
 import api from '@/lib/api';
 import { getProducts } from '@/lib/offline-db';
 
