@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye } from 'lucide-react';
+import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
+import { addPendingOrder } from '@/lib/offline-db';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 const PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
