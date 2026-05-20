@@ -52,7 +52,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   // Create tenant
   app.post('/tenants', async (request, reply) => {
     const schema = z.object({
-      slug: z.string().min(3, 'Slug deve ter no mínimo 3 caracteres'),
+      slug: z.string().min(3, 'Slug deve ter no mínimo 3 caracteres').regex(/^[a-z0-9-]+$/, 'Slug deve conter apenas letras minúsculas, números e hífens').transform((s) => s.toLowerCase()),
       companyName: z.string().min(1, 'Nome da empresa é obrigatório'),
       plan: z.enum(['PRO', 'GROW', 'PRIME']).default('PRO'),
       status: z.enum(['TRIAL', 'ACTIVE', 'SUSPENDED', 'CANCELLED']).default('TRIAL'),
