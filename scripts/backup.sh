@@ -191,6 +191,22 @@ tar czf "${BACKUP_NAME}.tar.gz" "$BACKUP_NAME" 2>> "$LOG_FILE"
 BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
 ok "Backup compactado: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
 
+# ---- Copiar tarball para Backup/ (versionamento GitHub) ----
+log "📤 Copiando tarball para Backup/..."
+mkdir -p /home/opc/sale360/Backup
+cp "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz" /home/opc/sale360/Backup/
+ok "Tarball copiado para Backup/"
+
+# Manter só os últimos 7 tarballs na pasta Backup/
+BACKUP_TARBALLS=$(ls -1t /home/opc/sale360/Backup/sale360-full-*.tar.gz 2>/dev/null)
+BACKUP_TAR_COUNT=$(echo "$BACKUP_TARBALLS" | grep -c . || true)
+if [ "$BACKUP_TAR_COUNT" -gt "$RETENTION_DAYS" ]; then
+    echo "$BACKUP_TARBALLS" | tail -n +$((RETENTION_DAYS + 1)) | while read -r f; do
+        log "Removendo Backup antigo: $(basename "$f")"
+        rm -f "$f"
+    done
+fi
+
 # Limpar diretório temporário (sudo necessário para arquivos SSL copiados com sudo)
 sudo rm -rf "$BACKUP_PATH" 2>/dev/null || rm -rf "$BACKUP_PATH" 2>/dev/null || true
 
