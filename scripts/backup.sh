@@ -155,9 +155,9 @@ log "🔧 [8/9] Configurações de runtime..."
 mkdir -p "${BACKUP_PATH}/config"
 
 # Node & Package Manager versions
-node --version > "${BACKUP_PATH}/config/node-version.txt" 2>/dev/null
-pnpm --version > "${BACKUP_PATH}/config/pnpm-version.txt" 2>/dev/null
-npm --version > "${BACKUP_PATH}/config/npm-version.txt" 2>/dev/null
+node --version > "${BACKUP_PATH}/config/node-version.txt" 2>/dev/null || true
+/usr/local/bin/pnpm --version > "${BACKUP_PATH}/config/pnpm-version.txt" 2>/dev/null || true
+npm --version > "${BACKUP_PATH}/config/npm-version.txt" 2>/dev/null || true
 
 # Package files
 cp /home/opc/sale360/package.json "${BACKUP_PATH}/config/root-package.json" 2>/dev/null
