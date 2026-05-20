@@ -195,7 +195,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         const now = new Date();
         const validFrom = coupon.validFrom ? new Date(coupon.validFrom) <= now : true;
         const validUntil = coupon.validUntil ? new Date(coupon.validUntil) >= now : true;
-        const usageOk = !coupon.maxUses || (coupon.usedCount || 0) < coupon.maxUses;
+        const usageOk = !coupon.usageLimit || (coupon.usedCount || 0) < coupon.usageLimit;
 
         if (validFrom && validUntil && usageOk) {
           couponId = coupon.id;
@@ -308,7 +308,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
     if (coupon.validUntil && new Date(coupon.validUntil) < now) {
       return reply.status(200).send({ valid: false, error: 'Cupom expirado' });
     }
-    if (coupon.maxUses && (coupon.usedCount || 0) >= coupon.maxUses) {
+    if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) {
       return reply.status(200).send({ valid: false, error: 'Cupom esgotado' });
     }
     if (coupon.minOrderValue && subtotal < Number(coupon.minOrderValue)) {
