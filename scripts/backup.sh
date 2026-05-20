@@ -228,7 +228,7 @@ find "${BACKUP_DIR}" -name 'backup-*.log' -mtime +${RETENTION_DAYS} -delete 2>/d
 ok "Limpeza local concluída (mantidos ${RETENTION_DAYS} backups)"
 
 # OCI: remover objetos antigos
-if [ "$OCI_UPLOAD_OK" = true ]; then
+if [ "$OCI_UPLOAD_OK" = "1" ]; then
     OCI_OBJECTS=$(oci os object list \
         --auth instance_principal \
         --bucket-name "$OCI_BUCKET" \
