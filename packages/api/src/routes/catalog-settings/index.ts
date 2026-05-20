@@ -72,7 +72,7 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
 
   // PUT settings
   app.put('/', async (request, reply) => {
-    const parsed = updateSchema.safeParse(request.body);
+    const parsed = updateSchema.safeParse(stripNulls(request.body as Record<string, unknown>));
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
