@@ -113,7 +113,11 @@ export default function PurchasesPage() {
       setPurchases(data.purchases);
       setTotal(data.total);
     } catch (err: any) {
-      setError(err.message || 'Erro ao carregar compras');
+      if (!navigator.onLine) {
+        setError('Voce esta offline. As compras nao estao disponiveis sem conexao.');
+      } else {
+        setError(err.message || 'Erro ao carregar compras');
+      }
     } finally {
       setLoading(false);
     }
