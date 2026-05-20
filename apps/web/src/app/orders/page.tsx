@@ -834,7 +834,14 @@ export default function OrdersPage() {
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
-                <p className="text-white text-sm">{detailOrder.paymentMethod}</p>
+                <p className="text-white text-sm flex items-center gap-1.5">
+                  {detailOrder.paymentMethod}
+                  {detailOrder.source === 'ONLINE' && (
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                      <Link2 size={10} /> Link
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Data</p>
