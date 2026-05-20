@@ -52,11 +52,17 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
           <Menu size={20} />
         </button>
         <h1 className="ml-2 text-base font-bold text-indigo-400">SALE360</h1>
+        <div className="ml-auto">
+          <OfflineIndicator isOnline={isOnline} isSyncing={isSyncing} pendingCount={pendingCount} />
+        </div>
       </div>
 
       <main className="flex-1 p-3 md:p-5 min-h-screen md:ml-52 mt-12 md:mt-0 w-full max-w-full overflow-x-hidden">
-        <PageTitle />
-        <PullToRefresh>
+        <div className="flex items-center justify-between mb-2">
+          <PageTitle />
+          <OfflineIndicator isOnline={isOnline} isSyncing={isSyncing} pendingCount={pendingCount} />
+        </div>
+        <PullToRefresh onRefresh={sync}>
           {children}
         </PullToRefresh>
       </main>
