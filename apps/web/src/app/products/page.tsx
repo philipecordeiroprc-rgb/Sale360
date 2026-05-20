@@ -91,7 +91,35 @@ export default function ProductsPage() {
         setVariationNames(Array.from(names).sort((a, b) => a.localeCompare(b, 'pt-BR', { numeric: true })));
       }
     } catch (err: any) {
-      setError(err.message);
+      // Offline fallback: load from IndexedDB cache
+      try {
+        const cached = await getProducts();
+        // Apply filters locally
+        let results = cached;
+        if (search) {
+          const q = search.toLowerCase();
+          results = results.filter((p: any) =>
+            p.name?.toLowerCase().includes(q) ||
+            p.sku?.toLowerCase().includes(q) ||
+            p.barcode?.toString().toLowerCase().includes(q)
+          );
+        }
+        if (selectedCategory !== 'all') {
+          results = results.filter((p: any) => p.categoryId === selectedCategory);
+        }
+        if (variationName) {
+          results = results.filter((p: any) =>
+            (p.variations || []).some((v: any) => v.name === variationName)
+          );
+        }
+        setProducts(results);
+        setTotal(results.length);
+        if (results.length === 0 && !search && selectedCategory === 'all') {
+          setError('Voce esta offline. Nenhum produto em cache.');
+        }
+      } catch {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
