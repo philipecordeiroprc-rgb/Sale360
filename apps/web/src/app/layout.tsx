@@ -41,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {children}
           </ClientShell>
         </AuthHydrator>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );
