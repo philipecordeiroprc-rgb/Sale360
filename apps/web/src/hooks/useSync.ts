@@ -69,14 +69,6 @@ export function useSync(): UseSyncReturn {
     refreshCount();
   }, [refreshCount]);
 
-  // Initial sync on mount (populates IndexedDB cache for offline use)
-  useEffect(() => {
-    if (!initialSyncDone.current && isOnline) {
-      initialSyncDone.current = true;
-      sync();
-    }
-  }, [isOnline, sync]);
-
   const sync = useCallback(async () => {
     if (syncing) return { pulled: false, pushed: 0, errors: 0 };
     if (!isOnline && navigator.onLine === false) return { pulled: false, pushed: 0, errors: 0 };
