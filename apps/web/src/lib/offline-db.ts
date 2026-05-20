@@ -82,6 +82,20 @@ export function getProduct(id: string): Promise<any | null> {
   return withStore('products', 'readonly', (s) => s.get(id));
 }
 
+export function mergeProducts(products: any[]): Promise<void> {
+  return openDB().then((db) => {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('products', 'readwrite');
+      const store = tx.objectStore('products');
+      for (const p of products) {
+        store.put({ ...p, _cachedAt: Date.now() });
+      }
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  });
+}
+
 export function clearProducts(): Promise<void> {
   return withStore('products', 'readwrite', (s) => s.clear());
 }
