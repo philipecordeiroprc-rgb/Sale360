@@ -61,13 +61,11 @@ export default function OrdersPage() {
   const [walkInName, setWalkInName] = useState('');
   const [useWalkIn, setUseWalkIn] = useState(false);
 
-  // Product search
-  const [productSearch, setProductSearch] = useState('');
-  const [productResults, setProductResults] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [selectedVariation, setSelectedVariation] = useState<any>(null);
-  const [quantity, setQuantity] = useState('1');
-  const [showVariationPicker, setShowVariationPicker] = useState(false);
+  // Product grid + quick add
+  const [productGridSearch, setProductGridSearch] = useState('');
+  const [quickAddProduct, setQuickAddProduct] = useState<any>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
