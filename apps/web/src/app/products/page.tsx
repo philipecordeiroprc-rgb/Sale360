@@ -137,6 +137,7 @@ export default function ProductsPage() {
         setCategories(cached);
       } catch { /* silently fail */ }
     }
+  }, []);
 
   useEffect(() => { loadCategories(); }, [loadCategories]);
 
