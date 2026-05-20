@@ -328,6 +328,7 @@ export default function OrdersPage() {
           });
           show('Venda salva offline. Sera sincronizada quando houver conexao.', 'success');
           setSaleOpen(false);
+          loadOrders();
         } catch {
           show('Erro ao salvar venda offline', 'error');
         }
