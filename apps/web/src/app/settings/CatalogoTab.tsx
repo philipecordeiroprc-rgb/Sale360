@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Store, Palette, ImageUp, ShoppingCart, MessageSquare, CreditCard, Upload, Trash2, Plus, GripVertical } from 'lucide-react';
+import { Store, Palette, ImageUp, ShoppingCart, MessageSquare, CreditCard, Upload, Trash2, Plus, GripVertical, Phone } from 'lucide-react';
 import api from '@/lib/api';
 
 interface CatalogData {
