@@ -8,6 +8,26 @@ import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { getPendingOrders, getProducts, getCustomers } from '@/lib/offline-db';
 
+function paymentLabel(method: string | null | undefined): string {
+  const map: Record<string, string> = {
+    credit_store: 'Fiado',
+    cash: 'Dinheiro',
+    pix: 'Pix',
+    credit: 'Crédito',
+    debit: 'Débito',
+    Dinheiro: 'Dinheiro',
+    Pix: 'Pix',
+    Debito: 'Débito',
+    Credito: 'Crédito',
+    Fiado: 'Fiado',
+  };
+  return map[method || ''] || method || '—';
+}
+
+function isFiado(method: string | null | undefined): boolean {
+  return method === 'credit_store' || method === 'Fiado';
+}
+
 export default function DashboardPage() {
   const { tenant } = useAuth();
   const [summary, setSummary] = useState<any>(null);
