@@ -33,7 +33,7 @@ interface CatalogData {
 
 async function getCatalog(slug: string): Promise<CatalogData | null> {
   try {
-    const res = await fetch(`${API_URL}/api/public/catalog/${slug}`, {
+    const res = await fetch(`${INTERNAL_API}/api/public/catalog/${slug}`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return null;
