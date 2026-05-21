@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, ShoppingCart, CreditCard, Package, Users, UserCheck, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, ShoppingCart, CreditCard, Package, Users, UserCheck, BarChart3, Clock, ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
 
 function useToast() {
