@@ -1,7 +1,20 @@
 const fs = require('fs');
 const file = 'C:/Users/rafac/Documents/GitHub/Sale360/apps/web/src/app/orders/page.tsx';
 const confirmModalContent = fs.readFileSync('C:/Users/rafac/Documents/GitHub/Sale360/confirm-modal.txt', 'utf8');
-let content = fs.readFileSync(file, 'utf8');
+// Normalize line endings to LF
+let content = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n');
+
+// Debug
+function replace(oldStr, newStr, label) {
+  if (content.includes(oldStr)) {
+    content = content.replace(oldStr, newStr);
+    console.log('OK: ' + label);
+  } else {
+    console.log('FAIL: ' + label + ' — string not found');
+    // Show first 80 chars of what we're looking for
+    console.log('  Looking for: ' + JSON.stringify(oldStr.substring(0, 80)));
+  }
+}
 
 // ============================================================
 // 1. Add paymentLabel(), isFiado(), and CONFIRM_PAYMENT_METHODS after PAYMENT_METHODS array
@@ -37,11 +50,10 @@ const CONFIRM_PAYMENT_METHODS = [
   { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
 ];`;
 
-content = content.replace(paymentMethodsEnd, paymentMethodsEnd + paymentLabelFn);
-console.log('1. Added paymentLabel/isFiado/CONFIRM_PAYMENT_METHODS');
+replace(paymentMethodsEnd, paymentMethodsEnd + paymentLabelFn, '1. paymentLabel/isFiado/CONFIRM_PAYMENT_METHODS');
 
 // ============================================================
-// 2. Add confirm payment sub-modal state after detail modal state
+// 2. Add confirm payment sub-modal state
 // ============================================================
 const detailStateEnd = `  const [detailOpen, setDetailOpen] = useState(false);
   const [detailOrder, setDetailOrder] = useState<any>(null);`;
@@ -52,8 +64,7 @@ const confirmState = `
   const [confirmingIsOnline, setConfirmingIsOnline] = useState(false);
   const [selectedConfirmPayment, setSelectedConfirmPayment] = useState(CONFIRM_PAYMENT_METHODS[0]);`;
 
-content = content.replace(detailStateEnd, detailStateEnd + confirmState);
-console.log('2. Added confirm payment state');
+replace(detailStateEnd, detailStateEnd + confirmState, '2. confirm payment state');
 
 // ============================================================
 // 3. Replace handleConfirmOnline
@@ -93,8 +104,7 @@ const newHandleConfirmOnline = `  const handleConfirmOnline = (id: string) => {
     }
   };`;
 
-content = content.replace(oldHandleConfirmOnline, newHandleConfirmOnline);
-console.log('3. Replaced handleConfirmOnline');
+replace(oldHandleConfirmOnline, newHandleConfirmOnline, '3. handleConfirmOnline');
 
 // ============================================================
 // 4. Replace handlePay
@@ -135,8 +145,7 @@ const newHandlePay = `  const handlePay = (id: string) => {
     }
   };`;
 
-content = content.replace(oldHandlePay, newHandlePay);
-console.log('4. Replaced handlePay');
+replace(oldHandlePay, newHandlePay, '4. handlePay');
 
 // ============================================================
 // 5. Add Fiado filter tab
@@ -156,8 +165,7 @@ const filterTabsNew = `          {[
             { id: 'CANCELLED', label: 'Cancelados' },
           ].map(s => (`;
 
-content = content.replace(filterTabsOld, filterTabsNew);
-console.log('5. Added Fiado filter tab');
+replace(filterTabsOld, filterTabsNew, '5. Fiado filter tab');
 
 // ============================================================
 // 6. Update payment column
@@ -175,8 +183,7 @@ const newPaymentCol = `                    <td className="px-3 py-2 text-center 
                       </div>
                     </td>`;
 
-content = content.replace(oldPaymentCol, newPaymentCol);
-console.log('6. Updated payment column');
+replace(oldPaymentCol, newPaymentCol, '6. payment column');
 
 // ============================================================
 // 7. Update detail modal payment display
@@ -192,15 +199,17 @@ const newDetailPayment = `                <p className="text-white text-sm flex 
                   )}
                   {detailOrder.source === 'ONLINE' && (`;
 
-content = content.replace(oldDetailPayment, newDetailPayment);
-console.log('7. Updated detail modal payment display');
+replace(oldDetailPayment, newDetailPayment, '7. detail modal payment');
 
 // ============================================================
 // 8. Add confirm payment sub-modal before Toast
 // ============================================================
-const toastSection = '      {/* Toast */}\n      {toast && (';
-content = content.replace(toastSection, confirmModalContent + '\n\n' + '      {/* Toast */}\n      {toast && (');
-console.log('8. Added confirm payment sub-modal');
+// Normalize the confirm modal content too
+const modalContent = confirmModalContent.replace(/\r\n/g, '\n');
+const toastSection = `      {/* Toast */}
+      {toast && (`;
+const replacement = modalContent + '\n\n' + toastSection;
+replace(toastSection, replacement, '8. confirm payment sub-modal');
 
 fs.writeFileSync(file, content);
-console.log('All frontend changes applied successfully');
+console.log('\nDone!');
