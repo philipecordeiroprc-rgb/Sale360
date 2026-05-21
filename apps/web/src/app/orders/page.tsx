@@ -17,8 +17,8 @@ const PAYMENT_METHODS = [
   { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
   { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
 ];
-function paymentLabel(method) {
-  const map = {
+function paymentLabel(method: string | null | undefined): string {
+  const map: Record<string, string> = {
     credit_store: 'Fiado',
     cash: 'Dinheiro',
     pix: 'Pix',
@@ -30,10 +30,10 @@ function paymentLabel(method) {
     Credito: 'Crédito',
     Fiado: 'Fiado',
   };
-  return map[method] || method || '—';
+  return map[method || ''] || method || '—';
 }
 
-function isFiado(method) {
+function isFiado(method: string | null | undefined): boolean {
   return method === 'credit_store' || method === 'Fiado';
 }
 
