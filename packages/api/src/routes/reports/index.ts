@@ -32,15 +32,19 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { createdAt: 'desc' },
     });
 
-    // ── Summary ──
-    const revenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
-    const orderCount = orders.length;
+    // Split orders: PAID = faturamento real, PENDING = contas a receber
+    const paidOrders = orders.filter(o => o.paymentStatus === 'PAID');
+    const pendingOrders = orders.filter(o => o.paymentStatus === 'PENDING');
+
+    // ── Summary (apenas vendas PAGAS) ──
+    const revenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const orderCount = paidOrders.length;
     const avgTicket = orderCount > 0 ? revenue / orderCount : 0;
 
     // Profit = revenue - CMV (totalCost) - operational cost - tax (card fee)
     let costTotal = 0;
     let profit = 0;
-    for (const o of orders) {
+    for (const o of paidOrders) {
       for (const item of o.items) {
         const itemRevenue = Number(item.total);
         const itemCost = Number(item.totalCost || 0);
@@ -52,9 +56,9 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
-    // ── Payment Methods ──
+    // ── Payment Methods (apenas vendas PAGAS) ──
     const paymentMap: Record<string, { count: number; total: number }> = {};
-    for (const o of orders) {
+    for (const o of paidOrders) {
       const method = o.paymentMethod || 'Outro';
       if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
       paymentMap[method].count++;
@@ -64,9 +68,9 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       .map(([method, data]) => ({ method, ...data }))
       .sort((a, b) => b.total - a.total);
 
-    // ── Top Products ──
+    // ── Top Products (apenas vendas PAGAS) ──
     const productMap: Record<string, { name: string; quantity: number; revenue: number; profit: number }> = {};
-    for (const o of orders) {
+    for (const o of paidOrders) {
       for (const item of o.items) {
         const name = item.productName;
         if (!productMap[name]) productMap[name] = { name, quantity: 0, revenue: 0, profit: 0 };
@@ -84,9 +88,9 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 30);
 
-    // ── Top Customers ──
+    // ── Top Customers (apenas vendas PAGAS) ──
     const customerMap: Record<string, { id: string; name: string; orders: number; total: number }> = {};
-    for (const o of orders) {
+    for (const o of paidOrders) {
       if (!o.customerId) continue;
       const c = o.customer;
       if (!c) continue;
@@ -98,9 +102,9 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       .sort((a, b) => b.total - a.total)
       .slice(0, 20);
 
-    // ── Top Sellers ──
+    // ── Top Sellers (apenas vendas PAGAS) ──
     const sellerMap: Record<string, { id: string; name: string; orders: number; total: number }> = {};
-    for (const o of orders) {
+    for (const o of paidOrders) {
       const u = o.user;
       if (!u) continue;
       if (!sellerMap[u.id]) sellerMap[u.id] = { id: u.id, name: u.name, orders: 0, total: 0 };
@@ -110,7 +114,7 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     const topSellers = Object.values(sellerMap)
       .sort((a, b) => b.total - a.total);
 
-    // ── Curva ABC ──
+    // ── Curva ABC (apenas vendas PAGAS) ──
     const allProducts = Object.values(productMap).sort((a, b) => b.revenue - a.revenue);
     const totalRevenue = allProducts.reduce((sum, p) => sum + p.revenue, 0);
     let cumulative = 0;
@@ -130,6 +134,10 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       };
     });
 
+    // ── Contas a Receber (Fiado pendente) ──
+    const pendingAmount = pendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
+    const pendingCount = pendingOrders.length;
+
     return {
       period: { startDate: startDate || null, endDate: endDate || null },
       summary: {
@@ -138,6 +146,10 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         avgTicket: Math.round(avgTicket * 100) / 100,
         profit: Math.round(profit * 100) / 100,
         costTotal: Math.round(costTotal * 100) / 100,
+      },
+      pending: {
+        count: pendingCount,
+        amount: Math.round(pendingAmount * 100) / 100,
       },
       paymentMethods,
       topProducts,
