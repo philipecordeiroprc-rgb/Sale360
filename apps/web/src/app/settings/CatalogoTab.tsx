@@ -221,7 +221,7 @@ export function CatalogoTab() {
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
           <Palette size={16} className="text-indigo-400" /> Aparência
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Cor Principal</label>
             <div className="flex items-center gap-2">
