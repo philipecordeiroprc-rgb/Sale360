@@ -22,6 +22,9 @@ type Store = {
   postOrderMessage: string | null;
   whatsAppNumber: string | null;
   receiveWhatsApp: boolean;
+  instagram: string | null;
+  email: string | null;
+  aboutUs: string | null;
 };
 
 type Banner = { id: string; imagePath: string; linkUrl: string | null };
