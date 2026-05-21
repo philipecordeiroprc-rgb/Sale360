@@ -92,6 +92,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         document: settings.document,
         companyName: settings.companyName,
         primaryColor: settings.primaryColor,
+        backgroundColor: settings.backgroundColor,
         displayMode: settings.displayMode,
         outOfStockBehavior: settings.outOfStockBehavior,
         logoPath: settings.logoPath,
