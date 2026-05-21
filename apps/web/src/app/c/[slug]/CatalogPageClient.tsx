@@ -467,12 +467,36 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
         </div>
       )}
 
+      {/* ========== SEARCH ========== */}
+      <div className="max-w-5xl mx-auto px-4 mt-4">
+        <div className="relative">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar produto..."
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-[var(--primary)] transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ========== PRODUCTS ========== */}
-      <main className="max-w-5xl mx-auto px-4 mt-6 pb-24">
+      <main className="max-w-5xl mx-auto px-4 mt-4 pb-24">
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
             <AlertCircle size={32} className="text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-500">Nenhum produto nesta categoria.</p>
+            <p className="text-slate-500">
+              {searchQuery ? 'Nenhum produto encontrado.' : 'Nenhum produto nesta categoria.'}
+            </p>
           </div>
         ) : (
           <div className={`grid gap-3 ${
