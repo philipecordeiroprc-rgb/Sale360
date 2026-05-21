@@ -845,6 +845,27 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
               </div>
             </div>
 
+            {/* Quantity selector */}
+            <div className="flex items-center justify-between mb-4 bg-slate-800/50 rounded-xl p-3">
+              <span className="text-slate-400 text-sm">Quantidade</span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  disabled={qty <= 1}
+                  className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center disabled:opacity-30 transition-colors"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="text-white font-bold text-lg w-6 text-center">{qty}</span>
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="w-8 h-8 rounded-lg bg-slate-700 hover:bg-slate-600 text-white flex items-center justify-center transition-colors"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+
             {store.acceptOrders && (
               <button
                 onClick={addToCart}
@@ -856,7 +877,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                 className="w-full bg-[var(--primary)] hover:opacity-90 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Plus size={20} />
-                Adicionar ao Carrinho
+                Adicionar ao Carrinho ({qty})
               </button>
             )}
           </div>
