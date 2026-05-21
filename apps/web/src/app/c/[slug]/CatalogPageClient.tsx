@@ -332,7 +332,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       : '';
 
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: store.backgroundColor }}>
         <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
             <Check size={32} className="text-emerald-400" />
