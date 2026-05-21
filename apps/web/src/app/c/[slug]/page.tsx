@@ -18,6 +18,9 @@ interface CatalogData {
     postOrderMessage: string | null;
     whatsAppNumber: string | null;
     receiveWhatsApp: boolean;
+    instagram: string | null;
+    email: string | null;
+    aboutUs: string | null;
   };
   banners: Array<{ id: string; imagePath: string; linkUrl: string | null }>;
   paymentMethods: Array<{
