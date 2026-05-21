@@ -86,7 +86,7 @@ function buildOrderMessage(data: {
   const lines: string[] = [];
   lines.push(`*PEDIDO #${data.orderNumber}*`);
   lines.push('');
-  lines.push(`*Link para novos pedidos:* http://137.131.193.203/c/${data.slug}`);
+  lines.push(`*Link para novos pedidos:* https://sale360.jvp.app/c/${data.slug}`);
   lines.push('');
   lines.push('-------------------------------');
   lines.push('👉 *DETALHES DO PEDIDO*');
