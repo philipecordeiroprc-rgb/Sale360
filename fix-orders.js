@@ -3,7 +3,7 @@ const file = 'C:/Users/rafac/Documents/GitHub/Sale360/apps/web/src/app/orders/pa
 let content = fs.readFileSync(file, 'utf8');
 
 // ============================================================
-// 1. Add paymentLabel() function after PAYMENT_METHODS array
+// 1. Add paymentLabel(), isFiado(), and CONFIRM_PAYMENT_METHODS after PAYMENT_METHODS array
 // ============================================================
 const paymentMethodsEnd = `  { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
 ];`;
@@ -37,6 +37,7 @@ const CONFIRM_PAYMENT_METHODS = [
 ];`;
 
 content = content.replace(paymentMethodsEnd, paymentMethodsEnd + paymentLabelFn);
+console.log('1. Added paymentLabel/isFiado/CONFIRM_PAYMENT_METHODS');
 
 // ============================================================
 // 2. Add confirm payment sub-modal state after detail modal state
@@ -51,9 +52,10 @@ const confirmState = `
   const [selectedConfirmPayment, setSelectedConfirmPayment] = useState(CONFIRM_PAYMENT_METHODS[0]);`;
 
 content = content.replace(detailStateEnd, detailStateEnd + confirmState);
+console.log('2. Added confirm payment state');
 
 // ============================================================
-// 3. Replace handleConfirmOnline to show sub-modal
+// 3. Replace handleConfirmOnline
 // ============================================================
 const oldHandleConfirmOnline = `  const handleConfirmOnline = async (id: string) => {
     if (!confirm('Confirmar pedido online? O estoque será baixado e o pedido marcado como pago.')) return;
@@ -91,9 +93,10 @@ const newHandleConfirmOnline = `  const handleConfirmOnline = (id: string) => {
   };`;
 
 content = content.replace(oldHandleConfirmOnline, newHandleConfirmOnline);
+console.log('3. Replaced handleConfirmOnline');
 
 // ============================================================
-// 4. Replace handlePay to show sub-modal
+// 4. Replace handlePay
 // ============================================================
 const oldHandlePay = `  const handlePay = async (id: string) => {
     if (!confirm('Confirmar recebimento do pagamento?')) return;
@@ -132,6 +135,7 @@ const newHandlePay = `  const handlePay = (id: string) => {
   };`;
 
 content = content.replace(oldHandlePay, newHandlePay);
+console.log('4. Replaced handlePay');
 
 // ============================================================
 // 5. Add Fiado filter tab
@@ -152,9 +156,10 @@ const filterTabsNew = `          {[
           ].map(s => (`;
 
 content = content.replace(filterTabsOld, filterTabsNew);
+console.log('5. Added Fiado filter tab');
 
 // ============================================================
-// 6. Update payment column — use paymentLabel() and add Fiado badge
+// 6. Update payment column
 // ============================================================
 const oldPaymentCol = `                    <td className="px-3 py-2 text-center hidden md:table-cell">
                       <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{o.paymentMethod}</span>
@@ -170,9 +175,10 @@ const newPaymentCol = `                    <td className="px-3 py-2 text-center 
                     </td>`;
 
 content = content.replace(oldPaymentCol, newPaymentCol);
+console.log('6. Updated payment column');
 
 // ============================================================
-// 7. Update detail modal payment display — use paymentLabel() and add Fiado badge
+// 7. Update detail modal payment display
 // ============================================================
 const oldDetailPayment = `                <p className="text-white text-sm flex items-center gap-1.5">
                   {detailOrder.paymentMethod}
@@ -186,54 +192,21 @@ const newDetailPayment = `                <p className="text-white text-sm flex 
                   {detailOrder.source === 'ONLINE' && (`;
 
 content = content.replace(oldDetailPayment, newDetailPayment);
+console.log('7. Updated detail modal payment display');
 
 // ============================================================
-// 8. Add confirm payment sub-modal JSX before the Toast
+// 8. Add confirm payment sub-modal before Toast
 // ============================================================
-const toastSection = `      {/* Toast */}
-      {toast && (`;
+const toastSection = '      {/* Toast */}\n      {toast && (';
 
-const confirmModalJsx = `      {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
-      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm">
-        <div className="space-y-4">
-          <p className="text-slate-400 text-sm">
-            {confirmingIsOnline
-              ? 'Escolha a forma de pagamento para confirmar este pedido:'
-              : 'Escolha a forma de pagamento recebida:'}
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {CONFIRM_PAYMENT_METHODS.map((pm) => {
-              const Icon = pm.icon;
-              const isSelected = selectedConfirmPayment.id === pm.id;
-              return (
-                <button key={pm.id} onClick={() => setSelectedConfirmPayment(pm)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
-                    isSelected
-                      ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}>
-                  <Icon size={20} />
-                  <span className="text-xs font-medium">{pm.label}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
-            <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
-            <button
-              onClick={() => { if (confirmingIsOnline) handleConfirmOnlineExecute(); else handlePayExecute(); }}
-              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
-            >
-              {confirmingIsOnline ? 'Confirmar Pedido' : 'Receber Pagamento'}
-            </button>
-          </div>
-        </div>
-      </Modal>
+const confirmModalJsx = readFile('C:/Users/rafac/Documents/GitHub/Sale360/confirm-modal.txt');
 
-      {/* Toast */}
-      {toast && (`;
-
-content = content.replace(toastSection, confirmModalJsx);
+content = content.replace(toastSection, confirmModalJsx + '\n\n      {/* Toast */}\n      {toast && (');
+console.log('8. Added confirm payment sub-modal');
 
 fs.writeFileSync(file, content);
 console.log('All frontend changes applied successfully');
+
+function readFile(path) {
+  return fs.readFileSync(path, 'utf8');
+}
