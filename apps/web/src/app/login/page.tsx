@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -22,8 +20,8 @@ export default function LoginPage() {
 
     try {
       const endpoint = mode === 'pin'
-        ? `${API_URL}/api/auth/login-pin`
-        : `${API_URL}/api/auth/login`;
+        ? '/api/auth/login-pin'
+        : '/api/auth/login';
 
       const body = mode === 'pin'
         ? { email: email.trim(), pin }
