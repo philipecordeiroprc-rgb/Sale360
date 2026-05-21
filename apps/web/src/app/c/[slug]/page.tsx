@@ -65,7 +65,7 @@ export async function generateMetadata({
 
   const storeName = data.store.name || 'Catálogo';
   const logoUrl = data.store.logoPath
-    ? `${API_URL}/api/public/uploads/${data.store.logoPath}`
+    ? `${INTERNAL_API}/api/public/uploads/${data.store.logoPath}`
     : undefined;
 
   return {
