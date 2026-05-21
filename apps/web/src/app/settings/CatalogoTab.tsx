@@ -269,7 +269,7 @@ export function CatalogoTab() {
       {/* ── 3. Contatos ── */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-          <PhoneIcon size={16} className="text-indigo-400" /> Contatos e Informações
+          <Phone size={16} className="text-indigo-400" /> Contatos e Informações
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
