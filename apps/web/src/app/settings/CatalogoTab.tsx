@@ -266,7 +266,59 @@ export function CatalogoTab() {
         </div>
       </div>
 
-      {/* ── 3. Logo ── */}
+      {/* ── 3. Contatos ── */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+          <PhoneIcon size={16} className="text-indigo-400" /> Contatos e Informações
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Telefone</label>
+            <input
+              value={data.storePhone || ''}
+              onChange={(e) => updateField('storePhone', e.target.value)}
+              placeholder="(11) 99999-9999"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Instagram</label>
+            <input
+              value={data.instagram || ''}
+              onChange={(e) => updateField('instagram', e.target.value)}
+              placeholder="@sualoja"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Email</label>
+            <input
+              value={data.email || ''}
+              onChange={(e) => updateField('email', e.target.value)}
+              placeholder="contato@sualoja.com"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+        </div>
+        <div className="mt-3">
+          <label className="block text-xs text-slate-400 mb-1">Sobre Nós</label>
+          <textarea
+            value={data.aboutUs || ''}
+            onChange={(e) => updateField('aboutUs', e.target.value)}
+            placeholder="Conte um pouco sobre sua loja..."
+            rows={3}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none resize-none"
+          />
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button onClick={handleSaveSettings} disabled={saving}
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors">
+            Salvar Contatos
+          </button>
+        </div>
+      </div>
+
+      {/* ── 4. Logo ── */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
           <Upload size={16} className="text-indigo-400" /> Logo
