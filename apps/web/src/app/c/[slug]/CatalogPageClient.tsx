@@ -64,6 +64,53 @@ function formatPrice(v: number): string {
   return `R$ ${v.toFixed(2).replace('.', ',')}`;
 }
 
+function formatMoney(v: number): string {
+  return v.toFixed(2).replace('.', ',');
+}
+
+function buildOrderMessage(data: {
+  orderNumber: string;
+  slug: string;
+  items: Array<{ productName: string; quantity: number; unitPrice: number }>;
+  customerName: string;
+  customerPhone: string;
+  subtotal: number;
+  discount: number;
+  total: number;
+  itemCount: number;
+  paymentMethod: string;
+}): string {
+  const lines: string[] = [];
+  lines.push(`*PEDIDO #${data.orderNumber}*`);
+  lines.push('');
+  lines.push(`*Link para novos pedidos:* http://137.131.193.203/c/${data.slug}`);
+  lines.push('');
+  lines.push('-------------------------------');
+  lines.push('👉 *DETALHES DO PEDIDO*');
+  for (const item of data.items) {
+    lines.push(`*${item.quantity}x ${item.productName}* - R$ ${formatMoney(item.unitPrice)}/un`);
+  }
+  lines.push('');
+  lines.push('-------------------------------');
+  lines.push('👉 *DADOS DO CLIENTE*');
+  lines.push(`Nome: *${data.customerName}*`);
+  if (data.customerPhone) {
+    lines.push(`Telefone: *${data.customerPhone}*`);
+  }
+  lines.push('');
+  lines.push('-------------------------------');
+  lines.push('👉 *VALORES E PAGAMENTO*');
+  lines.push(`${data.itemCount} itens: *R$ ${formatMoney(data.subtotal)}*`);
+  if (data.discount > 0) {
+    lines.push(`Desconto: *-R$ ${formatMoney(data.discount)}*`);
+  }
+  lines.push(`Forma de pagamento: *${data.paymentMethod}*`);
+  lines.push(`Total: *R$ ${formatMoney(data.total)}*`);
+  lines.push('');
+  lines.push('-------------------------------');
+  return lines.join('\n');
+}
+
 function Toast({ message, type, onClose }: { message: string; type: 'success' | 'error'; onClose: () => void }) {
   useEffect(() => {
     const t = setTimeout(onClose, 3000);
