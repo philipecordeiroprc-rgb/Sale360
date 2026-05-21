@@ -148,6 +148,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
