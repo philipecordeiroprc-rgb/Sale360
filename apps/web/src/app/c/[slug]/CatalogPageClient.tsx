@@ -201,12 +201,13 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       productId: quickViewProduct.id,
       variationId: variation?.id,
       productName: name,
-      quantity: 1,
+      quantity: qty,
       unitPrice: Number(price),
-      total: Number(price),
+      total: Number(price) * qty,
     });
     setQuickViewProduct(null);
     setSelectedVariation(null);
+    setQty(1);
     show('Produto adicionado ao carrinho!');
   };
 
