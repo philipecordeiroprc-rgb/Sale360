@@ -149,7 +149,7 @@ export function CatalogoTab() {
 
   if (!data) return <p className="text-slate-400 text-sm">Erro ao carregar configurações.</p>;
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   return (
     <div className="space-y-5">
