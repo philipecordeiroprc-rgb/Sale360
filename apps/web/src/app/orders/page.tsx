@@ -117,7 +117,11 @@ export default function OrdersPage() {
     setError('');
     try {
       const params: any = { page };
-      if (statusFilter) params.status = statusFilter;
+      if (statusFilter === 'FIADO') {
+        params.paymentMethod = 'Fiado,credit_store';
+      } else if (statusFilter) {
+        params.status = statusFilter;
+      }
       if (search) params.search = search;
       if (dateFrom) params.startDate = new Date(dateFrom + 'T00:00:00').toISOString();
       if (dateTo) params.endDate = new Date(dateTo + 'T23:59:59').toISOString();
