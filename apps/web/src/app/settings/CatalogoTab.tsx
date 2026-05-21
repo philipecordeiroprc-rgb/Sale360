@@ -18,6 +18,9 @@ interface CatalogData {
   receiveWhatsApp: boolean;
   whatsAppNumber?: string;
   postOrderMessage?: string;
+  instagram?: string;
+  email?: string;
+  aboutUs?: string;
   logoPath?: string;
   banners: Array<{ id: string; imagePath: string; linkUrl?: string; sortOrder: number }>;
   paymentMethods: Array<{ id?: string; paymentMethod: string; enabled: boolean; dueDays?: number; instructions?: string }>;
