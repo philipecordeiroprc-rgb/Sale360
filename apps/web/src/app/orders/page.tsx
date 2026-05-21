@@ -551,9 +551,15 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center hidden md:table-cell">
                       <div className="flex items-center justify-center gap-1">
-                        <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paymentMethod)}</span>
-                        {isFiado(o.paymentMethod) && (
+                        {o.paidWithMethod ? (
+                          <>
+                            <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paidWithMethod)}</span>
+                            <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                          </>
+                        ) : isFiado(o.paymentMethod) ? (
                           <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                        ) : (
+                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paymentMethod)}</span>
                         )}
                       </div>
                     </td>
