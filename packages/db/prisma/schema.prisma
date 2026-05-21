@@ -379,6 +379,9 @@ model CatalogSettings {
   receiveWhatsApp    Boolean  @default(false)
   whatsAppNumber     String?  // número para notificações (wa.me link)
   postOrderMessage   String?  // mensagem pós-pedido
+  instagram          String?  // @ ou URL do Instagram
+  email              String?  // email de contato
+  aboutUs            String?  // texto "Sobre nós"
   logoPath           String?  // caminho do arquivo de logo
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
