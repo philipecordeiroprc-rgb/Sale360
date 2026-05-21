@@ -163,11 +163,19 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
 
   const cart = useCartStore();
   const show = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
+  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredProducts = useMemo(() => {
-    if (!selectedCategory) return products;
-    return products.filter((p) => p.categoryId === selectedCategory);
-  }, [products, selectedCategory]);
+    let filtered = products;
+    if (selectedCategory) {
+      filtered = filtered.filter((p) => p.categoryId === selectedCategory);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q));
+    }
+    return filtered;
+  }, [products, selectedCategory, searchQuery]);
 
   const outOfStockClass = (product: Product): string => {
     if (product.hasVariations && product.variations.length > 0) {
