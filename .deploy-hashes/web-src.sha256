@@ -5,6 +5,7 @@
 0cf2c52a9fa7260699966ce53f875779baec2fc7e8f8ad3001e7d9556fe2997a  /home/opc/sale360/apps/web/src/components/ui/PullToRefresh.tsx
 0f9bc064157e6045d5cebf17dddef64b5f5ba049b8e4d0436496f8119a4abaa5  /home/opc/sale360/apps/web/src/app/inventory/page.tsx
 18026a80e175bd1b285b660af244a096cfa9af4941b4ed0d067a03f42ab0cfa0  /home/opc/sale360/apps/web/src/app/layout.tsx
+1bec50b8cefb397d403eb4fdddd5a45f20f1b520a3e5beef6266617725a6ea5e  /home/opc/sale360/apps/web/src/lib/api.ts
 248f38a557f0c38574d3f49c9a5242e83340bf00a206e523d5afe752a2a61687  /home/opc/sale360/apps/web/src/app/coupons/page.tsx
 37cf8e53ee9d28dae53a28e762a4991fc79cd5c606929a078c3b04cac4946641  /home/opc/sale360/apps/web/src/app/finance/page.tsx
 3ca1c2e057aa32fca5dd892f8e32d0921390ae8b9a71be3f25c6f03cb2c1ac48  /home/opc/sale360/apps/web/src/middleware.ts
@@ -15,10 +16,12 @@
 58fc52d24ffb183c91620f9b11a9473214200398b2e997408ce19ec410ccedaa  /home/opc/sale360/apps/web/src/app/login/page.tsx
 59cb98279754b15a6631177ee5f54e4fc494ab6396343587971004b845c11f3b  /home/opc/sale360/apps/web/src/components/layout/PageTitle.tsx
 59f73608f94d42c0e3648c582d684f754dc208a5a3133d34fe7afac27fb653a2  /home/opc/sale360/apps/web/src/app/customers/page.tsx
-6977dc2e65a1a65759f99d3520b6e7c747b03c0898ba23e3addf1213e8c6f2a7  /home/opc/sale360/apps/web/src/app/orders/page.tsx
+6a6f1f8141c8d0f9cf45af237f40f80c676625c8842891aebf97fd21151df374  /home/opc/sale360/apps/web/src/components/products/QuickAddSheet.tsx
 776c16791f8bba420a1f12f23dda0e2e984dfa17e4dd89b466d0a40a0ba87906  /home/opc/sale360/apps/web/src/components/products/StockDetailModal.tsx
 778a9de993c79fea94621c3254b123d21c80d12ae0d38200affe6b7619e4dab9  /home/opc/sale360/apps/web/src/lib/auth.ts
+7f72ad6fe0558b4b0b338590d203c7e32d33d3bba06f508c7d6dabd422fb0d27  /home/opc/sale360/apps/web/src/components/products/ProductGrid.tsx
 819ec551cf33c2a951fca06ce1f42ecd4744f9be9a027df5220a816efd785376  /home/opc/sale360/apps/web/src/app/dashboard/page.tsx
+84872511e9a8b5e876ce1506c87c23b59240bf9c3a1a34ecabd672270087f8b3  /home/opc/sale360/apps/web/src/components/products/BarcodeScanner.tsx
 85507dde7ba774e3acc24d28ba7de821c1fe7714920cb6fbf3bc0fb23673bb76  /home/opc/sale360/apps/web/src/app/select-store/page.tsx
 8944a42e2b622c02e231fa998e1ca655b358a1e9c004e5cfc0d78cbd6f78e53f  /home/opc/sale360/apps/web/src/components/ui/Modal.tsx
 a2f5c1b3b1473c283d79b53aa19657b54f11a2663596c5964df16f035a414e12  /home/opc/sale360/apps/web/src/hooks/useNetworkStatus.ts
@@ -34,5 +37,5 @@ e9887246daf4612e583cc1dd200392982a3c6d87e455e4936699a153d64807fd  /home/opc/sale
 eadb88354254efd8f655a715eb20603cac3f9b11b8e143d7f35549faf99da52b  /home/opc/sale360/apps/web/src/app/forgot-password/page.tsx
 ebf0a94370be05a6d3ff4cedd60b800b2c8ad8d32520305c696ece5f467e9b5b  /home/opc/sale360/apps/web/src/app/settings/page.tsx
 efcfb4bbf4b68e5a2b79b0e66bddd9c4ea1e42f8f5342c031caf1a89f0d52166  /home/opc/sale360/apps/web/src/app/admin/layout.tsx
+f1a9d6825392c526087e409cba7bdfb77ba6f2277eb37b811e69cce61273a3c1  /home/opc/sale360/apps/web/src/app/orders/page.tsx
 f2aa198ec5232457d6072f033afc550b939b0bb7bd0c704d24f77a09a064d4f5  /home/opc/sale360/apps/web/src/hooks/useSync.ts
-f64dbd78692b29133dc8884203406d5f839df640bf354818291f91719ec8484c  /home/opc/sale360/apps/web/src/lib/api.ts

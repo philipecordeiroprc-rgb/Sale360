@@ -20,9 +20,10 @@ export function middleware(request: NextRequest) {
   const isForgotPassword = pathname.startsWith('/forgot-password');
   const isResetPassword = pathname.startsWith('/reset-password');
   const isSelectStore = pathname.startsWith('/select-store');
+  const isCatalogRoute = pathname.startsWith('/c/');
 
   // Public routes (no auth required)
-  if (pathname === '/login' || isForgotPassword || isResetPassword) {
+  if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute) {
     if (token && pathname === '/login') {
       return NextResponse.redirect(new URL(isSuperAdmin ? '/admin' : '/dashboard', request.url));
     }
@@ -41,8 +42,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // SUPER_ADMIN redirect to /admin from non-admin pages
-  if (isSuperAdmin && !isAdminRoute) {
+  // SUPER_ADMIN redirect to /admin from non-admin pages (allow catalog)
+  if (isSuperAdmin && !isAdminRoute && !isCatalogRoute) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
 

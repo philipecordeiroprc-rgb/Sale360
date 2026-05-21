@@ -1,11 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff, Ticket } from 'lucide-react';
+import { Plus, Search, X, ShoppingCart, Trash2, CreditCard, Banknote, User, Eye, WifiOff, Ticket, Scan, Link2, CheckCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
-import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeProducts, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
+import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { ProductGrid } from '@/components/products/ProductGrid';
+import { QuickAddSheet } from '@/components/products/QuickAddSheet';
+import { BarcodeScanner } from '@/components/products/BarcodeScanner';
 
 const PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
@@ -58,13 +61,11 @@ export default function OrdersPage() {
   const [walkInName, setWalkInName] = useState('');
   const [useWalkIn, setUseWalkIn] = useState(false);
 
-  // Product search
-  const [productSearch, setProductSearch] = useState('');
-  const [productResults, setProductResults] = useState<any[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [selectedVariation, setSelectedVariation] = useState<any>(null);
-  const [quantity, setQuantity] = useState('1');
-  const [showVariationPicker, setShowVariationPicker] = useState(false);
+  // Product grid + quick add
+  const [productGridSearch, setProductGridSearch] = useState('');
+  const [quickAddProduct, setQuickAddProduct] = useState<any>(null);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -172,123 +173,20 @@ export default function OrdersPage() {
     setUseWalkIn(false);
   };
 
-  const searchProducts = async (q: string) => {
-    setProductSearch(q);
-    if (q.length < 1) { setProductResults([]); return; }
-    // If clearly offline, skip API call entirely (avoids waiting for timeout)
-    if (!navigator.onLine) {
-      const cached = await getProducts();
-      const qLower = q.toLowerCase();
-      setProductResults(cached.filter((p: any) =>
-        p.active !== false && (
-          p.name?.toLowerCase().includes(qLower) ||
-          p.sku?.toLowerCase().includes(qLower) ||
-          p.barcode?.toString().toLowerCase().includes(qLower)
-        )
-      ));
-      return;
-    }
-    try {
-      const data = await api.products.list({ search: q, active: true });
-      setProductResults(data.products || []);
-      // Merge into IndexedDB for offline use (upsert, doesn't clear)
-      if (data.products?.length > 0) {
-        mergeProducts(data.products).catch(() => {});
-      }
-    } catch {
-      try {
-        const cached = await getProducts();
-        const qLower = q.toLowerCase();
-        const results = cached.filter((p: any) =>
-          p.active !== false && (
-            p.name?.toLowerCase().includes(qLower) ||
-            p.sku?.toLowerCase().includes(qLower) ||
-            p.barcode?.toString().toLowerCase().includes(qLower)
-          )
-        );
-        console.log('[Offline] Produtos carregados do cache:', results.length);
-        setProductResults(results);
-      } catch {
-        setProductResults([]);
-      }
-    }
-  };
-
-  const selectProduct = (p: any) => {
-    setSelectedProduct(p);
-    setSelectedVariation(null);
-    setProductSearch(p.name);
-    setProductResults([]);
-    setQuantity('1');
-    if (p.variations?.length > 0) {
-      setShowVariationPicker(true);
-    }
-  };
-
-  // Available stock for currently selected product/variation
-  const getAvailableStock = (): number => {
-    if (!selectedProduct) return 0;
-    if (selectedProduct.variations?.length > 0 && selectedVariation) {
-      return Number(selectedVariation.stockQty || 0);
-    }
-    return Number(selectedProduct.stockQty || 0);
-  };
-
-  // How many of this product/variation are already in the cart
-  const getCartQty = (): number => {
-    return cart
-      .filter(c =>
-        c.productId === selectedProduct?.id &&
-        c.variationId === (selectedVariation?.id || undefined)
-      )
-      .reduce((sum, c) => sum + c.quantity, 0);
-  };
-
-  const addToCart = () => {
-    if (!selectedProduct) return;
-    const qty = parseFloat(quantity);
-    if (qty <= 0) { show('Quantidade inválida', 'error'); return; }
-
-    // Validate stock
-    const available = getAvailableStock();
-    const alreadyInCart = getCartQty();
-    if (qty + alreadyInCart > available) {
-      show(`Estoque insuficiente. Disponível: ${available - alreadyInCart}`, 'error');
-      return;
-    }
-
-    const price = Number(selectedProduct.price || 0);
-    const itemName = selectedVariation
-      ? `${selectedProduct.name} - ${selectedVariation.name}`
-      : selectedProduct.name;
-
-    // Check if already in cart
+  const addToCart = (item: CartItem) => {
+    // Check if already in cart and merge quantities
     const existingIdx = cart.findIndex(c =>
-      c.productId === selectedProduct.id &&
-      c.variationId === (selectedVariation?.id || undefined)
+      c.productId === item.productId &&
+      c.variationId === (item.variationId || undefined)
     );
     if (existingIdx >= 0) {
       const updated = [...cart];
-      updated[existingIdx].quantity += qty;
-      updated[existingIdx].total = updated[existingIdx].quantity * price;
+      updated[existingIdx].quantity += item.quantity;
+      updated[existingIdx].total = updated[existingIdx].quantity * item.unitPrice;
       setCart(updated);
     } else {
-      setCart([...cart, {
-        productId: selectedProduct.id,
-        variationId: selectedVariation?.id || undefined,
-        variationName: selectedVariation?.name,
-        productName: itemName,
-        quantity: qty,
-        unitPrice: price,
-        total: qty * price,
-      }]);
+      setCart([...cart, item]);
     }
-    // Reset selection
-    setSelectedProduct(null);
-    setSelectedVariation(null);
-    setProductSearch('');
-    setQuantity('1');
-    setShowVariationPicker(false);
   };
 
   const removeFromCart = (idx: number) => setCart(cart.filter((_, i) => i !== idx));
@@ -337,12 +235,10 @@ export default function OrdersPage() {
     setSelectedCustomer(null);
     setWalkInName('');
     setUseWalkIn(false);
-    setProductSearch('');
-    setProductResults([]);
-    setSelectedProduct(null);
-    setSelectedVariation(null);
-    setQuantity('1');
-    setShowVariationPicker(false);
+    setProductGridSearch('');
+    setQuickAddProduct(null);
+    setQuickAddOpen(false);
+    setScannerOpen(false);
     setCart([]);
     setDiscount('0');
     setCouponCode('');
@@ -444,6 +340,18 @@ export default function OrdersPage() {
       if (detailOpen && detailOrder?.id === id) setDetailOpen(false);
     } catch (err: any) {
       show(err.message || 'Erro ao receber pagamento', 'error');
+    }
+  };
+
+  const handleConfirmOnline = async (id: string) => {
+    if (!confirm('Confirmar pedido online? O estoque será baixado e o pedido marcado como pago.')) return;
+    try {
+      const result = await api.orders.confirm(id);
+      show(result.message || 'Pedido confirmado!');
+      loadOrders();
+      loadTodayRevenue();
+    } catch (err: any) {
+      show(err.message || 'Erro ao confirmar pedido', 'error');
     }
   };
 
@@ -589,18 +497,26 @@ export default function OrdersPage() {
                       <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{o.paymentMethod}</span>
                     </td>
                     <td className="px-3 py-2 text-center">
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        o.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
-                        o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400') :
-                        o.paymentStatus === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
-                        o.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
-                        'bg-slate-500/20 text-slate-400'
-                      }`}>
-                        {o.paymentStatus === 'PAID' ? 'Pago' :
-                         o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'Vencido' : 'Pendente') :
-                         o.paymentStatus === 'PARTIAL' ? 'Parcial' :
-                         o.status === 'CANCELLED' ? 'Cancelado' : o.paymentStatus || o.status}
-                      </span>
+                      <div className="flex items-center justify-center gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          o.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400' :
+                          o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400') :
+                          o.paymentStatus === 'PARTIAL' ? 'bg-blue-500/20 text-blue-400' :
+                          o.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
+                          'bg-slate-500/20 text-slate-400'
+                        }`}>
+                          {o.paymentStatus === 'PAID' ? 'Pago' :
+                           o.paymentStatus === 'PENDING' ? (o.dueDate && new Date(o.dueDate) < new Date() ? 'Vencido' : 'Pendente') :
+                           o.paymentStatus === 'PARTIAL' ? 'Parcial' :
+                           o.status === 'CANCELLED' ? 'Cancelado' : o.paymentStatus || o.status}
+                        </span>
+                        {o.source === 'ONLINE' && (
+                          <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-1 rounded-full flex items-center gap-0.5">
+                            <Link2 size={10} />
+                            Link
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-center text-xs hidden lg:table-cell">
                       {o.dueDate ? (
@@ -616,7 +532,13 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
-                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                          <button onClick={() => handleConfirmOnline(o.id)}
+                            className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
+                            <CheckCircle size={16} />
+                          </button>
+                        )}
+                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && o.source !== 'ONLINE' && (
                           <button onClick={() => handlePay(o.id)}
                             className="p-1.5 text-amber-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Receber pagamento">
                             <Banknote size={16} />
@@ -704,82 +626,55 @@ export default function OrdersPage() {
             )}
           </div>
 
-          {/* ── Product ── */}
+          {/* ── Produtos ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
-            <div className="relative mb-3">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input value={productSearch} onChange={(e) => searchProducts(e.target.value)}
-                placeholder="Buscar produto..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              {productResults.length > 0 && (
-                <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-48 overflow-y-auto z-20">
-                  {productResults.map((p: any) => (
-                    <button key={p.id} onClick={() => selectProduct(p)}
-                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600 flex justify-between">
-                      <span>{p.name}</span>
-                      <span className="text-xs text-slate-500">R$ {Number(p.price).toFixed(2)} — Est: {Number(p.stockQty)}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-sm font-semibold text-white flex-1">Produtos</h3>
+              <button
+                onClick={() => setScannerOpen(true)}
+                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors"
+                title="Escanear código de barras"
+              >
+                <Scan size={16} />
+              </button>
             </div>
 
-            {/* Selected product */}
-            {selectedProduct && (
-              <div className="bg-slate-900 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-white text-sm font-medium">{selectedProduct.name}</p>
-                  <p className="text-emerald-400 text-sm font-semibold">R$ {Number(selectedProduct.price).toFixed(2)}</p>
-                </div>
-
-                {/* Variation picker */}
-                {selectedProduct.variations?.length > 0 && (
-                  <div className="mb-2">
-                    <label className="block text-xs text-slate-400 mb-1">Variação</label>
-                    <div className="flex flex-wrap gap-1">
-                      {selectedProduct.variations.map((v: any) => {
-                        const vStock = Number(v.stockQty || 0);
-                        const outOfStock = vStock <= 0;
-                        return (
-                          <button key={v.id}
-                            onClick={() => !outOfStock && setSelectedVariation(v)}
-                            disabled={outOfStock}
-                            className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                              selectedVariation?.id === v.id
-                                ? 'bg-indigo-500 text-white'
-                                : outOfStock
-                                  ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
-                                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                            }`}>
-                            {v.name}{v.priceModifier > 0 ? ` (+R$${Number(v.priceModifier).toFixed(2)})` : ''} — Est: {vStock}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quantity */}
-                <div className="flex items-center gap-3">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Qtd</label>
-                    <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-                      min="0.001" step="any"
-                      className="w-24 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                    <p className="text-[10px] text-slate-500 mt-0.5">
-                      Disp: {getAvailableStock() - getCartQty()}
-                    </p>
-                  </div>
-                  <button onClick={addToCart}
-                    disabled={getAvailableStock() <= 0}
-                    className="mt-4 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors">
-                    <Plus size={14} className="inline mr-1" /> Adicionar
-                  </button>
-                </div>
-              </div>
+            {scannerOpen ? (
+              <BarcodeScanner
+                isOpen={scannerOpen}
+                onClose={() => setScannerOpen(false)}
+                onDetected={(product) => {
+                  setScannerOpen(false);
+                  setQuickAddProduct(product);
+                  setQuickAddOpen(true);
+                }}
+                onError={(msg) => show(msg, 'error')}
+              />
+            ) : (
+              <ProductGrid
+                onProductClick={(product) => {
+                  setQuickAddProduct(product);
+                  setQuickAddOpen(true);
+                }}
+                cart={cart}
+                isOnline={isOnline}
+                productSearch={productGridSearch}
+                onProductSearchChange={setProductGridSearch}
+              />
             )}
           </div>
+
+          <QuickAddSheet
+            open={quickAddOpen}
+            product={quickAddProduct}
+            onClose={() => { setQuickAddOpen(false); setQuickAddProduct(null); }}
+            onAdd={(item) => {
+              addToCart(item);
+              setQuickAddOpen(false);
+              setQuickAddProduct(null);
+            }}
+            cartItems={cart}
+          />
 
           {/* ── Cart ── */}
           {cart.length > 0 && (
@@ -939,7 +834,14 @@ export default function OrdersPage() {
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
-                <p className="text-white text-sm">{detailOrder.paymentMethod}</p>
+                <p className="text-white text-sm flex items-center gap-1.5">
+                  {detailOrder.paymentMethod}
+                  {detailOrder.source === 'ONLINE' && (
+                    <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                      <Link2 size={10} /> Link
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Data</p>
@@ -1002,7 +904,16 @@ export default function OrdersPage() {
               </tfoot>
             </table>
 
-            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+              <button
+                onClick={() => { handleConfirmOnline(detailOrder.id); setDetailOpen(false); setDetailOrder(null); }}
+                className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                <CheckCircle size={16} />
+                Confirmar Pedido Online (Baixar Estoque)
+              </button>
+            )}
+            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && detailOrder.source !== 'ONLINE' && (
               <button
                 onClick={() => handlePay(detailOrder.id)}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"

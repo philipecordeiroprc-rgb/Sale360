@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2 } from 'lucide-react';
+import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store } from 'lucide-react';
+import { CatalogoTab } from './CatalogoTab';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
@@ -560,11 +561,12 @@ function MinhaSenhaTab() {
 // Settings Page (with tabs)
 // ============================================================
 
-type Tab = 'taxas' | 'usuarios' | 'senha';
+type Tab = 'taxas' | 'usuarios' | 'catalogo' | 'senha';
 
 const TABS: { key: Tab; label: string; icon: any }[] = [
   { key: 'taxas', label: 'Taxas', icon: Percent },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
+  { key: 'catalogo', label: 'Catalogo', icon: Store },
   { key: 'senha', label: 'Minha Senha', icon: Key },
 ];
 
@@ -611,6 +613,7 @@ export default function SettingsPage() {
       {/* Tab Content */}
       {activeTab === 'taxas' && <TaxasTab />}
       {activeTab === 'usuarios' && <UsuariosTab />}
+      {activeTab === 'catalogo' && <CatalogoTab />}
       {activeTab === 'senha' && <MinhaSenhaTab />}
 
       {/* Toast */}

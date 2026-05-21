@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import rateLimit from '@fastify/rate-limit';
+import multipart from '@fastify/multipart';
 import { authRoutes } from './routes/auth/index.js';
 import { productRoutes } from './routes/products/index.js';
 import { orderRoutes } from './routes/orders/index.js';
@@ -18,8 +19,12 @@ import { inventoryRoutes } from './routes/inventory/index.js';
 import { reportRoutes } from './routes/reports/index.js';
 import { paymentConfigRoutes } from './routes/payment-configs/index.js';
 import { couponRoutes } from './routes/coupons/index.js';
+import { catalogSettingsRoutes } from './routes/catalog-settings/index.js';
+import { publicRoutes } from './routes/public/index.js';
 import { adminRoutes } from './routes/admin/index.js';
 import { authMiddleware } from './middleware/auth.js';
+import path from 'path';
+import fsSync from 'fs';
 
 const PORT = parseInt(process.env.PORT || '3001', 10);
 const HOST = process.env.HOST || '0.0.0.0';
@@ -66,9 +71,50 @@ async function buildApp() {
   // Plugins
   await app.register(cors, { origin: true, credentials: true });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
   // Health check (no auth — for uptime monitoring)
   app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
+
+  // Serve uploaded files (logos, banners, products) — public
+  const uploadDir = path.resolve(process.cwd(), '../uploads');
+  const uploadSubdirs = ['logos', 'banners', 'products'];
+  app.get('/api/public/uploads/*', async (request, reply) => {
+    const requestedPath = (request.params as Record<string, string>)['*'] || '';
+    // Prevent path traversal
+    if (requestedPath.includes('..')) {
+      return reply.status(400).send({ error: 'Invalid path' });
+    }
+    let filePath = path.resolve(uploadDir, requestedPath);
+    if (!filePath.startsWith(path.resolve(uploadDir))) {
+      return reply.status(400).send({ error: 'Invalid path' });
+    }
+    // Check if file exists; if not, try subdirectories (backward compat)
+    try {
+      await fsSync.promises.access(filePath);
+    } catch {
+      let found = false;
+      for (const sub of uploadSubdirs) {
+        const altPath = path.resolve(uploadDir, sub, path.basename(requestedPath));
+        if (!altPath.startsWith(path.resolve(uploadDir))) continue;
+        try {
+          await fsSync.promises.access(altPath);
+          filePath = altPath;
+          found = true;
+          break;
+        } catch { /* keep trying */ }
+      }
+      if (!found) {
+        return reply.status(404).send({ error: 'File not found' });
+      }
+    }
+    const ext = path.extname(requestedPath).toLowerCase();
+    const mimeTypes: Record<string, string> = {
+      '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp',
+    };
+    reply.type(mimeTypes[ext] || 'application/octet-stream');
+    return reply.send(fsSync.createReadStream(filePath));
+  });
 
   // Global error handler — catch all unhandled route errors
   app.setErrorHandler((error: any, _request, reply) => {
@@ -82,6 +128,7 @@ async function buildApp() {
 
   // Public routes (no auth required)
   await app.register(authRoutes, { prefix: '/api/auth' });
+  await app.register(publicRoutes, { prefix: '/api/public' });
 
   // Authenticated routes
   await app.register(async (api) => {
@@ -112,6 +159,7 @@ async function buildApp() {
     await registerSafe(inventoryRoutes, { prefix: '/api/inventory' });
     await registerSafe(reportRoutes, { prefix: '/api/reports' });
     await registerSafe(paymentConfigRoutes, { prefix: '/api/payment-configs' });
+    await registerSafe(catalogSettingsRoutes, { prefix: '/api/catalog-settings' });
     await registerSafe(couponRoutes, { prefix: '/api/coupons' });
   });
 

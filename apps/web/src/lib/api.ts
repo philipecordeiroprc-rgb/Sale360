@@ -28,7 +28,10 @@ async function request<T>(
   const data = await res.json();
 
   if (!res.ok) {
-    throw new Error(data.error || `Erro ${res.status}`);
+    const msg = data.details
+      ? `${data.error}: ${JSON.stringify(data.details)}`
+      : (data.error || `Erro ${res.status}`);
+    throw new Error(msg);
   }
 
   return data as T;
@@ -115,6 +118,9 @@ export const api = {
     get(id: string) {
       return request<Product>(`/api/products/${id}`);
     },
+    getByBarcode(code: string) {
+      return request<Product>(`/api/products/barcode/${encodeURIComponent(code)}`);
+    },
     create(data: CreateProductInput) {
       return request<Product>('/api/products', { method: 'POST', body: JSON.stringify(data) });
     },
@@ -136,6 +142,11 @@ export const api = {
     },
     deleteVariation(productId: string, variationId: string) {
       return request<{ success: boolean }>(`/api/products/${productId}/variations/${variationId}`, { method: 'DELETE' });
+    },
+    uploadImage(productId: string, file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+      return upload(`/api/products/${productId}/image`, formData);
     },
   },
 
@@ -221,6 +232,9 @@ export const api = {
     },
     pay(id: string, data?: { paidAmount?: number }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
+    },
+    confirm(id: string) {
+      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST' });
     },
   },
 
@@ -508,7 +522,93 @@ export const api = {
       return request<any>(`/api/commands/${id}/close`, { method: 'POST' });
     },
   },
+
+  // Catalog Settings
+  catalogSettings: {
+    get() {
+      return request<any>('/api/catalog-settings');
+    },
+    update(data: any) {
+      return request<any>('/api/catalog-settings', { method: 'PUT', body: JSON.stringify(data) });
+    },
+    uploadLogo(file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+      return upload('/api/catalog-settings/logo', formData);
+    },
+    uploadBanner(file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+      return upload('/api/catalog-settings/banners', formData);
+    },
+    deleteBanner(id: string) {
+      return request<any>(`/api/catalog-settings/banners/${id}`, { method: 'DELETE' });
+    },
+    reorderBanners(bannerIds: string[]) {
+      return request<any>('/api/catalog-settings/banners/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ bannerIds }),
+      });
+    },
+    updatePaymentMethods(methods: Array<{
+      paymentMethod: string;
+      enabled: boolean;
+      dueDays?: number;
+      instructions?: string;
+    }>) {
+      return request<any>('/api/catalog-settings/payment-methods', {
+        method: 'PUT',
+        body: JSON.stringify({ methods }),
+      });
+    },
+  },
+
+  // Public catalog
+  public: {
+    getCatalog(slug: string) {
+      return request<any>(`/api/public/catalog/${slug}`);
+    },
+    createOrder(data: {
+      tenantSlug: string;
+      customerName: string;
+      customerPhone?: string;
+      items: Array<{
+        productId: string;
+        variationId?: string;
+        productName: string;
+        quantity: number;
+        unitPrice: number;
+        total: number;
+      }>;
+      subtotal: number;
+      discount?: number;
+      total: number;
+      paymentMethod: string;
+      couponCode?: string;
+      couponDiscount?: number;
+    }) {
+      return request<any>('/api/public/orders', { method: 'POST', body: JSON.stringify(data) });
+    },
+    validateCoupon(tenantSlug: string, code: string, subtotal: number) {
+      return request<any>('/api/public/coupons/validate', {
+        method: 'POST',
+        body: JSON.stringify({ tenantSlug, code, subtotal }),
+      });
+    },
+  },
 };
+
+async function upload(path: string, formData: FormData) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Erro ${res.status}`);
+  return data;
+}
 
 export interface CategoryWithCount {
   id: string;

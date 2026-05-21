@@ -38,6 +38,7 @@ model Tenant {
   inventoryBatches  InventoryBatch[]
   inventoryMovements  InventoryMovement[]
   paymentMethodConfigs PaymentMethodConfig[]
+  catalogSettings        CatalogSettings?
   coupons      Coupon[]
 
   @@map("tenants")
@@ -357,6 +358,65 @@ model PaymentMethodConfig {
 
   @@unique([tenantId, paymentMethod])
   @@map("payment_method_configs")
+}
+
+// ============================================================
+// CATÁLOGO ONLINE
+// ============================================================
+
+model CatalogSettings {
+  id                 String   @id @default(cuid())
+  tenantId           String   @unique
+  active             Boolean  @default(true)
+  storeName          String?
+  storePhone         String?
+  document           String?  // CPF/CNPJ
+  companyName        String?  // Razão Social
+  primaryColor       String   @default("#6366f1")
+  displayMode        String   @default("grid")    // "grid" | "list"
+  outOfStockBehavior String   @default("hide")    // "hide" | "show_disabled" | "show"
+  acceptOrders       Boolean  @default(true)
+  receiveWhatsApp    Boolean  @default(false)
+  whatsAppNumber     String?  // número para notificações (wa.me link)
+  postOrderMessage   String?  // mensagem pós-pedido
+  logoPath           String?  // caminho do arquivo de logo
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant         Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  banners        CatalogBanner[]
+  paymentMethods CatalogPaymentMethod[]
+
+  @@map("catalog_settings")
+}
+
+model CatalogBanner {
+  id        String   @id @default(cuid())
+  catalogId String
+  imagePath String
+  linkUrl   String?  // link opcional ao clicar
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  catalog CatalogSettings @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@index([catalogId, active, sortOrder])
+  @@map("catalog_banners")
+}
+
+model CatalogPaymentMethod {
+  id            String  @id @default(cuid())
+  catalogId     String
+  paymentMethod String  // "pix" | "cash" | "credit" | "debit" | "credit_store"
+  enabled       Boolean @default(true)
+  dueDays       Int?    // dias para vencimento (fiado)
+  instructions  String? // ex: "Chave Pix: 11999999999"
+
+  catalog CatalogSettings @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@unique([catalogId, paymentMethod])
+  @@map("catalog_payment_methods")
 }
 
 // ============================================================

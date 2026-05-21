@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { type VariationData } from '@/components/products/VariationEditor';
+import { BarcodeScanner } from '@/components/products/BarcodeScanner';
 import api from '@/lib/api';
 import { getProducts } from '@/lib/offline-db';
 
@@ -100,6 +101,7 @@ export default function PurchasesPage() {
   const [currentItem, setCurrentItem] = useState<PurchaseItemData>({ ...emptyItem });
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
+  const [scannerOpen, setScannerOpen] = useState(false);
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
@@ -165,6 +167,7 @@ export default function PurchasesPage() {
     setDiscount('0');
     setProductSearch('');
     setProductResults([]);
+    setScannerOpen(false);
     const sups = await loadSuppliers();
     setSuppliers(sups);
     setFormOpen(true);
@@ -578,26 +581,49 @@ export default function PurchasesPage() {
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
 
-            {/* Product search (existing only) */}
-            <div className="relative mb-3">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-              <input
-                value={productSearch}
-                onChange={(e) => searchProducts(e.target.value)}
-                placeholder="Buscar produto..."
-                className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
-              {productResults.length > 0 && (
-                <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto z-20">
-                  {productResults.map((p: any) => (
-                    <button key={p.id} onClick={() => selectProduct(p)}
-                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600 flex items-center justify-between">
-                      <span>{p.name}</span>
-                      <span className="text-xs text-slate-500">R$ {Number(p.price).toFixed(2)}</span>
-                    </button>
-                  ))}
+            {/* Product search / scanner toggle */}
+            {scannerOpen ? (
+              <div className="mb-3">
+                <BarcodeScanner
+                  isOpen={scannerOpen}
+                  onClose={() => setScannerOpen(false)}
+                  onDetected={(product) => {
+                    setScannerOpen(false);
+                    selectProduct(product);
+                  }}
+                  onError={(msg) => show(msg, 'error')}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-3">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    value={productSearch}
+                    onChange={(e) => searchProducts(e.target.value)}
+                    placeholder="Buscar produto por nome, SKU..."
+                    className="w-full pl-9 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                  {productResults.length > 0 && (
+                    <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto z-20">
+                      {productResults.map((p: any) => (
+                        <button key={p.id} onClick={() => selectProduct(p)}
+                          className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600 flex items-center justify-between">
+                          <span>{p.name}</span>
+                          <span className="text-xs text-slate-500">R$ {Number(p.price).toFixed(2)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+                <button
+                  onClick={() => setScannerOpen(true)}
+                  className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-indigo-400 transition-colors shrink-0"
+                  title="Escanear código de barras"
+                >
+                  <Scan size={18} />
+                </button>
+              </div>
+            )}
 
             {/* Selected product info */}
             {currentItem.productId ? (

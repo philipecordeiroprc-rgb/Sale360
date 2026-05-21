@@ -480,6 +480,131 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     return { date: today.toISOString().slice(0, 10), totalSales, count, pendingAmount, pendingCount, byMethod };
   });
 
+  // Confirm an ONLINE pending order (consume stock, mark as paid)
+  app.post('/:id/confirm', async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const order = await prisma.order.findFirst({
+      where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
+      include: { items: true, customer: true },
+    });
+    if (!order) return reply.status(404).send({ error: 'Venda não encontrada' });
+
+    if (order.source !== 'ONLINE') {
+      return reply.status(400).send({ error: 'Apenas pedidos online podem ser confirmados' });
+    }
+    if (order.status === 'CANCELLED') {
+      return reply.status(400).send({ error: 'Pedido já cancelado' });
+    }
+    if (order.paymentStatus !== 'PENDING') {
+      return reply.status(400).send({ error: 'Pedido já foi confirmado' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const item of order.items) {
+        if (item.productId) {
+          // FIFO: consume from oldest batches
+          const qty = Number(item.quantity);
+          let remaining = qty;
+          const batches = await tx.inventoryBatch.findMany({
+            where: {
+              tenantId: request.tenantId,
+              productId: item.productId,
+              variationId: (item as any).variationId || null,
+              remainingQty: { gt: 0 },
+            },
+            orderBy: { receivedAt: 'asc' },
+          });
+
+          let totalCostAcc = 0;
+          for (const batch of batches) {
+            if (remaining <= 0) break;
+            const consume = Math.min(Number(batch.remainingQty), remaining);
+            const batchCost = Number(batch.unitCost);
+            totalCostAcc += consume * batchCost;
+
+            await tx.inventoryBatch.update({
+              where: { id: batch.id },
+              data: { remainingQty: { decrement: consume } },
+            });
+
+            await tx.inventoryMovement.create({
+              data: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                variationId: (item as any).variationId || null,
+                type: 'SALE_OUT',
+                quantity: -consume,
+                unitCost: batchCost,
+                totalCost: -(consume * batchCost),
+                batchId: batch.id,
+                orderId: order.id,
+                notes: `Pedido online #${order.orderNumber} - ${item.productName}`,
+              },
+            });
+
+            remaining -= consume;
+          }
+
+          // Update product/variation stock
+          if ((item as any).variationId) {
+            await tx.productVariation.update({
+              where: { id: (item as any).variationId },
+              data: { stockQty: { decrement: qty } },
+            });
+          }
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stockQty: { decrement: qty } },
+          });
+
+          const costPrice = totalCostAcc / qty;
+          await tx.orderItem.update({
+            where: { id: item.id },
+            data: {
+              costPrice: Math.round(costPrice * 100) / 100,
+              totalCost: Math.round(totalCostAcc * 100) / 100,
+            },
+          });
+        }
+      }
+
+      // Update order status
+      await tx.order.update({
+        where: { id: order.id },
+        data: { paymentStatus: 'PAID', status: 'COMPLETED' },
+      });
+
+      // Register in cash flow
+      await tx.cashFlow.create({
+        data: {
+          tenantId: request.tenantId,
+          type: 'IN',
+          category: 'venda',
+          description: `Pedido online #${order.orderNumber}`,
+          amount: order.total,
+          dueDate: new Date(),
+          paidAt: new Date(),
+          orderId: order.id,
+        },
+      });
+
+      // Update customer stats
+      if (order.customerId) {
+        await tx.customer.update({
+          where: { id: order.customerId },
+          data: {
+            totalPurchases: { increment: 1 },
+            totalSpent: { increment: order.total },
+            lastPurchaseAt: new Date(),
+          },
+        });
+      }
+    });
+
+    return { success: true, message: 'Pedido confirmado! Estoque atualizado.' };
+  });
+
   // Receive payment for a pending fiado order
   app.post('/:id/pay', async (request, reply) => {
     const { id } = request.params as { id: string };
