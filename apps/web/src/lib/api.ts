@@ -195,10 +195,11 @@ export const api = {
 
   // Orders
   orders: {
-    list(params?: { search?: string; status?: string; page?: number }) {
+    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number }) {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set('search', params.search);
       if (params?.status) searchParams.set('status', params.status);
+      if (params?.paymentMethod) searchParams.set('paymentMethod', params.paymentMethod);
       if (params?.page) searchParams.set('page', String(params.page));
       const qs = searchParams.toString();
       return request<any>(`/api/orders${qs ? `?${qs}` : ''}`);
