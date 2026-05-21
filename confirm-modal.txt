@@ -1,0 +1,36 @@
+      {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
+      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm">
+        <div className="space-y-4">
+          <p className="text-slate-400 text-sm">
+            {confirmingIsOnline
+              ? 'Escolha a forma de pagamento para confirmar este pedido:'
+              : 'Escolha a forma de pagamento recebida:'}
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {CONFIRM_PAYMENT_METHODS.map((pm) => {
+              const Icon = pm.icon;
+              const isSelected = selectedConfirmPayment.id === pm.id;
+              return (
+                <button key={pm.id} onClick={() => setSelectedConfirmPayment(pm)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
+                    isSelected
+                      ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                  }`}>
+                  <Icon size={20} />
+                  <span className="text-xs font-medium">{pm.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
+            <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
+            <button
+              onClick={() => { if (confirmingIsOnline) handleConfirmOnlineExecute(); else handlePayExecute(); }}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {confirmingIsOnline ? 'Confirmar Pedido' : 'Receber Pagamento'}
+            </button>
+          </div>
+        </div>
+      </Modal>
