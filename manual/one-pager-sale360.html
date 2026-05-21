@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Sale360 — O PDV que nunca para, mesmo sem internet</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22262f;
+    --border: #2a2e38;
+    --text: #e1e4ea;
+    --text2: #9ca3af;
+    --accent: #34d399;
+    --accent2: #60a5fa;
+    --amber: #fbbf24;
+    --rose: #f43f5e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #1a1d27;
+    display: flex;
+    justify-content: center;
+    padding: 12px;
+  }
+
+  .page {
+    width: 210mm;
+    height: 297mm;
+    background: var(--bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ============ HEADER ============ */
+  .hero {
+    background: linear-gradient(135deg, #0f3624 0%, #1a1d27 50%, #0f1f36 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 36px 10px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .hero .logo {
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .hero h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 3px;
+  }
+  .hero .sub {
+    font-size: 11px;
+    color: var(--text2);
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* ============ PERFIS (3 colunas) ============ */
+  .perfis {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding: 10px 16px;
+    flex-shrink: 0;
+  }
+  .perfil-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .perfil-card .card-img {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    object-position: top;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .perfil-card .card-body { padding: 8px 10px; }
+  .perfil-card .card-tag {
+    display: inline-block;
+    font-size: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+  }
+  .tag-dono     { background: #1e3a5f; color: var(--accent2); }
+  .tag-vendedor { background: #1e3a2f; color: var(--accent); }
+  .tag-cliente  { background: #3a2f1e; color: var(--amber); }
+  .perfil-card h3 {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 5px;
+  }
+  .perfil-card ul {
+    list-style: none;
+    font-size: 9px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .perfil-card ul li::before { content: '• '; color: var(--accent); }
+
+  /* ============ FEATURES GRID ============ */
+  .features-section {
+    padding: 2px 16px 4px;
+    flex-shrink: 0;
+  }
+  .features-section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .feat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 9px;
+  }
+  .feat-card .feat-icon { font-size: 15px; margin-bottom: 2px; }
+  .feat-card h4 {
+    font-size: 10px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1px;
+  }
+  .feat-card p {
+    font-size: 8.5px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  .mais-features {
+    text-align: center;
+    margin-top: 6px;
+    font-size: 8.5px;
+    color: var(--text2);
+  }
+  .mais-features span { color: var(--accent); }
+
+  /* ============ DIFERENCIAIS + PLANOS lado a lado ============ */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 10px;
+    padding: 6px 16px 0;
+    flex-shrink: 0;
+  }
+
+  /* Diferenciais (coluna esquerda, empilhados) */
+  .diferenciais {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dif-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 11px;
+    text-align: center;
+    flex: 1;
+  }
+  .dif-card .dif-icon { font-size: 20px; margin-bottom: 1px; }
+  .dif-card h4 { font-size: 10.5px; font-weight: 600; color: #fff; margin-bottom: 1px; }
+  .dif-card p { font-size: 8.5px; color: var(--text2); line-height: 1.4; }
+
+  /* Planos (coluna direita) */
+  .planos-section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .planos {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+  .plano-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 8px;
+    text-align: center;
+  }
+  .plano-card.destaque {
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(52,211,153,0.07);
+  }
+  .plano-card .plano-nome {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 1px;
+  }
+  .plano-card .plano-preco {
+    font-size: 9px;
+    color: var(--accent);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .plano-card ul {
+    list-style: none;
+    font-size: 7.8px;
+    color: var(--text2);
+    line-height: 1.65;
+  }
+  .plano-card ul li.has { color: var(--text); }
+  .plano-card ul li.no  { color: #4b5563; text-decoration: line-through; }
+
+  /* ============ CTA ============ */
+  .cta {
+    background: linear-gradient(135deg, #0f3624 0%, #0f1f36 100%);
+    border: 1px solid #1a4a2f;
+    border-radius: 8px;
+    margin: 8px 16px 0;
+    padding: 12px 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .cta h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .cta .cta-sub {
+    font-size: 10px;
+    color: #6ee7b7;
+    margin-bottom: 8px;
+  }
+  .cta .cta-contatos {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    font-size: 11px;
+    color: #fff;
+  }
+  .cta .cta-contatos div {
+    background: rgba(255,255,255,0.06);
+    border-radius: 5px;
+    padding: 4px 10px;
+  }
+
+  /* ============ FOOTER ============ */
+  .footer {
+    text-align: center;
+    font-size: 7.5px;
+    color: #4b5563;
+    padding: 6px 16px 0;
+    flex-shrink: 0;
+  }
+
+  /* ============ PRINT ============ */
+  @media print {
+    body {
+      background: #0f1117;
+      padding: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .page { box-shadow: none; }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="hero">
+    <div class="logo">Sale360</div>
+    <h1>O PDV que nunca para, mesmo sem internet.</h1>
+    <p class="sub">Venda no balcão, no celular e online. Controle estoque, fiado e finanças — tudo integrado, sem mensalidade surpresa.</p>
+  </div>
+
+  <!-- 3 PERFIS -->
+  <div class="perfis">
+    <div class="perfil-card">
+      <div class="card-img" style="background:linear-gradient(135deg,#1e3a5f,#162240);">📊</div>
+      <div class="card-body">
+        <span class="card-tag tag-dono">Dono da Loja</span>
+        <h3>Controle total do seu negócio</h3>
+        <ul>
+          <li>Dashboard com vendas, lucro e fiado a receber</li>
+          <li>Relatórios financeiros, curva ABC e top produtos</li>
+          <li>Catálogo online para vender pelo WhatsApp</li>
+          <li>Cadastro de produtos, clientes e fornecedores</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="perfil-card">
+      <div class="card-img" style="background:linear-gradient(135deg,#1e3a2f,#162a20);">🛒</div>
+      <div class="card-body">
+        <span class="card-tag tag-vendedor">Vendedor / Caixa</span>
+        <h3>Venda em 2 toques, sem enrolação</h3>
+        <ul>
+          <li>PDV rápido com busca, código de barras e grade de produtos</li>
+          <li>Login por PIN de 4 dígitos — sem digitar email e senha</li>
+          <li>Aceita dinheiro, Pix, crédito, débito e fiado</li>
+          <li>Funciona offline — a venda não para se a internet cair</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="perfil-card">
+      <div class="card-img" style="background:linear-gradient(135deg,#3a2f1e,#2a2016);">📱</div>
+      <div class="card-body">
+        <span class="card-tag tag-cliente">Seu Cliente</span>
+        <h3>Compra fácil, pelo celular</h3>
+        <ul>
+          <li>Catálogo online com cara de loja virtual</li>
+          <li>Faz o pedido sozinho, sem precisar mandar mensagem</li>
+          <li>Recebe confirmação automática do pedido</li>
+          <li>Cupom de desconto direto no carrinho</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="features-section">
+    <h2>Tudo que sua loja precisa, num sistema só</h2>
+    <div class="features-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🛍️</div>
+        <h4>PDV no Celular</h4>
+        <p>App mobile com leitor de código de barras, grade de produtos e checkout em 2 toques</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📴</div>
+        <h4>Offline-First</h4>
+        <p>Venda sem internet. Os pedidos sincronizam automaticamente quando a conexão voltar</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📦</div>
+        <h4>Estoque FIFO/PEPS</h4>
+        <p>Controle de lotes, baixa automática por ordem de entrada, ajuste manual e histórico de movimentações</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💳</div>
+        <h4>Fiado com Limite</h4>
+        <p>Venda pra pagar depois, controle de crédito por cliente, registro de pagamentos e extrato completo</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌐</div>
+        <h4>Catálogo Online</h4>
+        <p>Sua loja na web em 1 clique. Cliente faz pedido sozinho e você recebe notificação no WhatsApp</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h4>Relatórios Completos</h4>
+        <p>Vendas, lucro real (CMV), curva ABC, top 30 produtos, top 20 clientes e análise por vendedor</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🏷️</div>
+        <h4>Cupons de Desconto</h4>
+        <p>Crie cupons (% ou R$) com data de validade, limite de uso e restrição por produto ou categoria</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔢</div>
+        <h4>Variações de Produto</h4>
+        <p>Tamanho, cor, peso, volume — controle estoque e preço por variação com templates prontos</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🚚</div>
+        <h4>Compras & Fornecedores</h4>
+        <p>Registre compras, dê entrada no estoque e acompanhe margem de lucro por produto</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🍽️</div>
+        <h4>Comandas</h4>
+        <p>Controle de mesas para bares e restaurantes — abra, adicione itens e feche a conta</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">💰</div>
+        <h4>Fluxo de Caixa</h4>
+        <p>Entradas, saídas, contas a pagar e receber. Contas recorrentes com lembrete automático</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🔌</div>
+        <h4>Integrações</h4>
+        <p>Mercado Pago, WhatsApp, iFood, Google Shopping, Instagram, Facebook e Correios</p>
+      </div>
+    </div>
+    <p class="mais-features">
+      <span>+</span> Painel Web Admin &nbsp;·&nbsp; Multi-usuário &nbsp;·&nbsp; Controle de Comissões &nbsp;·&nbsp; Entregas &nbsp;·&nbsp; Gestão de Mesas &nbsp;·&nbsp; Importação em Lote &nbsp;·&nbsp; IA para Descrição de Produtos
+    </p>
+  </div>
+
+  <!-- DIFERENCIAIS + PLANOS lado a lado -->
+  <div class="bottom-row">
+    <div class="diferenciais">
+      <div class="dif-card">
+        <div class="dif-icon">📴</div>
+        <h4>100% Offline — A venda não para</h4>
+        <p>Caiu a internet? O PDV continua funcionando. Dados sincronizam sozinhos quando voltar.</p>
+      </div>
+      <div class="dif-card">
+        <div class="dif-icon">💸</div>
+        <h4>Zero comissão por venda</h4>
+        <p>Você paga uma mensalidade fixa. Não cobramos % das suas vendas — o faturamento é todo seu.</p>
+      </div>
+      <div class="dif-card">
+        <div class="dif-icon">📱</div>
+        <h4>Celular, tablet ou computador</h4>
+        <p>App no celular, painel no navegador, catálogo online. Use onde e como quiser, sem instalar nada.</p>
+      </div>
+    </div>
+
+    <div class="planos-section">
+      <h2>Planos</h2>
+      <div class="planos">
+        <div class="plano-card">
+          <div class="plano-nome">PRO</div>
+          <div class="plano-preco">R$49,90/mês</div>
+          <ul>
+            <li class="has">1 usuário</li>
+            <li class="has">1 dispositivo</li>
+            <li class="has">App PDV mobile</li>
+            <li class="has">Catálogo online</li>
+            <li class="has">Fiado e comandas</li>
+            <li class="no">Painel web admin</li>
+            <li class="no">Fornecedores</li>
+            <li class="no">IA e importação</li>
+          </ul>
+        </div>
+        <div class="plano-card destaque">
+          <div class="plano-nome">GROW</div>
+          <div class="plano-preco">R$69,90/mês</div>
+          <ul>
+            <li class="has">Tudo do PRO</li>
+            <li class="has">Até 10 usuários</li>
+            <li class="has">5 dispositivos</li>
+            <li class="has">Painel web admin</li>
+            <li class="has">Fornecedores</li>
+            <li class="has">Variações de produto</li>
+            <li class="has">Importação em lote</li>
+            <li class="has">IA p/ descrições</li>
+          </ul>
+        </div>
+        <div class="plano-card">
+          <div class="plano-nome">PRIME</div>
+          <div class="plano-preco">R$99,90/mês</div>
+          <ul>
+            <li class="has">Tudo do GROW</li>
+            <li class="has">Usuários ilimitados</li>
+            <li class="has">Dispositivos ilimitados</li>
+            <li class="has">IA assistente virtual</li>
+            <li class="has">Cadastro mágico (IA)</li>
+            <li class="has">Suporte prioritário</li>
+            <li class="has">Suporte WhatsApp</li>
+            <li class="has">Suporte sábado + vídeo</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <h3>Teste grátis por 7 dias. Sem cartão de crédito, sem compromisso.</h3>
+    <p class="cta-sub">Agende uma demonstração de 15 minutos ou experimente você mesmo agora</p>
+    <div class="cta-contatos">
+      <div>📱 WhatsApp: (21) 97270-6215</div>
+      <div>✉️ pcodeiro@jvptecnologia.com.br</div>
+      <div>🌐 www.jvptecnologia.com.br</div>
+    </div>
+  </div>
+
+  <div class="footer">Sale360 &copy; 2026 — PDV inteligente para o varejo brasileiro &nbsp;|&nbsp; Planos a partir de R$49,90/mês &nbsp;|&nbsp; Pagamento anual: pague 10, leve 12 meses</div>
+
+</div>
+</body>
+</html>
