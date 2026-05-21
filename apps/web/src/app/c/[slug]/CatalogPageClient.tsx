@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import {
-  ShoppingCart, X, Minus, Plus, Share2, AlertCircle, Check, Loader2,
+  ShoppingCart, X, Minus, Plus, Share2, AlertCircle, Check, Loader2, Search,
 } from 'lucide-react';
 import { useCartStore } from './cart-store';
 import api from '@/lib/api';
