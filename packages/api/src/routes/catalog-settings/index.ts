@@ -17,6 +17,9 @@ const updateSchema = z.object({
   receiveWhatsApp: z.boolean().optional(),
   whatsAppNumber: z.string().optional(),
   postOrderMessage: z.string().optional(),
+  instagram: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  aboutUs: z.string().optional(),
   active: z.boolean().optional(),
 });
 
@@ -108,17 +111,18 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
     // Remove old logo if exists
     const current = await prisma.catalogSettings.findUnique({ where: { tenantId: request.tenantId } });
     if (current?.logoPath) {
-      const oldPath = path.join(logosDir, current.logoPath);
+      const oldPath = path.join(uploadDir, current.logoPath);
       fs.unlink(oldPath).catch(() => {});
     }
 
+    const logoPath = `logos/${filename}`;
     await prisma.catalogSettings.upsert({
       where: { tenantId: request.tenantId },
-      create: { tenantId: request.tenantId, logoPath: filename },
-      update: { logoPath: filename },
+      create: { tenantId: request.tenantId, logoPath },
+      update: { logoPath },
     });
 
-    return { logoPath: filename };
+    return { logoPath };
   });
 
   // POST banner upload
@@ -149,10 +153,11 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
       _max: { sortOrder: true },
     });
 
+    const bannerPath = `banners/${filename}`;
     const banner = await prisma.catalogBanner.create({
       data: {
         catalogId: existing!.id,
-        imagePath: filename,
+        imagePath: bannerPath,
         sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
       },
     });
@@ -174,7 +179,7 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
     if (!banner) return reply.status(404).send({ error: 'Banner não encontrado' });
 
     // Delete file
-    const filepath = path.join(bannersDir, banner.imagePath);
+    const filepath = path.join(uploadDir, banner.imagePath);
     fs.unlink(filepath).catch(() => {});
 
     await prisma.catalogBanner.delete({ where: { id } });
