@@ -264,9 +264,43 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
         couponCode: cart.coupon?.code,
         couponDiscount: cart.coupon?.discountAmount,
       });
+
+      // Snap cart data before clearing (needed for WhatsApp message)
+      const cartSnapshot = {
+        items: [...cart.items],
+        customerName: cart.customerName,
+        customerPhone: cart.customerPhone,
+        subtotal: cart.subtotal(),
+        discount: cart.discount(),
+        total: cart.total(),
+        itemCount: cart.itemCount(),
+        paymentMethod: cart.paymentMethod,
+      };
+
       setOrderResult(result);
       cart.clearCart();
       setCheckoutOpen(false);
+
+      // Auto-open WhatsApp if store has it enabled
+      if (store.receiveWhatsApp && store.whatsAppNumber) {
+        const paymentLabel = paymentMethods.find(pm => pm.value === cartSnapshot.paymentMethod)?.label || cartSnapshot.paymentMethod;
+        const msg = buildOrderMessage({
+          orderNumber: result.order.orderNumber,
+          slug,
+          items: cartSnapshot.items,
+          customerName: cartSnapshot.customerName,
+          customerPhone: cartSnapshot.customerPhone,
+          subtotal: cartSnapshot.subtotal,
+          discount: cartSnapshot.discount,
+          total: cartSnapshot.total,
+          itemCount: cartSnapshot.itemCount,
+          paymentMethod: paymentLabel,
+        });
+        const cleanPhone = store.whatsAppNumber.replace(/\D/g, '');
+        const url = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`;
+        window.open(url, '_blank');
+      }
+
       show('Pedido realizado com sucesso!');
     } catch (err: any) {
       show(err.message || 'Erro ao criar pedido', 'error');
