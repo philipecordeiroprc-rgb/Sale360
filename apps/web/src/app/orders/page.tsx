@@ -451,7 +451,7 @@ export default function OrdersPage() {
             { id: '', label: 'Todos' },
             { id: 'PAID', label: 'Pagos' },
             { id: 'PENDING', label: 'Pendentes' },
-            { id: 'CREDIT_STORE', label: 'Fiado' },
+            { id: 'FIADO', label: 'Fiado' },
             { id: 'CANCELLED', label: 'Cancelados' },
           ].map(s => (
             <button key={s.id} onClick={() => { setStatusFilter(s.id); setPage(1); }}
