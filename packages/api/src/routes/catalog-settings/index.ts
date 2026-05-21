@@ -11,6 +11,7 @@ const updateSchema = z.object({
   document: z.string().optional(),
   companyName: z.string().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   displayMode: z.enum(['grid', 'list']).optional(),
   outOfStockBehavior: z.enum(['hide', 'show_disabled', 'show']).optional(),
   acceptOrders: z.boolean().optional(),
