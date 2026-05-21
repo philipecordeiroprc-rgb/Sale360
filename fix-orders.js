@@ -1,5 +1,6 @@
 const fs = require('fs');
 const file = 'C:/Users/rafac/Documents/GitHub/Sale360/apps/web/src/app/orders/page.tsx';
+const confirmModalContent = fs.readFileSync('C:/Users/rafac/Documents/GitHub/Sale360/confirm-modal.txt', 'utf8');
 let content = fs.readFileSync(file, 'utf8');
 
 // ============================================================
@@ -198,15 +199,8 @@ console.log('7. Updated detail modal payment display');
 // 8. Add confirm payment sub-modal before Toast
 // ============================================================
 const toastSection = '      {/* Toast */}\n      {toast && (';
-
-const confirmModalJsx = readFile('C:/Users/rafac/Documents/GitHub/Sale360/confirm-modal.txt');
-
-content = content.replace(toastSection, confirmModalJsx + '\n\n      {/* Toast */}\n      {toast && (');
+content = content.replace(toastSection, confirmModalContent + '\n\n' + '      {/* Toast */}\n      {toast && (');
 console.log('8. Added confirm payment sub-modal');
 
 fs.writeFileSync(file, content);
 console.log('All frontend changes applied successfully');
-
-function readFile(path) {
-  return fs.readFileSync(path, 'utf8');
-}
