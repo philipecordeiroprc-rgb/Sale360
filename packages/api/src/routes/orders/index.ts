@@ -581,7 +581,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         data: {
           paymentStatus: 'PAID',
           status: 'COMPLETED',
-          ...(paymentMethod ? { paymentMethod: paymentMethod as string } : {}),
+          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
         },
       });
 
@@ -647,7 +647,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         data: {
           paymentStatus: newPaymentStatus,
           paidAmount: { increment: paidAmount },
-          ...(paymentMethod ? { paymentMethod: paymentMethod as string } : {}),
+          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
         },
       });
 
