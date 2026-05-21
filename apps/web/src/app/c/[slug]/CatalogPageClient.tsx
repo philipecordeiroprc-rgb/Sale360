@@ -369,7 +369,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
   }
 
   return (
-    <div className="min-h-screen bg-slate-950" style={{ '--primary': store.primaryColor } as React.CSSProperties}>
+    <div className="min-h-screen" style={{ backgroundColor: store.backgroundColor, '--primary': store.primaryColor } as React.CSSProperties}>
       {/* ========== HEADER ========== */}
       <header className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-md border-b border-slate-800/50">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
