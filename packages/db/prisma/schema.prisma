@@ -525,9 +525,10 @@ model Order {
   discount      Decimal   @default(0) @db.Decimal(10, 2)
   total         Decimal   @db.Decimal(10, 2)
   paidAmount    Decimal   @default(0) @db.Decimal(10, 2)
-  paymentMethod String    // "pix", "credit", "debit", "cash", "credit_store"
-  paymentStatus PaymentStatus @default(PAID)
-  dueDate       DateTime?   // data de vencimento para vendas fiado
+  paymentMethod  String    // "pix", "credit", "debit", "cash", "credit_store"
+  paidWithMethod String?   // método usado para quitar fiado (ex: "Dinheiro")
+  paymentStatus  PaymentStatus @default(PAID)
+  dueDate        DateTime?   // data de vencimento para vendas fiado
   syncStatus    SyncStatus @default(SYNCED)
   couponId      String?
   couponDiscount Decimal?  @db.Decimal(10, 2) // desconto aplicado pelo cupom
