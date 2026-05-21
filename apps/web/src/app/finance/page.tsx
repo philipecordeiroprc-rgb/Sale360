@@ -134,7 +134,7 @@ export default function FinancePage() {
             ))}
           </div>
 
-          {/* Contas a Receber (Fiado) */}
+          {/* Contas a Receber */}
           {data.pending && data.pending.count > 0 && (
             <a
               href="/orders?status=PENDING"
@@ -145,10 +145,15 @@ export default function FinancePage() {
                   <Clock size={20} className="text-amber-400" />
                 </div>
                 <div>
-                  <p className="text-slate-400 text-xs">Contas a Receber (Fiado)</p>
+                  <p className="text-slate-400 text-xs">Contas a Receber</p>
                   <p className="text-xl font-bold text-white mt-0.5">
                     {data.pending.count} vendas — R$ {data.pending.amount.toFixed(2)}
                   </p>
+                  {data.pending.fiadoCount > 0 && (
+                    <p className="text-xs text-amber-400/80 mt-0.5">
+                      {data.pending.fiadoCount} Fiado — R$ {data.pending.fiadoAmount.toFixed(2)}
+                    </p>
+                  )}
                 </div>
               </div>
               <ArrowRight size={20} className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
