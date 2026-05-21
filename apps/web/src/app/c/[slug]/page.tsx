@@ -3,6 +3,7 @@ import CatalogPageClient from './CatalogPageClient';
 
 // Server-side fetch uses internal API directly (Node fetch requires absolute URL)
 const INTERNAL_API = process.env.API_INTERNAL_URL || 'http://127.0.0.1:3001';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sale360.jvp.app';
 
 interface CatalogData {
   store: {
