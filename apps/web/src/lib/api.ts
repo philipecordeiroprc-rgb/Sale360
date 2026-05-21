@@ -143,6 +143,11 @@ export const api = {
     deleteVariation(productId: string, variationId: string) {
       return request<{ success: boolean }>(`/api/products/${productId}/variations/${variationId}`, { method: 'DELETE' });
     },
+    uploadImage(productId: string, file: File) {
+      const formData = new FormData();
+      formData.append('file', file);
+      return upload(`/api/products/${productId}/image`, formData);
+    },
   },
 
   // Categories
@@ -225,11 +230,11 @@ export const api = {
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
-    pay(id: string, data?: { paidAmount?: number }) {
+    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
-    confirm(id: string) {
-      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST' });
+    confirm(id: string, data?: { paymentMethod?: string }) {
+      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
   },
 
