@@ -12,6 +12,7 @@ interface CatalogData {
     document: string | null;
     companyName: string | null;
     primaryColor: string;
+    backgroundColor: string;
     displayMode: string;
     outOfStockBehavior: string;
     logoPath: string | null;
