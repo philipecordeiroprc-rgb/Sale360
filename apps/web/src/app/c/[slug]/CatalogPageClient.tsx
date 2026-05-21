@@ -7,7 +7,7 @@ import {
 import { useCartStore } from './cart-store';
 import api from '@/lib/api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 type Store = {
   name: string;
@@ -38,7 +38,7 @@ type Product = {
   name: string;
   description: string | null;
   price: number;
-  imagePath: string | null;
+  imageUrl: string | null;
   hasVariations: boolean;
   stockQty: number;
   categoryId: string | null;
@@ -133,10 +133,14 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
     return Number(product.price);
   };
 
-  const productImage = (product: Product): string | null => {
-    if (product.imagePath) return `${API_URL}/api/public/uploads/${product.imagePath}`;
-    return null;
+  const getImageUrl = (urlPath: string | null): string | null => {
+    if (!urlPath) return null;
+    // Already a full URL or data URI — use as-is
+    if (urlPath.startsWith('http://') || urlPath.startsWith('https://') || urlPath.startsWith('data:')) return urlPath;
+    return `${API_URL}/api/public/uploads/${urlPath}`;
   };
+
+  const productImage = (product: Product): string | null => getImageUrl(product.imageUrl);
 
   const addToCart = () => {
     if (!quickViewProduct) return;
@@ -275,7 +279,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
           <div className="flex items-center gap-3">
             {store.logoPath ? (
               <img
-                src={`${API_URL}/api/public/uploads/${store.logoPath}`}
+                src={getImageUrl(store.logoPath) || ''}
                 alt={store.name}
                 className="h-8 w-8 rounded-lg object-cover"
               />
@@ -321,7 +325,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
               const img = (
                 <img
                   key={banner.id}
-                  src={`${API_URL}/api/public/uploads/${banner.imagePath}`}
+                  src={getImageUrl(banner.imagePath) || ''}
                   alt=""
                   className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full max-w-2xl"
                 />
@@ -677,10 +681,10 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
             </div>
 
             {/* Product image */}
-            {quickViewProduct.imagePath && (
+            {quickViewProduct.imageUrl && (
               <div className="aspect-square bg-slate-800 rounded-xl mb-4 overflow-hidden">
                 <img
-                  src={`${API_URL}/api/public/uploads/${quickViewProduct.imagePath}`}
+                  src={getImageUrl(quickViewProduct.imageUrl) || ''}
                   alt={quickViewProduct.name}
                   className="w-full h-full object-cover"
                 />
