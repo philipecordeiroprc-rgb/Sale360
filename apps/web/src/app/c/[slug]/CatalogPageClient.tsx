@@ -396,7 +396,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
 
           <div className="flex items-center gap-2">
             {store.receiveWhatsApp && store.whatsAppNumber && (
-              <WhatsAppLink phone={store.whatsAppNumber} message="Olá! Gostaria de saber mais sobre os produtos." />
+              <WhatsAppLink phone={store.whatsAppNumber} message="Quero fazer um pedido!" iconOnly />
             )}
             <button
               onClick={() => setCartOpen(true)}
