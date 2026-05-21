@@ -134,6 +134,27 @@ export default function FinancePage() {
             ))}
           </div>
 
+          {/* Contas a Receber (Fiado) */}
+          {data.pending && data.pending.count > 0 && (
+            <a
+              href="/orders?status=PENDING"
+              className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-5 flex items-center justify-between hover:bg-amber-500/20 transition-colors group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-500/20">
+                  <Clock size={20} className="text-amber-400" />
+                </div>
+                <div>
+                  <p className="text-slate-400 text-xs">Contas a Receber (Fiado)</p>
+                  <p className="text-xl font-bold text-white mt-0.5">
+                    {data.pending.count} vendas — R$ {data.pending.amount.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          )}
+
           {/* Tab navigation */}
           <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1">
             {[
