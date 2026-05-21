@@ -99,6 +99,9 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         postOrderMessage: settings.postOrderMessage,
         whatsAppNumber: settings.whatsAppNumber,
         receiveWhatsApp: settings.receiveWhatsApp,
+        instagram: settings.instagram,
+        email: settings.email,
+        aboutUs: settings.aboutUs,
       },
       banners: settings.banners.map((b) => ({
         id: b.id,
