@@ -412,8 +412,7 @@ export default function OrdersPage() {
 
   const openDetail = async (id: string) => {
     try {
-      const data = await api.orders.list({ search: id });
-      const order = data.orders?.[0] || null;
+      const order = await api.orders.get(id);
       if (order) { setDetailOrder(order); setDetailOpen(true); }
     } catch { show('Erro ao carregar detalhes', 'error'); }
   };
