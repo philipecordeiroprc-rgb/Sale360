@@ -134,9 +134,12 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       };
     });
 
-    // ── Contas a Receber (Fiado pendente) ──
+    // ── Contas a Receber ──
     const pendingAmount = pendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = pendingOrders.length;
+    const fiadoPendingOrders = pendingOrders.filter(o => o.paymentMethod === 'credit_store');
+    const fiadoCount = fiadoPendingOrders.length;
+    const fiadoAmount = fiadoPendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
     return {
       period: { startDate: startDate || null, endDate: endDate || null },
@@ -150,6 +153,8 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
       pending: {
         count: pendingCount,
         amount: Math.round(pendingAmount * 100) / 100,
+        fiadoCount,
+        fiadoAmount: Math.round(fiadoAmount * 100) / 100,
       },
       paymentMethods,
       topProducts,
