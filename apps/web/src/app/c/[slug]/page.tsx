@@ -1,7 +1,8 @@
 import { Metadata } from 'next';
 import CatalogPageClient from './CatalogPageClient';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+// Server-side fetch uses internal API directly (Node fetch requires absolute URL)
+const INTERNAL_API = process.env.API_INTERNAL_URL || 'http://127.0.0.1:3001';
 
 interface CatalogData {
   store: {
