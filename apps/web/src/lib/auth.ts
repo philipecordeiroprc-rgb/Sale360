@@ -108,8 +108,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     const selected = availableTenants.find((t) => t.id === tenantId);
     if (!selected) throw new Error('Empresa não encontrada');
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-    const res = await fetch(`${API_URL}/api/auth/switch-tenant`, {
+    const res = await fetch(`/api/auth/switch-tenant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
