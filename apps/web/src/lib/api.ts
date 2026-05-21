@@ -228,6 +228,9 @@ export const api = {
         body: JSON.stringify({ ...data, localId, paymentStatus: data.paymentStatus || 'PAID' }),
       });
     },
+    get(id: string) {
+      return request<any>(`/api/orders/${id}`);
+    },
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
