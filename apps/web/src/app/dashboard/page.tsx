@@ -92,7 +92,7 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       {loading ? (
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${pendingCount > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        <div className={`grid grid-cols-2 gap-3 ${pendingCount > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           {[...Array(pendingCount > 0 ? 5 : 4)].map((_, i) => (
             <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-4 animate-pulse">
               <div className="h-10 w-10 bg-slate-800 rounded-lg mb-3" />
@@ -102,7 +102,7 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : (
-        <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${pendingCount > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        <div className={`grid grid-cols-2 gap-3 ${pendingCount > 0 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
           {statCards.map((card) => (
             <div
               key={card.id}
