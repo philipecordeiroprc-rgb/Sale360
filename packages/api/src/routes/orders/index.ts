@@ -53,6 +53,9 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       } else {
         where.status = status;
       }
+    } else {
+      // Por padrão, exclui vendas canceladas da lista principal
+      where.status = { not: 'CANCELLED' };
     }
     if (source) where.source = source;
     if (customerId) where.customerId = customerId;
