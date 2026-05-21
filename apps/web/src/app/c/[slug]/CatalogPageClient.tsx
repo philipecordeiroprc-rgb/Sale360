@@ -476,7 +476,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
               return (
                 <button
                   key={product.id}
-                  onClick={() => { setQuickViewProduct(product); setSelectedVariation(null); }}
+                  onClick={() => { setQuickViewProduct(product); setSelectedVariation(null); setQty(1); }}
                   className={`bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden text-left hover:border-slate-700 transition-colors ${
                     isOut && store.outOfStockBehavior !== 'show' ? 'opacity-50' : ''
                   }`}
