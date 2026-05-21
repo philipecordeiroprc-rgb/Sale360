@@ -239,6 +239,23 @@ export function CatalogoTab() {
             </div>
           </div>
           <div>
+            <label className="block text-xs text-slate-400 mb-1">Cor do Fundo</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={data.backgroundColor}
+                onChange={(e) => updateField('backgroundColor', e.target.value)}
+                className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent"
+              />
+              <input
+                value={data.backgroundColor}
+                onChange={(e) => updateField('backgroundColor', e.target.value)}
+                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none font-mono"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">Cor de fundo do catálogo (padrão: azul escuro)</p>
+          </div>
+          <div>
             <label className="block text-xs text-slate-400 mb-1">Modo de Exibição</label>
             <select
               value={data.displayMode}
