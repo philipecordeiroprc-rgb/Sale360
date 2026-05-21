@@ -373,6 +373,7 @@ model CatalogSettings {
   document           String?  // CPF/CNPJ
   companyName        String?  // Razão Social
   primaryColor       String   @default("#6366f1")
+  backgroundColor    String   @default("#0f172a")  // bg-slate-950
   displayMode        String   @default("grid")    // "grid" | "list"
   outOfStockBehavior String   @default("hide")    // "hide" | "show_disabled" | "show"
   acceptOrders       Boolean  @default(true)
