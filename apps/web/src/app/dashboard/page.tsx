@@ -188,7 +188,18 @@ export default function DashboardPage() {
                     <td className="px-3 py-2 text-center text-slate-400 text-sm">{o.items?.length || 0}</td>
                     <td className="px-3 py-2 text-right text-white font-semibold text-sm">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center">
-                      <span className="px-1.5 py-0.5 bg-slate-800 rounded-md text-[11px] text-white">{o.paymentMethod}</span>
+                      <div className="flex items-center justify-center gap-1">
+                        {o.paidWithMethod ? (
+                          <>
+                            <span className="text-[11px] bg-slate-800 rounded-md px-1.5 py-0.5 text-white">{paymentLabel(o.paidWithMethod)}</span>
+                            <span className="text-[11px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                          </>
+                        ) : isFiado(o.paymentMethod) ? (
+                          <span className="text-[11px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                        ) : (
+                          <span className="text-[11px] bg-slate-800 rounded-md px-1.5 py-0.5 text-white">{paymentLabel(o.paymentMethod)}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-right text-slate-400 text-xs">
                       {new Date(o.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
