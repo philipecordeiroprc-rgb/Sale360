@@ -266,6 +266,37 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
+  // Send reset link to user (SUPER_ADMIN triggers email)
+  app.post('/tenants/:id/users/:userId/send-reset-link', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+    // Generate token (1 hour expiry)
+    const token = randomBytes(32).toString('hex');
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    const result = await sendResetEmail(user.email, token, user.name);
+
+    return {
+      message: result.success
+        ? 'Email enviado com sucesso.'
+        : 'Token gerado, mas o envio de email falhou.',
+      resetLink: result.link,
+      emailSent: result.success,
+    };
+  });
+
   // ============================================================
   // Feature Overrides (per-tenant module toggling)
   // ============================================================
