@@ -1013,3 +1013,167 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
     </div>
   );
 }
+
+// ============================================================
+// VariationSelector – organized by dimension (Cor → Tamanho)
+// ============================================================
+function VariationSelector({
+  variations,
+  selectedId,
+  onSelect,
+  basePrice,
+}: {
+  variations: Array<{ id: string; name: string; price: number | null; stockQty: number }>;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+  basePrice: number;
+}) {
+  // Parse each variation name into dimension parts (split by " / ")
+  const parsed = variations.map((v) => ({
+    ...v,
+    dims: v.name.split('/').map((s) => s.trim()),
+  }));
+
+  const dimCount = parsed[0]?.dims.length || 0;
+  const allSame = parsed.every((p) => p.dims.length === dimCount);
+
+  // Only group when all variations have exactly 2 dimensions
+  if (!allSame || dimCount !== 2) {
+    // Fallback: flat list
+    return (
+      <div className="mb-4">
+        <p className="text-slate-400 text-sm mb-2">Selecione:</p>
+        <div className="flex flex-wrap gap-2">
+          {variations.map((v) => {
+            const out = Number(v.stockQty) <= 0;
+            return (
+              <button
+                key={v.id}
+                onClick={() => !out && onSelect(v.id === selectedId ? null : v.id)}
+                disabled={out}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  selectedId === v.id
+                    ? 'bg-[var(--primary)] text-white'
+                    : out
+                    ? 'bg-slate-800 text-slate-600 line-through cursor-not-allowed'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                {v.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Extract unique values for each dimension
+  const dim1Values = [...new Set(parsed.map((p) => p.dims[0]))];
+  const dim2Values = [...new Set(parsed.map((p) => p.dims[1]))];
+
+  // Build lookup: name → variation
+  const byName = new Map(variations.map((v) => [v.name, v]));
+
+  // Find selected variation's dims
+  const selectedVar = selectedId ? variations.find((v) => v.id === selectedId) : null;
+  const selectedDims = selectedVar ? selectedVar.name.split('/').map((s) => s.trim()) : null;
+
+  const variantBtn = (name: string) => {
+    const v = byName.get(name);
+    if (!v) return null;
+    const out = Number(v.stockQty) <= 0;
+    const isSelected = selectedId === v.id;
+    return (
+      <button
+        key={v.id}
+        onClick={() => !out && onSelect(isSelected ? null : v.id)}
+        disabled={out}
+        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors min-w-[2.5rem] ${
+          isSelected
+            ? 'bg-[var(--primary)] text-white'
+            : out
+            ? 'bg-slate-800/50 text-slate-600 line-through cursor-not-allowed'
+            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+        }`}
+      >
+        {v.dims[1]}
+        {v.price && Number(v.price) !== basePrice && (
+          <span className="ml-0.5 opacity-75 text-[10px]">
+            {formatPriceLocal(Number(v.price))}
+          </span>
+        )}
+      </button>
+    );
+  };
+
+  return (
+    <div className="mb-4 space-y-3">
+      {/* Dimension 1 (Cor) — horizontal chips */}
+      <div>
+        <p className="text-slate-500 text-xs mb-1.5 font-medium">Cor</p>
+        <div className="flex flex-wrap gap-1.5">
+          {dim1Values.map((d1) => {
+            const isActive = selectedDims?.[0] === d1;
+            return (
+              <button
+                key={d1}
+                onClick={() => {
+                  // If clicking active color, clear selection
+                  if (isActive) { onSelect(null); return; }
+                  // Select first available variation for this color
+                  const firstAvail = parsed.find(
+                    (p) => p.dims[0] === d1 && Number(p.stockQty) > 0
+                  );
+                  if (firstAvail) onSelect(firstAvail.id);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  isActive
+                    ? 'bg-[var(--primary)] text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                {d1}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Dimension 2 (Tamanho) — shown for selected color */}
+      <div>
+        <p className="text-slate-500 text-xs mb-1.5 font-medium">Tamanho</p>
+        <div className="flex flex-wrap gap-1.5">
+          {dim2Values.map((d2) => {
+            // Only show sizes available for the selected color (or all if none selected)
+            const relevant = selectedDims
+              ? parsed.filter((p) => p.dims[0] === selectedDims[0] && p.dims[1] === d2)
+              : parsed.filter((p) => p.dims[1] === d2);
+
+            if (relevant.length === 0) {
+              // Size not available for this color
+              return (
+                <span
+                  key={d2}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800/30 text-slate-600 line-through cursor-not-allowed min-w-[2.5rem] text-center"
+                >
+                  {d2}
+                </span>
+              );
+            }
+
+            const v = relevant[0];
+            const out = Number(v.stockQty) <= 0;
+            const isSelected = selectedId === v.id;
+
+            return variantBtn(v.name);
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatPriceLocal(value: number) {
+  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
