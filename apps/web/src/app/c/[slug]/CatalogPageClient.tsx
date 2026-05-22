@@ -1023,15 +1023,30 @@ function VariationSelector({
   onSelect,
   basePrice,
 }: {
-  variations: Array<{ id: string; name: string; price: number | null; stockQty: number }>;
+  variations: Array<{ id: string; name: string; price?: number | null; priceModifier?: number | string | null; stockQty: number | string }>;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   basePrice: number;
 }) {
-  // Parse each variation name into dimension parts (split by " / ")
+  // Parse variation name into dimensions.
+  // Supports both "Cor / Tamanho" (new) and "Tamanho Cor" (legacy) formats.
+  const parseDims = (name: string): string[] => {
+    // Try " / " separator first (VariationEditor generates this)
+    const slashSplit = name.split(' / ').map((s) => s.trim());
+    if (slashSplit.length >= 2) return slashSplit;
+
+    // Fallback: space separator (legacy data)
+    const spaceSplit = name.split(' ').map((s) => s.trim()).filter(Boolean);
+    if (spaceSplit.length >= 2) {
+      // First token is dim1, rest is dim2 (handles "10 Verde limão")
+      return [spaceSplit[0], spaceSplit.slice(1).join(' ')];
+    }
+    return spaceSplit;
+  };
+
   const parsed = variations.map((v) => ({
     ...v,
-    dims: v.name.split('/').map((s) => s.trim()),
+    dims: parseDims(v.name),
   }));
 
   const dimCount = parsed[0]?.dims.length || 0;
@@ -1072,46 +1087,33 @@ function VariationSelector({
   const dim1Values = [...new Set(parsed.map((p) => p.dims[0]))];
   const dim2Values = [...new Set(parsed.map((p) => p.dims[1]))];
 
-  // Build lookup: name → variation
-  const byName = new Map(variations.map((v) => [v.name, v]));
+  // Smart-label: detect if dim1 is numeric (Tamanho) or text (Cor)
+  const dim1IsNumeric = dim1Values.every((v) => /^\d/.test(v));
+  const dim2IsNumeric = dim2Values.every((v) => /^\d/.test(v));
+  // Only swap labels when dim1 is clearly numeric and dim2 is clearly not
+  const swappedLabels = dim1IsNumeric && !dim2IsNumeric;
+  const dim1Label = swappedLabels ? 'Tamanho' : 'Cor';
+  const dim2Label = swappedLabels ? 'Cor' : 'Tamanho';
+
+  // Build lookup: id → variation
+  const byId = new Map(variations.map((v) => [v.id, v]));
 
   // Find selected variation's dims
-  const selectedVar = selectedId ? variations.find((v) => v.id === selectedId) : null;
-  const selectedDims = selectedVar ? selectedVar.name.split('/').map((s) => s.trim()) : null;
+  const selectedVar = selectedId ? byId.get(selectedId) : null;
+  const selectedDims = selectedVar ? parseDims(selectedVar.name) : null;
 
-  const variantBtn = (name: string) => {
-    const v = byName.get(name);
-    if (!v) return null;
-    const out = Number(v.stockQty) <= 0;
-    const isSelected = selectedId === v.id;
-    return (
-      <button
-        key={v.id}
-        onClick={() => !out && onSelect(isSelected ? null : v.id)}
-        disabled={out}
-        className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors min-w-[2.5rem] ${
-          isSelected
-            ? 'bg-[var(--primary)] text-white'
-            : out
-            ? 'bg-slate-800/50 text-slate-600 line-through cursor-not-allowed'
-            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-        }`}
-      >
-        {v.name.split('/')[1]?.trim() || v.name}
-        {v.price && Number(v.price) !== basePrice && (
-          <span className="ml-0.5 opacity-75 text-[10px]">
-            {Number(v.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-          </span>
-        )}
-      </button>
-    );
+  // Helper: compute actual price from either price or priceModifier
+  const getVarPrice = (v: any): number => {
+    if (v.price != null) return Number(v.price);
+    const mod = v.priceModifier != null ? Number(v.priceModifier) : 0;
+    return basePrice + mod;
   };
 
   return (
     <div className="mb-4 space-y-3">
-      {/* Dimension 1 (Cor) — horizontal chips */}
+      {/* Dimension 1 — horizontal chips */}
       <div>
-        <p className="text-slate-500 text-xs mb-1.5 font-medium">Cor</p>
+        <p className="text-slate-500 text-xs mb-1.5 font-medium">{dim1Label}</p>
         <div className="flex flex-wrap gap-1.5">
           {dim1Values.map((d1) => {
             const isActive = selectedDims?.[0] === d1;
@@ -1119,9 +1121,9 @@ function VariationSelector({
               <button
                 key={d1}
                 onClick={() => {
-                  // If clicking active color, clear selection
+                  // If clicking active, clear selection
                   if (isActive) { onSelect(null); return; }
-                  // Select first available variation for this color
+                  // Select first available variation for this value
                   const firstAvail = parsed.find(
                     (p) => p.dims[0] === d1 && Number(p.stockQty) > 0
                   );
@@ -1140,18 +1142,18 @@ function VariationSelector({
         </div>
       </div>
 
-      {/* Dimension 2 (Tamanho) — shown for selected color */}
+      {/* Dimension 2 — shown for selected dim1 */}
       <div>
-        <p className="text-slate-500 text-xs mb-1.5 font-medium">Tamanho</p>
+        <p className="text-slate-500 text-xs mb-1.5 font-medium">{dim2Label}</p>
         <div className="flex flex-wrap gap-1.5">
           {dim2Values.map((d2) => {
-            // Only show sizes available for the selected color (or all if none selected)
+            // Only show values available for the selected dim1 (or all if none selected)
             const relevant = selectedDims
               ? parsed.filter((p) => p.dims[0] === selectedDims[0] && p.dims[1] === d2)
               : parsed.filter((p) => p.dims[1] === d2);
 
             if (relevant.length === 0) {
-              // Size not available for this color
+              // Value not available for this dim1 selection
               return (
                 <span
                   key={d2}
@@ -1165,8 +1167,29 @@ function VariationSelector({
             const v = relevant[0];
             const out = Number(v.stockQty) <= 0;
             const isSelected = selectedId === v.id;
+            const varPrice = getVarPrice(v);
 
-            return variantBtn(v.name);
+            return (
+              <button
+                key={v.id}
+                onClick={() => !out && onSelect(isSelected ? null : v.id)}
+                disabled={out}
+                className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors min-w-[2.5rem] ${
+                  isSelected
+                    ? 'bg-[var(--primary)] text-white'
+                    : out
+                    ? 'bg-slate-800/50 text-slate-600 line-through cursor-not-allowed'
+                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                }`}
+              >
+                {d2}
+                {varPrice !== basePrice && (
+                  <span className="ml-0.5 opacity-75 text-[10px]">
+                    {varPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+                )}
+              </button>
+            );
           })}
         </div>
       </div>
