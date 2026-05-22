@@ -163,6 +163,7 @@ export default function PurchasesPage() {
     setCurrentItem({ ...emptyItem });
     setTemplateDims([]);
     setRowDims({});
+    setRowCustom({});
     setRowQty(0);
     setNotes('');
     setDiscount('0');
