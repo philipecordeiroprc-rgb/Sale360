@@ -93,7 +93,6 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       Quagga.init(
         {
           inputStream: {
-            name: 'Live',
             type: 'LiveStream',
             target: viewport,
             constraints: {
