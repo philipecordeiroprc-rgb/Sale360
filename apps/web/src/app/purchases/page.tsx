@@ -273,6 +273,7 @@ export default function PurchasesPage() {
     setCurrentItem({ ...emptyItem });
     setTemplateDims([]);
     setRowDims({});
+    setRowCustom({});
     setRowQty(0);
     setProductSearch('');
     setProductResults([]);
