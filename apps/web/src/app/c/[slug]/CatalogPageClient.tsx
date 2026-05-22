@@ -858,35 +858,14 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
               <p className="text-slate-400 text-sm mb-4">{quickViewProduct.description}</p>
             )}
 
-            {/* Variations */}
+            {/* Variations — organized by dimension */}
             {quickViewProduct.hasVariations && quickViewProduct.variations.length > 0 && (
-              <div className="mb-4">
-                <p className="text-slate-400 text-sm mb-2">Selecione:</p>
-                <div className="flex flex-wrap gap-2">
-                  {quickViewProduct.variations.map((v) => {
-                    const out = Number(v.stockQty) <= 0;
-                    return (
-                      <button
-                        key={v.id}
-                        onClick={() => !out && setSelectedVariation(v.id)}
-                        disabled={out}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                          selectedVariation === v.id
-                            ? 'bg-[var(--primary)] text-white'
-                            : out
-                            ? 'bg-slate-800 text-slate-600 line-through cursor-not-allowed'
-                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                        }`}
-                      >
-                        {v.name}
-                        {v.price && v.price !== quickViewProduct.price && (
-                          <span className="ml-1 opacity-75">{formatPrice(Number(v.price))}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <VariationSelector
+                variations={quickViewProduct.variations}
+                selectedId={selectedVariation}
+                onSelect={setSelectedVariation}
+                basePrice={quickViewProduct.price}
+              />
             )}
 
             {/* Price */}
