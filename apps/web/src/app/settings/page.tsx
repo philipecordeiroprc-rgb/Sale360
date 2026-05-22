@@ -234,26 +234,21 @@ function UsuariosTab() {
     }
   };
 
-  const openResetPassword = (userId: string, userName: string) => {
-    setResetModal({ userId, userName });
-    setNewPassword('');
+  const openResetPassword = async (userId: string, userName: string) => {
+    setResetModal({ userId, userName, loading: true, resetLink: '', emailSent: false });
+    try {
+      const result = await api.tenant.users.sendResetLink(userId);
+      setResetModal({ userId, userName, loading: false, resetLink: result.resetLink, emailSent: result.emailSent });
+    } catch (err: any) {
+      show(err.message || 'Erro ao gerar link', 'error');
+      setResetModal(null);
+    }
   };
 
-  const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      show('Senha deve ter no minimo 6 caracteres', 'error');
-      return;
-    }
-    if (!resetModal) return;
-    setSaving(true);
-    try {
-      await api.tenant.users.resetPassword(resetModal.userId, newPassword);
-      show('Senha redefinida!');
-      setResetModal(null);
-    } catch (err: any) {
-      show(err.message || 'Erro ao redefinir', 'error');
-    } finally {
-      setSaving(false);
+  const copyResetLink = () => {
+    if (resetModal?.resetLink) {
+      navigator.clipboard.writeText(resetModal.resetLink);
+      show('Link copiado!');
     }
   };
 
