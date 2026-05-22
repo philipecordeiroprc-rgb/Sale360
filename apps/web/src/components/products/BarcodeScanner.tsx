@@ -102,6 +102,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       try {
         const scanner = new Html5Qrcode('barcode-scanner-viewport', {
           verbose: false,
+          useBarCodeDetectorIfSupported: true,
           formatsToSupport: [
             Html5QrcodeSupportedFormats.EAN_13,
             Html5QrcodeSupportedFormats.EAN_8,
