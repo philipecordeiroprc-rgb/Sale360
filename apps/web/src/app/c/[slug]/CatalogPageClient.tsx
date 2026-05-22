@@ -202,6 +202,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
   const cart = useCartStore();
   const show = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
   const [searchQuery, setSearchQuery] = useState('');
+  const isLight = getLuminance(store.backgroundColor) > 0.5;
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
