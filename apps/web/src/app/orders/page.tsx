@@ -7,8 +7,9 @@ import api from '@/lib/api';
 import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { ProductGrid } from '@/components/products/ProductGrid';
+import dynamic from 'next/dynamic';
 import { QuickAddSheet } from '@/components/products/QuickAddSheet';
-import { BarcodeScanner } from '@/components/products/BarcodeScanner';
+const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 
 const PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
