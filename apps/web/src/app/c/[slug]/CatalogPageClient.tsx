@@ -150,6 +150,41 @@ function WhatsAppLink({ phone, message, iconOnly }: { phone: string; message: st
   );
 }
 
+function getLuminance(hex: string): number {
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substring(0, 2), 16) / 255;
+  const g = parseInt(c.substring(2, 4), 16) / 255;
+  const b = parseInt(c.substring(4, 6), 16) / 255;
+  // sRGB → linear
+  const toLinear = (v: number) => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+}
+
+const LIGHT_THEME_CSS = `
+[data-catalog-theme="light"] .bg-slate-950,
+[data-catalog-theme="light"] .bg-slate-900 { background-color: #ffffff !important; }
+[data-catalog-theme="light"] .bg-slate-800,
+[data-catalog-theme="light"] .bg-slate-800\\/50 { background-color: #f8fafc !important; }
+[data-catalog-theme="light"] .bg-slate-700 { background-color: #e2e8f0 !important; }
+[data-catalog-theme="light"] .bg-slate-950\\/80 { background-color: rgba(255,255,255,0.8) !important; }
+[data-catalog-theme="light"] .bg-black\\/60 { background-color: rgba(0,0,0,0.15) !important; }
+[data-catalog-theme="light"] .text-white:not(.bg-emerald-500):not(.bg-emerald-600):not(.bg-red-500):not(.bg-\\[var\\(--primary\\)\\]):not(.bg-amber-500\\/20) { color: #0f172a !important; }
+[data-catalog-theme="light"] .text-slate-400 { color: #475569 !important; }
+[data-catalog-theme="light"] .text-slate-500 { color: #64748b !important; }
+[data-catalog-theme="light"] .text-slate-300 { color: #334155 !important; }
+[data-catalog-theme="light"] .text-slate-600 { color: #94a3b8 !important; }
+[data-catalog-theme="light"] .border-slate-800,
+[data-catalog-theme="light"] .border-slate-800\\/50 { border-color: #e2e8f0 !important; }
+[data-catalog-theme="light"] .border-slate-700 { border-color: #cbd5e1 !important; }
+[data-catalog-theme="light"] .border-slate-600 { border-color: #94a3b8 !important; }
+[data-catalog-theme="light"] .placeholder\\:text-slate-500::placeholder { color: #94a3b8 !important; }
+[data-catalog-theme="light"] .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #e2e8f0 !important; }
+[data-catalog-theme="light"] .hover\\:text-white:hover:not(.bg-emerald-500):not(.bg-emerald-600):not(.bg-red-500) { color: #0f172a !important; }
+[data-catalog-theme="light"] .hover\\:bg-slate-700:hover:not(.bg-emerald-500):not(.bg-emerald-600) { background-color: #e2e8f0 !important; }
+[data-catalog-theme="light"] .hover\\:bg-slate-700\\/50:hover { background-color: #e2e8f0 !important; }
+[data-catalog-theme="light"] .hover\\:border-slate-700:hover { border-color: #cbd5e1 !important; }
+`;
+
 export default function CatalogPageClient({ slug, store, banners, paymentMethods, categories, products }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
