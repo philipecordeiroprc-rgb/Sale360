@@ -466,6 +466,9 @@ export const api = {
         resetPassword(tenantId: string, userId: string, password: string) {
           return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
         },
+        sendResetLink(tenantId: string, userId: string) {
+          return request<{ message: string; resetLink: string; emailSent: boolean }>(`/api/admin/tenants/${tenantId}/users/${userId}/send-reset-link`, { method: 'POST' });
+        },
       },
       features: {
         get(tenantId: string) {
