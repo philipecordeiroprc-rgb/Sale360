@@ -161,8 +161,7 @@ function UsuariosTab() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [resetModal, setResetModal] = useState<{ userId: string; userName: string } | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
   const { toast, show } = useToast();
 
   const loadUsers = async () => {
