@@ -625,26 +625,49 @@ export default function TenantDetailPage() {
               </button>
             </div>
 
-            <p className="text-slate-400 text-sm mb-4">
-              Nova senha para <strong className="text-white">{resetModal.userName}</strong>
-            </p>
+            {resetModal.loading ? (
+              <div className="text-center py-8">
+                <Loader2 size={32} className="animate-spin text-indigo-400 mx-auto mb-4" />
+                <p className="text-slate-400 text-sm">
+                  Gerando link para <strong className="text-white">{resetModal.userName}</strong>...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {resetModal.emailSent ? (
+                  <div className="bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-3 text-emerald-400 text-sm">
+                    Email enviado com sucesso para o usuario.
+                  </div>
+                ) : (
+                  <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl px-4 py-3 text-amber-400 text-sm">
+                    Nao foi possivel enviar o email. Envie o link manualmente.
+                  </div>
+                )}
 
-            <div className="space-y-4">
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nova senha (mín 6 caracteres)"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                minLength={6}
-              />
-              <button
-                onClick={handleResetPassword}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-white py-3 rounded-xl font-semibold transition-colors"
-              >
-                Redefinir Senha
-              </button>
-            </div>
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Link de redefinicao</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={resetModal.resetLink}
+                      readOnly
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-xs focus:outline-none"
+                    />
+                    <button
+                      onClick={copyResetLink}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0"
+                    >
+                      <Copy size={14} />
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-slate-500 text-xs">
+                  O link expira em 1 hora. Envie este link para o usuario por WhatsApp, email ou outro canal.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
