@@ -227,6 +227,7 @@ export default function PurchasesPage() {
       }));
       setTemplateDims(dims);
       setRowDims({});
+      setRowCustom({});
       setRowQty(0);
       setCurrentItem({
         productId: p.id,
