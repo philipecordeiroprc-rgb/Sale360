@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, X, Trash2, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, X, Trash2, Loader2, Save, Copy } from 'lucide-react';
 import api from '@/lib/api';
 
 function useToast() {
