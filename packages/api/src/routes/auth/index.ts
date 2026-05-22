@@ -239,7 +239,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       },
     });
 
-    await sendResetEmail(email, token, user.name);
+    const result = await sendResetEmail(email, token, user.name);
+
+    if (!result.success) {
+      console.log('[AUTH] Email not sent, reset link:', result.link);
+    }
 
     return { message: 'Se o email estiver cadastrado, você receberá um link de recuperação.' };
   });
