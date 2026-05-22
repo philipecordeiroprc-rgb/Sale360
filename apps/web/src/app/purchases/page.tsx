@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import dynamic from 'next/dynamic';
 import { type VariationData } from '@/components/products/VariationEditor';
-import { BarcodeScanner } from '@/components/products/BarcodeScanner';
+const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 import api from '@/lib/api';
 import { getProducts } from '@/lib/offline-db';
 
