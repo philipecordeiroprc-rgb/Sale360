@@ -55,8 +55,7 @@ export default function TenantDetailPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
   const [userSaving, setUserSaving] = useState(false);
-  const [resetModal, setResetModal] = useState<{ userId: string; userName: string } | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
 
   // Modules
   const [features, setFeatures] = useState<Record<string, boolean>>({});
