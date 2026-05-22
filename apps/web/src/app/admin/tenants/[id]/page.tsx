@@ -185,23 +185,21 @@ export default function TenantDetailPage() {
     }
   };
 
-  const openResetPassword = (userId: string, userName: string) => {
-    setResetModal({ userId, userName });
-    setNewPassword('');
+  const openResetPassword = async (userId: string, userName: string) => {
+    setResetModal({ userId, userName, loading: true, resetLink: '', emailSent: false });
+    try {
+      const result = await api.admin.tenants.users.sendResetLink(id, userId);
+      setResetModal({ userId, userName, loading: false, resetLink: result.resetLink, emailSent: result.emailSent });
+    } catch (err: any) {
+      show(err.message || 'Erro ao gerar link', 'error');
+      setResetModal(null);
+    }
   };
 
-  const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      show('Senha deve ter no mínimo 6 caracteres', 'error');
-      return;
-    }
-    if (!resetModal) return;
-    try {
-      await api.admin.tenants.users.resetPassword(id, resetModal.userId, newPassword);
-      show('Senha redefinida!');
-      setResetModal(null);
-    } catch (err: any) {
-      show(err.message, 'error');
+  const copyResetLink = () => {
+    if (resetModal?.resetLink) {
+      navigator.clipboard.writeText(resetModal.resetLink);
+      show('Link copiado!');
     }
   };
 
