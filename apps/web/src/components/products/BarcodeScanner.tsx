@@ -109,11 +109,24 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
           {
             fps: 10,
             qrbox: (viewfinderWidth, viewfinderHeight) => {
-              // Dynamic qrbox based on actual viewport size
-              const boxSize = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
-              return { width: Math.floor(boxSize), height: Math.floor(boxSize * 0.6) };
+              // Dynamic scan region: wider for barcodes (horizontal strip)
+              const boxWidth = Math.min(viewfinderWidth * 0.85, 400);
+              const boxHeight = Math.min(boxWidth * 0.35, 180);
+              return { width: Math.floor(boxWidth), height: Math.floor(boxHeight) };
             },
-            aspectRatio: 1.777,
+            aspectRatio: 1.333,
+            formatsToSupport: [
+              Html5QrcodeSupportedFormats.EAN_13,
+              Html5QrcodeSupportedFormats.EAN_8,
+              Html5QrcodeSupportedFormats.UPC_A,
+              Html5QrcodeSupportedFormats.UPC_E,
+              Html5QrcodeSupportedFormats.CODE_128,
+              Html5QrcodeSupportedFormats.CODE_39,
+              Html5QrcodeSupportedFormats.ITF,
+              Html5QrcodeSupportedFormats.QR_CODE,
+              Html5QrcodeSupportedFormats.CODE_93,
+              Html5QrcodeSupportedFormats.DATA_MATRIX,
+            ],
           },
           async (decodedText) => {
             if (stoppedRef.current) return;
