@@ -776,20 +776,41 @@ export default function PurchasesPage() {
                     <div className="bg-slate-800 rounded-lg p-2">
                       <div className="grid gap-2 items-end"
                         style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 100px 40px` }}>
-                        {templateDims.map((d: any) => (
-                          <div key={d.id || d.label}>
-                            <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
-                            <select
-                              value={rowDims[d.label] || ''}
-                              onChange={(e) => setRowDims({ ...rowDims, [d.label]: e.target.value })}
-                              className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
-                              <option value="">—</option>
-                              {d.options.map((opt: string) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          </div>
-                        ))}
+                        {templateDims.map((d: any) => {
+                          const isCustom = rowDims[d.label] === '__custom__';
+                          return (
+                            <div key={d.id || d.label}>
+                              <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
+                              <select
+                                value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setRowDims({ ...rowDims, [d.label]: val });
+                                  if (val !== '__custom__') {
+                                    const next = { ...rowCustom };
+                                    delete next[d.label];
+                                    setRowCustom(next);
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
+                                <option value="">—</option>
+                                {d.options.map((opt: string) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                                <option value="__custom__">Outro...</option>
+                              </select>
+                              {isCustom && (
+                                <input
+                                  type="text"
+                                  value={rowCustom[d.label] || ''}
+                                  onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
+                                  placeholder="Digite..."
+                                  className="mt-1 w-full px-2 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                         <div>
                           <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
                           <input type="number" value={rowQty || ''}
@@ -799,9 +820,17 @@ export default function PurchasesPage() {
                         </div>
                         <button
                           onClick={() => {
-                            const allDims = templateDims.every((d: any) => rowDims[d.label]);
+                            const allDims = templateDims.every((d: any) => {
+                              const val = rowDims[d.label];
+                              if (!val) return false;
+                              if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                              return true;
+                            });
                             if (!allDims || rowQty <= 0) return;
-                            const name = templateDims.map((d: any) => rowDims[d.label]).join(' ');
+                            const name = templateDims.map((d: any) => {
+                              const val = rowDims[d.label];
+                              return val === '__custom__' ? rowCustom[d.label].trim() : val;
+                            }).join(' ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
@@ -810,9 +839,15 @@ export default function PurchasesPage() {
                               ],
                             });
                             setRowDims({});
+                            setRowCustom({});
                             setRowQty(0);
                           }}
-                          disabled={!templateDims.every((d: any) => rowDims[d.label]) || rowQty <= 0}
+                          disabled={!templateDims.every((d: any) => {
+                            const val = rowDims[d.label];
+                            if (!val) return false;
+                            if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                            return true;
+                          }) || rowQty <= 0}
                           className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
                           title="Adicionar variação">
                           <Plus size={16} />
