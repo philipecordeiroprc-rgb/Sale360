@@ -1097,10 +1097,10 @@ function VariationSelector({
             : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
         }`}
       >
-        {v.dims[1]}
+        {v.name.split('/')[1]?.trim() || v.name}
         {v.price && Number(v.price) !== basePrice && (
           <span className="ml-0.5 opacity-75 text-[10px]">
-            {formatPriceLocal(Number(v.price))}
+            {Number(v.price).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </span>
         )}
       </button>
