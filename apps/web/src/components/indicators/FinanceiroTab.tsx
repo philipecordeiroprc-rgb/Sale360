@@ -138,6 +138,18 @@ export function FinanceiroTab({ data, loading }: { data: FinancialIndicators | n
           </div>
         </div>
       )}
+
+      <Legenda items={[
+        { term: 'Faturamento Bruto', definition: 'Soma de todas as vendas finalizadas, sem deduzir descontos ou custos.' },
+        { term: 'Faturamento Líquido', definition: 'Faturamento Bruto - descontos concedidos - cupons aplicados.' },
+        { term: 'CMV', definition: 'Custo da Mercadoria Vendida — soma do custo unitário de cada produto vendido, baseado no PEPS (primeiro que entra, primeiro que sai).' },
+        { term: 'Lucro Bruto', definition: 'Faturamento Líquido - CMV. Mostra o ganho antes de descontar custos operacionais e taxas.' },
+        { term: 'Margem Bruta', definition: '(Lucro Bruto / Faturamento Líquido) × 100. Percentual do faturamento que é lucro bruto.' },
+        { term: 'Custo Operacional', definition: 'Soma dos custos operacionais por item vendido (embalagem, frete, preparo).' },
+        { term: 'Perda Taxa Cartão', definition: 'Soma do % da maquininha sobre o valor de cada venda paga com crédito ou débito.' },
+        { term: 'Lucro Líquido Estimado', definition: 'Lucro Bruto - Custo Operacional - Perda Taxa Cartão. Estimativa do que realmente sobrou.' },
+        { term: 'Ticket Médio', definition: 'Faturamento Bruto / número de vendas. Valor médio (em R$) de cada venda.' },
+      ]} />
     </div>
   );
 }
