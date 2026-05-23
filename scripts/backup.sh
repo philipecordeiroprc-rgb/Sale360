@@ -285,7 +285,7 @@ except: pass
             if [ -n "$obj" ]; then
                 log "Removendo OCI: $obj"
                 oci os object delete \
-                    --auth instance_principal \
+                    --profile SALE360-BACKUP \
                     --bucket-name "$OCI_BUCKET" \
                     --region "$OCI_REGION" \
                     --object-name "$obj" \
