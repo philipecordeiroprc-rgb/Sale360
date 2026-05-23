@@ -371,7 +371,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       : '';
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" data-catalog-theme={isLight ? 'light' : 'dark'} style={{ backgroundColor: store.backgroundColor }}>
+      <div className="min-h-screen flex items-center justify-center p-4" data-catalog-theme={isLight ? 'light' : 'dark'} style={{ backgroundColor: bgColor }}>
         <style>{LIGHT_THEME_CSS}</style>
         <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
