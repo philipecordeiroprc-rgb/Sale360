@@ -162,6 +162,7 @@ async function buildApp() {
     await registerSafe(paymentConfigRoutes, { prefix: '/api/payment-configs' });
     await registerSafe(catalogSettingsRoutes, { prefix: '/api/catalog-settings' });
     await registerSafe(couponRoutes, { prefix: '/api/coupons' });
+    await registerSafe(indicatorRoutes, { prefix: '/api/indicators' });
   });
 
   // SUPER_ADMIN routes (auth + SUPER_ADMIN check)
