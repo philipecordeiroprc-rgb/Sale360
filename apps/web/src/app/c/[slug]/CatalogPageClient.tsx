@@ -150,7 +150,8 @@ function WhatsAppLink({ phone, message, iconOnly }: { phone: string; message: st
   );
 }
 
-function getLuminance(hex: string): number {
+function getLuminance(hex: string | null | undefined): number {
+  if (!hex) return 0.3; // default dark
   const c = hex.replace('#', '');
   const r = parseInt(c.substring(0, 2), 16) / 255;
   const g = parseInt(c.substring(2, 4), 16) / 255;
