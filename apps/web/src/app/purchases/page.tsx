@@ -523,6 +523,10 @@ export default function PurchasesPage() {
                   <div className="flex items-center gap-1 ml-2">
                     {p.status === 'DRAFT' && (
                       <>
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(p); }}
+                          className="p-1.5 text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors" title="Editar">
+                          <Pencil size={16} />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); handleReceive(p.id); }}
                           className="p-1.5 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors" title="Receber">
                           <Check size={18} />
