@@ -206,21 +206,25 @@ export default function PurchasesPage() {
       const varName = hasVar && item.productName.includes(' - ')
         ? item.productName.split(' - ').slice(1).join(' - ')
         : '';
+      // Extract base product name (without variation suffix) to avoid duplication on re-save
+      const baseName = hasVar && item.productName.includes(' - ')
+        ? item.productName.split(' - ')[0]
+        : item.productName;
       return {
         productId: item.productId || '',
-        productName: item.productName,
+        productName: baseName,
         costPrice: Number(item.unitCost || 0),
         operationalCost: Number(item.operationalCost || 0),
         taxRatePct: Number(item.taxRatePct || 0),
         marginPct: Number(item.marginPct || 0),
         salePrice: Number(item.salePrice || 0),
-        quantity: item.quantity,
+        quantity: Number(item.quantity),
         hasVariations: hasVar,
         variations: hasVar ? [{
           id: item.variationId,
           name: varName,
           priceModifier: 0,
-          stockQty: item.quantity,
+          stockQty: Number(item.quantity),
           lowStockAt: undefined,
         }] : [],
       };
