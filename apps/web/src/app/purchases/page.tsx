@@ -404,18 +404,22 @@ export default function PurchasesPage() {
         return;
       }
 
-      // Create purchase
       const payload = {
         supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItemsData,
       };
-      console.log('Creating purchase:', JSON.stringify(payload, null, 2));
-      await api.purchases.create(payload);
 
-      show('Compra criada! Ao receber, o estoque será atualizado.');
+      if (editingId) {
+        await api.purchases.update(editingId, payload);
+        show('Compra atualizada!');
+      } else {
+        await api.purchases.create(payload);
+        show('Compra criada! Ao receber, o estoque será atualizado.');
+      }
       setFormOpen(false);
+      setEditingId(null);
       loadPurchases();
     } catch (err: any) {
       console.error('handleCreate error:', err);
