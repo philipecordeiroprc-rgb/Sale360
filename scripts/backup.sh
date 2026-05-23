@@ -263,7 +263,7 @@ ok "Limpeza local concluída (mantidos ${RETENTION_DAYS} backups)"
 # OCI: remover objetos antigos
 if [ "$OCI_UPLOAD_OK" = "1" ]; then
     OCI_OBJECTS=$(oci os object list \
-        --auth instance_principal \
+        --profile SALE360-BACKUP \
         --bucket-name "$OCI_BUCKET" \
         --region "$OCI_REGION" \
         --prefix "sale360-full-" \
