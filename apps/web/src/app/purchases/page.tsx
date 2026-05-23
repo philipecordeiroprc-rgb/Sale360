@@ -89,6 +89,7 @@ export default function PurchasesPage() {
 
   // Create form
   const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [useOutroSupplier, setUseOutroSupplier] = useState(false);
