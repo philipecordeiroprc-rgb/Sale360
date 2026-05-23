@@ -3,6 +3,7 @@
 import { Users, TrendingUp, AlertTriangle, DollarSign, Repeat } from 'lucide-react';
 import Link from 'next/link';
 import type { CustomerIndicators } from './types';
+import { Legenda } from './Legenda';
 
 function fmt(n: number): string {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
