@@ -1048,7 +1048,7 @@ export default function PurchasesPage() {
             <button onClick={handleCreate}
               disabled={saving || (!selectedSupplier && !(useOutroSupplier && outroSupplierName.trim())) || purchaseItems.length === 0}
               className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-              {saving ? 'Criando...' : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`}
+              {saving ? 'Salvando...' : (editingId ? `Salvar Alterações (R$ ${itemsTotal.toFixed(2)})` : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`)}
             </button>
           </div>
         </div>
