@@ -254,6 +254,8 @@ export default function PurchasesPage() {
     const hasExistingVars = p.hasVariations || (p.variations?.length > 0);
     const template = p.category?.variationTemplate;
     const hasTemplate = template?.dimensions?.length > 0;
+    setNewVarName('');
+    setNewVarQty(0);
 
     if (hasExistingVars) {
       // Load existing variations + keep template so user can add NEW variations
