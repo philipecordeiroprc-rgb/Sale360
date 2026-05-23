@@ -178,14 +178,22 @@ export default function InventoryPage() {
     for (const b of batches) {
       const key = `${b.productId}__${b.variationId || 'none'}`;
       if (!map.has(key)) {
+        // Use variation stock values when available, otherwise product-level
+        const hasVariation = !!b.variationId;
+        const stockQty = hasVariation
+          ? Number(b.variation?.stockQty || 0)
+          : Number(b.product?.stockQty || 0);
+        const lowStockAt = hasVariation
+          ? Number(b.variation?.lowStockAt || 0)
+          : Number(b.product?.lowStockAt || 0);
         map.set(key, {
           key,
           productId: b.productId,
           productName: b.product?.name || '—',
           sku: b.product?.sku || '',
           unit: b.product?.unit || '',
-          stockQty: Number(b.product?.stockQty || 0),
-          lowStockAt: Number(b.product?.lowStockAt || 0),
+          stockQty,
+          lowStockAt,
           variationId: b.variationId || null,
           variationName: b.variation?.name || null,
           batches: [],
