@@ -3,6 +3,7 @@
 import { Package, TrendingUp, AlertTriangle, Clock, Layers, Archive } from 'lucide-react';
 import { useState } from 'react';
 import type { InventoryIndicators } from './types';
+import { Legenda } from './Legenda';
 
 function fmt(n: number): string {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
