@@ -203,7 +203,9 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
   const cart = useCartStore();
   const show = (message: string, type: 'success' | 'error' = 'success') => setToast({ message, type });
   const [searchQuery, setSearchQuery] = useState('');
-  const isLight = getLuminance(store.backgroundColor) > 0.5;
+  const bgColor = store.backgroundColor || '#0f172a';
+  const primaryColor = store.primaryColor || '#6366f1';
+  const isLight = getLuminance(bgColor) > 0.5;
 
   const filteredProducts = useMemo(() => {
     let filtered = products;
