@@ -109,7 +109,7 @@ export function QuickAddSheet({ open, product, onClose, onAdd, cartItems }: Quic
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="" size="sm">
+    <Modal open={open} onClose={onClose} title="" size="sm" closeOnOverlayClick={false}>
       <div className="space-y-4">
         {/* Product image placeholder */}
         <div className="h-40 sm:h-48 bg-slate-800 rounded-xl flex items-center justify-center">
