@@ -251,8 +251,19 @@ export default function PurchasesPage() {
     const hasTemplate = template?.dimensions?.length > 0;
 
     if (hasExistingVars) {
-      // Use existing variations
-      setTemplateDims([]);
+      // Load existing variations + keep template so user can add NEW variations
+      if (hasTemplate) {
+        const dims = template.dimensions.map((d: any) => ({
+          ...d,
+          options: Array.isArray(d.options) ? d.options : (typeof d.options === 'string' ? JSON.parse(d.options) : []),
+        }));
+        setTemplateDims(dims);
+      } else {
+        setTemplateDims([]);
+      }
+      setRowDims({});
+      setRowCustom({});
+      setRowQty(0);
       setCurrentItem({
         productId: p.id,
         productName: p.name,
