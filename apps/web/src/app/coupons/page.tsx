@@ -342,6 +342,7 @@ export default function CouponsPage() {
         onClose={() => setFormOpen(false)}
         title={editingId ? 'Editar Cupom' : 'Novo Cupom'}
         size="lg"
+        closeOnOverlayClick={false}
       >
         <div className="space-y-4">
           <div className="grid grid-cols-3 gap-3">
