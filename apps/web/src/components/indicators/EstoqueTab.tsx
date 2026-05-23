@@ -194,6 +194,15 @@ export function EstoqueTab({ data, loading }: { data: InventoryIndicators | null
           )}
         </div>
       )}
+
+      <Legenda items={[
+        { term: 'Valor Estoque (Custo)', definition: 'Soma de (quantidade restante × custo unitário) de cada lote em estoque. Representa o capital parado em mercadoria.' },
+        { term: 'Valor Potencial (Venda)', definition: 'Soma de (estoque atual × preço de venda) de cada produto ativo. Quanto R$ entraria se vendesse tudo.' },
+        { term: 'Margem Potencial', definition: 'Valor Potencial de Venda - Valor de Estoque (Custo). Lucro "adormecido" nas prateleiras.' },
+        { term: 'Dias de Cobertura', definition: 'Valor do Estoque / média de vendas diárias. Em quantos dias o estoque zera sem novas compras.' },
+        { term: 'Giro de Estoque', definition: 'CMV / Valor do Estoque. Quantas vezes o estoque foi renovado no período. Quanto maior, melhor.' },
+        { term: 'Produtos Encalhados', definition: 'Itens sem venda há mais de 30/60/90 dias. Capital parado que pode virar prejuízo.' },
+      ]} />
     </div>
   );
 }
