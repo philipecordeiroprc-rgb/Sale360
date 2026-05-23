@@ -109,6 +109,9 @@ export default function PurchasesPage() {
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
   const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
   const [rowQty, setRowQty] = useState<number>(0);
+  // Manual variation input (when no template)
+  const [newVarName, setNewVarName] = useState('');
+  const [newVarQty, setNewVarQty] = useState<number>(0);
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
