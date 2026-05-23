@@ -763,6 +763,7 @@ export default function ProductsPage() {
         onClose={() => setFormOpen(false)}
         title={editingProduct ? 'Editar Produto' : 'Novo Produto'}
         size="lg"
+        closeOnOverlayClick={false}
       >
         <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
           {formError && (
