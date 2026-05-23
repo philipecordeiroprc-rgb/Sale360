@@ -2,6 +2,7 @@
 
 import { WifiOff, UserCheck, Clock } from 'lucide-react';
 import type { OperationalIndicators } from './types';
+import { Legenda } from './Legenda';
 
 function fmt(n: number): string {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
