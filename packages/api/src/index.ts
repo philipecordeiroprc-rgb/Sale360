@@ -19,6 +19,7 @@ import { inventoryRoutes } from './routes/inventory/index.js';
 import { reportRoutes } from './routes/reports/index.js';
 import { paymentConfigRoutes } from './routes/payment-configs/index.js';
 import { couponRoutes } from './routes/coupons/index.js';
+import { indicatorRoutes } from './routes/indicators/index.js';
 import { catalogSettingsRoutes } from './routes/catalog-settings/index.js';
 import { publicRoutes } from './routes/public/index.js';
 import { adminRoutes } from './routes/admin/index.js';
@@ -76,22 +77,37 @@ async function buildApp() {
   // Health check (no auth — for uptime monitoring)
   app.get('/api/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
 
-  // Serve uploaded files (logos, banners) — public
+  // Serve uploaded files (logos, banners, products) — public
   const uploadDir = path.resolve(process.cwd(), '../uploads');
+  const uploadSubdirs = ['logos', 'banners', 'products'];
   app.get('/api/public/uploads/*', async (request, reply) => {
     const requestedPath = (request.params as Record<string, string>)['*'] || '';
     // Prevent path traversal
-    if (requestedPath.includes('..') || requestedPath.includes('/')) {
+    if (requestedPath.includes('..')) {
       return reply.status(400).send({ error: 'Invalid path' });
     }
-    const filePath = path.join(uploadDir, requestedPath);
-    if (!filePath.startsWith(uploadDir)) {
+    let filePath = path.resolve(uploadDir, requestedPath);
+    if (!filePath.startsWith(path.resolve(uploadDir))) {
       return reply.status(400).send({ error: 'Invalid path' });
     }
+    // Check if file exists; if not, try subdirectories (backward compat)
     try {
       await fsSync.promises.access(filePath);
     } catch {
-      return reply.status(404).send({ error: 'File not found' });
+      let found = false;
+      for (const sub of uploadSubdirs) {
+        const altPath = path.resolve(uploadDir, sub, path.basename(requestedPath));
+        if (!altPath.startsWith(path.resolve(uploadDir))) continue;
+        try {
+          await fsSync.promises.access(altPath);
+          filePath = altPath;
+          found = true;
+          break;
+        } catch { /* keep trying */ }
+      }
+      if (!found) {
+        return reply.status(404).send({ error: 'File not found' });
+      }
     }
     const ext = path.extname(requestedPath).toLowerCase();
     const mimeTypes: Record<string, string> = {
