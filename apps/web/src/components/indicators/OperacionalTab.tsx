@@ -123,6 +123,11 @@ export function OperacionalTab({ data, loading }: { data: OperationalIndicators 
           </p>
         )}
       </div>
+
+      <Legenda items={[
+        { term: '% Vendas Offline', definition: 'Percentual de vendas registradas com syncStatus diferente de SYNCED (vendas feitas sem internet).' },
+        { term: 'Horários de Pico', definition: 'Horas do dia com maior concentração de vendas (acima de 70% do pico máximo). Barras roxas = horário de pico.' },
+      ]} />
     </div>
   );
 }
