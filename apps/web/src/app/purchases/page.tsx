@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan, Pencil } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import dynamic from 'next/dynamic';
 import { type VariationData } from '@/components/products/VariationEditor';
-import { BarcodeScanner } from '@/components/products/BarcodeScanner';
+const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 import api from '@/lib/api';
 import { getProducts } from '@/lib/offline-db';
 
@@ -88,6 +89,7 @@ export default function PurchasesPage() {
 
   // Create form
   const [formOpen, setFormOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [suppliers, setSuppliers] = useState<any[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [useOutroSupplier, setUseOutroSupplier] = useState(false);
@@ -105,6 +107,7 @@ export default function PurchasesPage() {
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
+  const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
   const [rowQty, setRowQty] = useState<number>(0);
 
   const loadPurchases = useCallback(async () => {
@@ -154,7 +157,8 @@ export default function PurchasesPage() {
 
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
 
-  const openCreate = async () => {
+  const openForm = async () => {
+    setEditingId(null);
     setSelectedSupplier('');
     setUseOutroSupplier(false);
     setOutroSupplierName('');
@@ -162,12 +166,62 @@ export default function PurchasesPage() {
     setCurrentItem({ ...emptyItem });
     setTemplateDims([]);
     setRowDims({});
+    setRowCustom({});
     setRowQty(0);
     setNotes('');
     setDiscount('0');
     setProductSearch('');
     setProductResults([]);
     setScannerOpen(false);
+    const sups = await loadSuppliers();
+    setSuppliers(sups);
+    setFormOpen(true);
+  };
+
+  const openEdit = async (purchase: any) => {
+    setEditingId(purchase.id);
+    setSelectedSupplier(purchase.supplierId || '');
+    setUseOutroSupplier(false);
+    setOutroSupplierName('');
+    setNotes(purchase.notes || '');
+    setDiscount(String(purchase.discount || '0'));
+    setProductSearch('');
+    setProductResults([]);
+    setScannerOpen(false);
+    setCurrentItem({ ...emptyItem });
+    setTemplateDims([]);
+    setRowDims({});
+    setRowCustom({});
+    setRowQty(0);
+
+    // Map purchase items to PurchaseItemData
+    const items: PurchaseItemData[] = (purchase.items || []).map((item: any) => {
+      const hasVar = !!item.variationId;
+      // Extract variation name from productName ("Produto - Variacao" → "Variacao")
+      const varName = hasVar && item.productName.includes(' - ')
+        ? item.productName.split(' - ').slice(1).join(' - ')
+        : '';
+      return {
+        productId: item.productId || '',
+        productName: item.productName,
+        costPrice: Number(item.unitCost || 0),
+        operationalCost: Number(item.operationalCost || 0),
+        taxRatePct: Number(item.taxRatePct || 0),
+        marginPct: Number(item.marginPct || 0),
+        salePrice: Number(item.salePrice || 0),
+        quantity: item.quantity,
+        hasVariations: hasVar,
+        variations: hasVar ? [{
+          id: item.variationId,
+          name: varName,
+          priceModifier: 0,
+          stockQty: item.quantity,
+          lowStockAt: undefined,
+        }] : [],
+      };
+    });
+    setPurchaseItems(items);
+
     const sups = await loadSuppliers();
     setSuppliers(sups);
     setFormOpen(true);
@@ -225,6 +279,7 @@ export default function PurchasesPage() {
       }));
       setTemplateDims(dims);
       setRowDims({});
+      setRowCustom({});
       setRowQty(0);
       setCurrentItem({
         productId: p.id,
@@ -270,6 +325,7 @@ export default function PurchasesPage() {
     setCurrentItem({ ...emptyItem });
     setTemplateDims([]);
     setRowDims({});
+    setRowCustom({});
     setRowQty(0);
     setProductSearch('');
     setProductResults([]);
@@ -348,18 +404,22 @@ export default function PurchasesPage() {
         return;
       }
 
-      // Create purchase
       const payload = {
         supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItemsData,
       };
-      console.log('Creating purchase:', JSON.stringify(payload, null, 2));
-      await api.purchases.create(payload);
 
-      show('Compra criada! Ao receber, o estoque será atualizado.');
+      if (editingId) {
+        await api.purchases.update(editingId, payload);
+        show('Compra atualizada!');
+      } else {
+        await api.purchases.create(payload);
+        show('Compra criada! Ao receber, o estoque será atualizado.');
+      }
       setFormOpen(false);
+      setEditingId(null);
       loadPurchases();
     } catch (err: any) {
       console.error('handleCreate error:', err);
@@ -403,7 +463,7 @@ export default function PurchasesPage() {
           <h1 className="text-2xl font-bold text-white">Compras</h1>
           <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
         </div>
-        <button onClick={openCreate}
+        <button onClick={openForm}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
           <Plus size={18} /> Nova Compra
         </button>
@@ -442,7 +502,7 @@ export default function PurchasesPage() {
         <div className="text-center py-12">
           <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
           <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
-          <button onClick={openCreate} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
+          <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
         </div>
       ) : (
         <>
@@ -467,6 +527,10 @@ export default function PurchasesPage() {
                   <div className="flex items-center gap-1 ml-2">
                     {p.status === 'DRAFT' && (
                       <>
+                        <button onClick={(e) => { e.stopPropagation(); openEdit(p); }}
+                          className="p-1.5 text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors" title="Editar">
+                          <Pencil size={16} />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); handleReceive(p.id); }}
                           className="p-1.5 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors" title="Receber">
                           <Check size={18} />
@@ -533,7 +597,7 @@ export default function PurchasesPage() {
       )}
 
       {/* ========== CREATE MODAL (simplified) ========== */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nova Compra" size="lg">
+      <Modal open={formOpen} onClose={() => { setFormOpen(false); setEditingId(null); }} title={editingId ? 'Editar Compra' : 'Nova Compra'} size="lg" closeOnOverlayClick={false}>
         <div className="space-y-5">
           {/* ── 1. Supplier ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
@@ -772,20 +836,41 @@ export default function PurchasesPage() {
                     <div className="bg-slate-800 rounded-lg p-2">
                       <div className="grid gap-2 items-end"
                         style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 100px 40px` }}>
-                        {templateDims.map((d: any) => (
-                          <div key={d.id || d.label}>
-                            <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
-                            <select
-                              value={rowDims[d.label] || ''}
-                              onChange={(e) => setRowDims({ ...rowDims, [d.label]: e.target.value })}
-                              className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
-                              <option value="">—</option>
-                              {d.options.map((opt: string) => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </select>
-                          </div>
-                        ))}
+                        {templateDims.map((d: any) => {
+                          const isCustom = rowDims[d.label] === '__custom__';
+                          return (
+                            <div key={d.id || d.label}>
+                              <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
+                              <select
+                                value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setRowDims({ ...rowDims, [d.label]: val });
+                                  if (val !== '__custom__') {
+                                    const next = { ...rowCustom };
+                                    delete next[d.label];
+                                    setRowCustom(next);
+                                  }
+                                }}
+                                className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
+                                <option value="">—</option>
+                                {d.options.map((opt: string) => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                                <option value="__custom__">Outro...</option>
+                              </select>
+                              {isCustom && (
+                                <input
+                                  type="text"
+                                  value={rowCustom[d.label] || ''}
+                                  onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
+                                  placeholder="Digite..."
+                                  className="mt-1 w-full px-2 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
                         <div>
                           <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
                           <input type="number" value={rowQty || ''}
@@ -795,9 +880,17 @@ export default function PurchasesPage() {
                         </div>
                         <button
                           onClick={() => {
-                            const allDims = templateDims.every((d: any) => rowDims[d.label]);
+                            const allDims = templateDims.every((d: any) => {
+                              const val = rowDims[d.label];
+                              if (!val) return false;
+                              if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                              return true;
+                            });
                             if (!allDims || rowQty <= 0) return;
-                            const name = templateDims.map((d: any) => rowDims[d.label]).join(' ');
+                            const name = templateDims.map((d: any) => {
+                              const val = rowDims[d.label];
+                              return val === '__custom__' ? rowCustom[d.label].trim() : val;
+                            }).join(' ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
@@ -806,9 +899,15 @@ export default function PurchasesPage() {
                               ],
                             });
                             setRowDims({});
+                            setRowCustom({});
                             setRowQty(0);
                           }}
-                          disabled={!templateDims.every((d: any) => rowDims[d.label]) || rowQty <= 0}
+                          disabled={!templateDims.every((d: any) => {
+                            const val = rowDims[d.label];
+                            if (!val) return false;
+                            if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                            return true;
+                          }) || rowQty <= 0}
                           className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
                           title="Adicionar variação">
                           <Plus size={16} />
@@ -949,7 +1048,7 @@ export default function PurchasesPage() {
             <button onClick={handleCreate}
               disabled={saving || (!selectedSupplier && !(useOutroSupplier && outroSupplierName.trim())) || purchaseItems.length === 0}
               className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
-              {saving ? 'Criando...' : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`}
+              {saving ? 'Salvando...' : (editingId ? `Salvar Alterações (R$ ${itemsTotal.toFixed(2)})` : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`)}
             </button>
           </div>
         </div>

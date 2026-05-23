@@ -3,6 +3,7 @@ import CatalogPageClient from './CatalogPageClient';
 
 // Server-side fetch uses internal API directly (Node fetch requires absolute URL)
 const INTERNAL_API = process.env.API_INTERNAL_URL || 'http://127.0.0.1:3001';
+const PUBLIC_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sale360.jvp.app';
 
 interface CatalogData {
   store: {
@@ -11,6 +12,7 @@ interface CatalogData {
     document: string | null;
     companyName: string | null;
     primaryColor: string;
+    backgroundColor: string;
     displayMode: string;
     outOfStockBehavior: string;
     logoPath: string | null;
@@ -18,6 +20,9 @@ interface CatalogData {
     postOrderMessage: string | null;
     whatsAppNumber: string | null;
     receiveWhatsApp: boolean;
+    instagram: string | null;
+    email: string | null;
+    aboutUs: string | null;
   };
   banners: Array<{ id: string; imagePath: string; linkUrl: string | null }>;
   paymentMethods: Array<{
@@ -65,7 +70,7 @@ export async function generateMetadata({
 
   const storeName = data.store.name || 'Catálogo';
   const logoUrl = data.store.logoPath
-    ? `${INTERNAL_API}/api/public/uploads/${data.store.logoPath}`
+    ? `${PUBLIC_URL}/api/public/uploads/${data.store.logoPath}`
     : undefined;
 
   return {

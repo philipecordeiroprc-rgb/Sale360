@@ -40,6 +40,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       startDate,
       endDate,
       customerId,
+      paymentMethod,
     } = request.query as Record<string, string>;
 
     const where: any = { tenantId: request.tenantId };
@@ -55,6 +56,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     }
     if (source) where.source = source;
     if (customerId) where.customerId = customerId;
+    if (paymentMethod) {
+      const methods = paymentMethod.split(',').filter(Boolean);
+      where.paymentMethod = methods.length === 1 ? methods[0] : { in: methods };
+    }
     if (startDate || endDate) {
       where.createdAt = {};
       if (startDate) where.createdAt.gte = new Date(startDate);
@@ -569,10 +574,15 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         }
       }
 
-      // Update order status
+      // Update order status (and optionally payment method)
+      const { paymentMethod } = (request.body as Record<string, unknown>) || {};
       await tx.order.update({
         where: { id: order.id },
-        data: { paymentStatus: 'PAID', status: 'COMPLETED' },
+        data: {
+          paymentStatus: 'PAID',
+          status: 'COMPLETED',
+          ...(paymentMethod ? { paymentMethod: paymentMethod as string } : {}),
+        },
       });
 
       // Register in cash flow
@@ -624,9 +634,11 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       paidAmount: z.number().optional(), // valor parcial (default: total)
+      paymentMethod: z.string().optional(), // novo metodo de pagamento ao quitar fiado
     });
     const parsed = schema.safeParse(request.body || {});
     const paidAmount = parsed.success && parsed.data.paidAmount ? parsed.data.paidAmount : Number(order.total);
+    const paymentMethod = parsed.success ? parsed.data.paymentMethod : undefined;
     const newPaymentStatus = paidAmount >= Number(order.total) ? 'PAID' : 'PARTIAL';
 
     await prisma.$transaction(async (tx) => {
@@ -635,6 +647,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         data: {
           paymentStatus: newPaymentStatus,
           paidAmount: { increment: paidAmount },
+          ...(paymentMethod ? { paymentMethod: paymentMethod as string } : {}),
         },
       });
 

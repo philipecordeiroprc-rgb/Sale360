@@ -8,6 +8,4 @@ generated/
 .env.local
 *.tar.gz
 deploy-*.tar.gz
-
-# Permite backups na pasta Backup/
-!Backup/*.tar.gz
+Backup/

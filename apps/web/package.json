@@ -10,6 +10,7 @@
     "clean": "rm -rf .next node_modules"
   },
   "dependencies": {
+    "@ericblade/quagga2": "^1.12.1",
     "@sale360/core": "workspace:*",
     "@sale360/db": "workspace:*",
     "clsx": "^2.1.0",

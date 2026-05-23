@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 function getToken(): string | null {
   if (typeof document === 'undefined') return null;
@@ -195,10 +195,11 @@ export const api = {
 
   // Orders
   orders: {
-    list(params?: { search?: string; status?: string; page?: number }) {
+    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number }) {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set('search', params.search);
       if (params?.status) searchParams.set('status', params.status);
+      if (params?.paymentMethod) searchParams.set('paymentMethod', params.paymentMethod);
       if (params?.page) searchParams.set('page', String(params.page));
       const qs = searchParams.toString();
       return request<any>(`/api/orders${qs ? `?${qs}` : ''}`);
@@ -227,14 +228,17 @@ export const api = {
         body: JSON.stringify({ ...data, localId, paymentStatus: data.paymentStatus || 'PAID' }),
       });
     },
+    get(id: string) {
+      return request<any>(`/api/orders/${id}`);
+    },
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
-    pay(id: string, data?: { paidAmount?: number }) {
+    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
-    confirm(id: string) {
-      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST' });
+    confirm(id: string, data?: { paymentMethod?: string }) {
+      return request<any>(`/api/orders/${id}/confirm`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
   },
 
@@ -408,6 +412,9 @@ export const api = {
       resetPassword(userId: string, password: string) {
         return request<any>(`/api/tenant/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
       },
+      sendResetLink(userId: string) {
+        return request<{ message: string; resetLink: string; emailSent: boolean }>(`/api/tenant/users/${userId}/send-reset-link`, { method: 'POST' });
+      },
     },
     me: {
       profile() {
@@ -458,6 +465,9 @@ export const api = {
         },
         resetPassword(tenantId: string, userId: string, password: string) {
           return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
+        },
+        sendResetLink(tenantId: string, userId: string) {
+          return request<{ message: string; resetLink: string; emailSent: boolean }>(`/api/admin/tenants/${tenantId}/users/${userId}/send-reset-link`, { method: 'POST' });
         },
       },
       features: {

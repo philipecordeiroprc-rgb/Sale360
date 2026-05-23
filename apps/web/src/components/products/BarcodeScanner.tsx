@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import Quagga from '@ericblade/quagga2';
 import { X, Camera, Scan, Keyboard, AlertTriangle } from 'lucide-react';
 import api from '@/lib/api';
 
@@ -14,10 +14,9 @@ interface BarcodeScannerProps {
 
 export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: BarcodeScannerProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
   const usbInputRef = useRef<HTMLInputElement | null>(null);
   const stoppedRef = useRef(false);
-  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const initRef = useRef(false);
 
   const [status, setStatus] = useState<'loading' | 'scanning' | 'error' | 'notfound'>('loading');
   const [errorMsg, setErrorMsg] = useState('');
@@ -28,7 +27,6 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
   const classifyError = useCallback((err: any): string => {
     const msg = err?.message || String(err);
 
-    // Check for secure context / HTTPS first
     if (!isSecureContext) {
       return 'Este site não está servido em HTTPS. O acesso à câmera exige uma conexão segura (HTTPS ou localhost).' +
         '\n\nSoluções:\n• Acesse via localhost no desenvolvimento\n• Configure HTTPS no servidor de produção';
@@ -43,9 +41,6 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     if (msg.includes('NotReadable') || msg.includes('not readable') || msg.includes('in use')) {
       return 'Não foi possível acessar a câmera. Verifique se outro aplicativo está usando a câmera e tente novamente.';
     }
-    if (msg.includes('streaming') || msg.includes('Streaming') || msg.includes('not supported')) {
-      return `Falha ao iniciar o streaming da câmera.\n\nCausas comuns:\n• Site não está em HTTPS (atual: ${window.location.protocol}//)\n• Navegador não suporta acesso à câmera\n• Câmera já em uso por outro app\n• Driver de câmera ausente no dispositivo`;
-    }
 
     return `Erro ao iniciar câmera: ${msg}`;
   }, [isSecureContext]);
@@ -54,10 +49,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     try {
       const product = await api.products.getByBarcode(code);
       if (!stoppedRef.current) {
-        // Stop scanner before calling onDetected
-        if (scannerRef.current?.isScanning) {
-          await scannerRef.current.stop().catch(() => {});
-        }
+        Quagga.stop();
         onDetected(product);
       }
     } catch {
@@ -68,99 +60,85 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     }
   }, [onDetected]);
 
-  // Camera lifecycle
+  // Camera lifecycle – Quagga2
   useEffect(() => {
     if (!isOpen) return;
+    if (initRef.current) return; // Prevent double init
 
     stoppedRef.current = false;
+    initRef.current = true;
 
-    const startCamera = async () => {
-      // Wait for viewport element to be visible with dimensions
+    const timer = setTimeout(() => {
       const viewport = viewportRef.current;
-      if (!viewport) {
-        if (!stoppedRef.current) {
-          retryTimerRef.current = setTimeout(startCamera, 100);
-        }
-        return;
-      }
+      if (!viewport || stoppedRef.current) return;
 
-      const rect = viewport.getBoundingClientRect();
-      if (rect.width === 0 || rect.height === 0) {
-        // Element exists but has no size yet (animation still running)
-        if (!stoppedRef.current) {
-          retryTimerRef.current = setTimeout(startCamera, 150);
-        }
-        return;
-      }
+      // Clear any previous Quagga artifacts
+      viewport.innerHTML = '';
 
-      // Clear any pending retry
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
+      setStatus('loading');
 
-      try {
-        const scanner = new Html5Qrcode('barcode-scanner-viewport');
-        scannerRef.current = scanner;
-
-        setStatus('loading');
-        await scanner.start(
-          { facingMode: 'environment' },
-          {
-            fps: 10,
-            qrbox: (viewfinderWidth, viewfinderHeight) => {
-              // Dynamic qrbox based on actual viewport size
-              const boxSize = Math.min(viewfinderWidth, viewfinderHeight) * 0.7;
-              return { width: Math.floor(boxSize), height: Math.floor(boxSize * 0.6) };
+      Quagga.init(
+        {
+          inputStream: {
+            type: 'LiveStream',
+            target: viewport,
+            constraints: {
+              facingMode: 'environment',
+              width: { min: 640 },
+              height: { min: 480 },
             },
-            aspectRatio: 1.777,
           },
-          async (decodedText) => {
-            if (stoppedRef.current) return;
-            setScannedCode(decodedText);
-            await lookupBarcode(decodedText);
+          locator: {
+            patchSize: 'medium',
+            halfSample: true,
           },
-          () => {
-            // scan failure per frame — ignore
+          numOfWorkers: 2,
+          decoder: {
+            readers: [
+              'ean_reader',
+              'ean_8_reader',
+              'upc_reader',
+              'upc_e_reader',
+              'code_128_reader',
+              'code_39_reader',
+              'code_93_reader',
+              'i2of5_reader',
+              '2of5_reader',
+            ],
+            multiple: false,
+          },
+          locate: true,
+        },
+        (err: any) => {
+          if (stoppedRef.current) {
+            Quagga.stop();
+            return;
           }
-        );
-        if (!stoppedRef.current) setStatus('scanning');
-      } catch (err: any) {
+          if (err) {
+            setErrorMsg(classifyError(err));
+            setStatus('error');
+            return;
+          }
+          Quagga.start();
+          if (!stoppedRef.current) setStatus('scanning');
+        }
+      );
+
+      Quagga.onDetected((result: any) => {
         if (stoppedRef.current) return;
-        const msg = classifyError(err);
-        setErrorMsg(msg);
-        setStatus('error');
-      }
-    };
-
-    // Initial delay to let the modal animation complete (200ms animation + buffer)
-    const initialTimer = setTimeout(startCamera, 300);
-
-    // Pause scanner when tab is hidden, resume when visible
-    const handleVisibility = () => {
-      const scanner = scannerRef.current;
-      if (!scanner) return;
-      if (document.hidden && scanner.isScanning) {
-        scanner.stop().catch(() => {});
-      } else if (!document.hidden && !scanner.isScanning && !stoppedRef.current) {
-        startCamera();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
+        const code = result.codeResult.code;
+        if (code) {
+          setScannedCode(code);
+          lookupBarcode(code);
+        }
+      });
+    }, 300);
 
     return () => {
       stoppedRef.current = true;
-      clearTimeout(initialTimer);
-      if (retryTimerRef.current) {
-        clearTimeout(retryTimerRef.current);
-        retryTimerRef.current = null;
-      }
-      document.removeEventListener('visibilitychange', handleVisibility);
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {});
-        scannerRef.current.clear();
-        scannerRef.current = null;
-      }
+      initRef.current = false;
+      clearTimeout(timer);
+      Quagga.stop();
     };
   }, [isOpen, classifyError, lookupBarcode]);
 
@@ -169,7 +147,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     if (!isOpen) return;
     const timer = setTimeout(() => {
       usbInputRef.current?.focus();
-    }, 500); // Longer delay to account for modal animation
+    }, 500);
     return () => clearTimeout(timer);
   }, [isOpen]);
 
@@ -180,10 +158,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       if (!code) return;
       input.value = '';
       setScannedCode(code);
-      // Stop camera if running (USB takes priority)
-      if (scannerRef.current?.isScanning) {
-        await scannerRef.current.stop().catch(() => {});
-      }
+      Quagga.stop();
       await lookupBarcode(code);
     }
   };
@@ -193,34 +168,47 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
     setErrorMsg('');
     setScannedCode('');
     stoppedRef.current = false;
+    initRef.current = false;
+    Quagga.stop();
 
-    // Clean up previous scanner instance
-    if (scannerRef.current) {
-      scannerRef.current.clear();
-      scannerRef.current = null;
-    }
-
-    // Clear viewport and restart
     const viewport = viewportRef.current;
     if (viewport) {
       viewport.innerHTML = '';
     }
 
-    // Delay to let DOM settle
+    // Re-trigger init by flipping initRef
     setTimeout(() => {
       if (!stoppedRef.current) {
-        // Trigger camera restart by re-rendering status
+        // The effect will re-run because we changed initRef
         setStatus('loading');
       }
-    }, 100);
-
-    // The main effect will pick up the new status and restart
+    }, 200);
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden">
+      {/* Quagga styles – constrain internal video/canvas to container */}
+      <style>{`
+        #barcode-scanner-viewport {
+          position: relative;
+          overflow: hidden;
+          background: #020617;
+        }
+        #barcode-scanner-viewport video,
+        #barcode-scanner-viewport canvas {
+          position: absolute !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          width: auto !important;
+          height: auto !important;
+        }
+      `}</style>
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -230,11 +218,7 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
         <button
           onClick={() => {
             stoppedRef.current = true;
-            if (scannerRef.current) {
-              scannerRef.current.stop().catch(() => {});
-              scannerRef.current.clear();
-              scannerRef.current = null;
-            }
+            Quagga.stop();
             onClose();
           }}
           className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
@@ -260,7 +244,8 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       <div
         ref={viewportRef}
         id="barcode-scanner-viewport"
-        className="w-full aspect-video bg-slate-950 relative"
+        className="w-full"
+        style={{ minHeight: '280px', maxHeight: '400px' }}
       />
 
       {/* Hidden USB scanner input */}

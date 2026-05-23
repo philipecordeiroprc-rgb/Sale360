@@ -7,8 +7,9 @@ import api from '@/lib/api';
 import { addPendingOrder, getProducts, getCustomers, getPendingOrders, mergeCustomers, decrementLocalStock } from '@/lib/offline-db';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { ProductGrid } from '@/components/products/ProductGrid';
+import dynamic from 'next/dynamic';
 import { QuickAddSheet } from '@/components/products/QuickAddSheet';
-import { BarcodeScanner } from '@/components/products/BarcodeScanner';
+const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 
 const PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
@@ -16,6 +17,32 @@ const PAYMENT_METHODS = [
   { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
   { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
   { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
+];
+function paymentLabel(method: string | null | undefined): string {
+  const map: Record<string, string> = {
+    credit_store: 'Fiado',
+    cash: 'Dinheiro',
+    pix: 'Pix',
+    credit: 'Crédito',
+    debit: 'Débito',
+    Dinheiro: 'Dinheiro',
+    Pix: 'Pix',
+    Debito: 'Débito',
+    Credito: 'Crédito',
+    Fiado: 'Fiado',
+  };
+  return map[method || ''] || method || '—';
+}
+
+function isFiado(method: string | null | undefined): boolean {
+  return method === 'credit_store' || method === 'Fiado';
+}
+
+const CONFIRM_PAYMENT_METHODS = [
+  { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
+  { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
+  { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
+  { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
 ];
 
 interface CartItem {
@@ -43,7 +70,12 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('status') || '';
+    }
+    return '';
+  });
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [todayRevenue, setTodayRevenue] = useState(0);
@@ -81,13 +113,21 @@ export default function OrdersPage() {
   // Detail modal
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailOrder, setDetailOrder] = useState<any>(null);
+  const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
+  const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
+  const [confirmingIsOnline, setConfirmingIsOnline] = useState(false);
+  const [selectedConfirmPayment, setSelectedConfirmPayment] = useState(CONFIRM_PAYMENT_METHODS[0]);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
       const params: any = { page };
-      if (statusFilter) params.status = statusFilter;
+      if (statusFilter === 'FIADO') {
+        params.paymentMethod = 'Fiado,credit_store';
+      } else if (statusFilter) {
+        params.status = statusFilter;
+      }
       if (search) params.search = search;
       if (dateFrom) params.startDate = new Date(dateFrom + 'T00:00:00').toISOString();
       if (dateTo) params.endDate = new Date(dateTo + 'T23:59:59').toISOString();
@@ -330,11 +370,21 @@ export default function OrdersPage() {
     }
   };
 
-  const handlePay = async (id: string) => {
-    if (!confirm('Confirmar recebimento do pagamento?')) return;
+  const handlePay = (id: string) => {
+    setConfirmingOrderId(id);
+    setConfirmingIsOnline(false);
+    setSelectedConfirmPayment(CONFIRM_PAYMENT_METHODS[0]);
+    setConfirmPaymentOpen(true);
+  };
+
+  const handlePayExecute = async () => {
+    const id = confirmingOrderId;
+    if (!id) return;
     try {
-      const result = await api.orders.pay(id);
+      const result = await api.orders.pay(id, { paymentMethod: selectedConfirmPayment.id });
       show(result.message || 'Pagamento recebido!');
+      setConfirmPaymentOpen(false);
+      setConfirmingOrderId(null);
       loadOrders();
       loadTodayRevenue();
       if (detailOpen && detailOrder?.id === id) setDetailOpen(false);
@@ -343,13 +393,24 @@ export default function OrdersPage() {
     }
   };
 
-  const handleConfirmOnline = async (id: string) => {
-    if (!confirm('Confirmar pedido online? O estoque será baixado e o pedido marcado como pago.')) return;
+  const handleConfirmOnline = (id: string) => {
+    setConfirmingOrderId(id);
+    setConfirmingIsOnline(true);
+    setSelectedConfirmPayment(CONFIRM_PAYMENT_METHODS[0]);
+    setConfirmPaymentOpen(true);
+  };
+
+  const handleConfirmOnlineExecute = async () => {
+    const id = confirmingOrderId;
+    if (!id) return;
     try {
-      const result = await api.orders.confirm(id);
+      const result = await api.orders.confirm(id, { paymentMethod: selectedConfirmPayment.id });
       show(result.message || 'Pedido confirmado!');
+      setConfirmPaymentOpen(false);
+      setConfirmingOrderId(null);
       loadOrders();
       loadTodayRevenue();
+      if (detailOpen && detailOrder?.id === id) setDetailOpen(false);
     } catch (err: any) {
       show(err.message || 'Erro ao confirmar pedido', 'error');
     }
@@ -357,8 +418,7 @@ export default function OrdersPage() {
 
   const openDetail = async (id: string) => {
     try {
-      const data = await api.orders.list({ search: id });
-      const order = data.orders?.[0] || null;
+      const order = await api.orders.get(id);
       if (order) { setDetailOrder(order); setDetailOpen(true); }
     } catch { show('Erro ao carregar detalhes', 'error'); }
   };
@@ -396,6 +456,7 @@ export default function OrdersPage() {
             { id: '', label: 'Todos' },
             { id: 'PAID', label: 'Pagos' },
             { id: 'PENDING', label: 'Pendentes' },
+            { id: 'FIADO', label: 'Fiado' },
             { id: 'CANCELLED', label: 'Cancelados' },
           ].map(s => (
             <button key={s.id} onClick={() => { setStatusFilter(s.id); setPage(1); }}
@@ -494,7 +555,18 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-right text-red-400 hidden sm:table-cell">{Number(o.discount) > 0 ? `R$ ${Number(o.discount).toFixed(2)}` : '—'}</td>
                     <td className="px-3 py-2 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center hidden md:table-cell">
-                      <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{o.paymentMethod}</span>
+                      <div className="flex items-center justify-center gap-1">
+                        {o.paidWithMethod ? (
+                          <>
+                            <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paidWithMethod)}</span>
+                            <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                          </>
+                        ) : isFiado(o.paymentMethod) ? (
+                          <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                        ) : (
+                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paymentMethod)}</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -835,7 +907,16 @@ export default function OrdersPage() {
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
                 <p className="text-white text-sm flex items-center gap-1.5">
-                  {detailOrder.paymentMethod}
+                  {detailOrder.paidWithMethod ? (
+                    <>
+                      {paymentLabel(detailOrder.paidWithMethod)}
+                      <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                    </>
+                  ) : isFiado(detailOrder.paymentMethod) ? (
+                    <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
+                  ) : (
+                    paymentLabel(detailOrder.paymentMethod)
+                  )}
                   {detailOrder.source === 'ONLINE' && (
                     <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                       <Link2 size={10} /> Link
@@ -906,7 +987,7 @@ export default function OrdersPage() {
 
             {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
               <button
-                onClick={() => { handleConfirmOnline(detailOrder.id); setDetailOpen(false); setDetailOrder(null); }}
+                onClick={() => { handleConfirmOnline(detailOrder.id); }}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
               >
                 <CheckCircle size={16} />
@@ -926,6 +1007,43 @@ export default function OrdersPage() {
         ) : (
           <div className="text-center py-8 text-slate-400">Carregando...</div>
         )}
+      </Modal>
+
+      {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
+      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm">
+        <div className="space-y-4">
+          <p className="text-slate-400 text-sm">
+            {confirmingIsOnline
+              ? 'Escolha a forma de pagamento para confirmar este pedido:'
+              : 'Escolha a forma de pagamento recebida:'}
+          </p>
+          <div className="grid grid-cols-4 gap-2">
+            {CONFIRM_PAYMENT_METHODS.map((pm) => {
+              const Icon = pm.icon;
+              const isSelected = selectedConfirmPayment.id === pm.id;
+              return (
+                <button key={pm.id} onClick={() => setSelectedConfirmPayment(pm)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
+                    isSelected
+                      ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
+                  }`}>
+                  <Icon size={20} />
+                  <span className="text-xs font-medium">{pm.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
+            <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
+            <button
+              onClick={() => { if (confirmingIsOnline) handleConfirmOnlineExecute(); else handlePayExecute(); }}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              {confirmingIsOnline ? 'Confirmar Pedido' : 'Receber Pagamento'}
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Toast */}
