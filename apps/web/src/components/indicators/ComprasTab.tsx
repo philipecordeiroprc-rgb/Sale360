@@ -3,6 +3,7 @@
 import { ShoppingBag, Clock, AlertTriangle, Truck } from 'lucide-react';
 import Link from 'next/link';
 import type { PurchasesIndicators } from './types';
+import { Legenda } from './Legenda';
 
 function fmt(n: number): string {
   return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
