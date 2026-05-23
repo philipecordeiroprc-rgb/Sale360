@@ -157,7 +157,8 @@ export default function PurchasesPage() {
 
   useEffect(() => { loadPurchases(); }, [loadPurchases]);
 
-  const openCreate = async () => {
+  const openForm = async () => {
+    setEditingId(null);
     setSelectedSupplier('');
     setUseOutroSupplier(false);
     setOutroSupplierName('');
@@ -172,6 +173,55 @@ export default function PurchasesPage() {
     setProductSearch('');
     setProductResults([]);
     setScannerOpen(false);
+    const sups = await loadSuppliers();
+    setSuppliers(sups);
+    setFormOpen(true);
+  };
+
+  const openEdit = async (purchase: any) => {
+    setEditingId(purchase.id);
+    setSelectedSupplier(purchase.supplierId || '');
+    setUseOutroSupplier(false);
+    setOutroSupplierName('');
+    setNotes(purchase.notes || '');
+    setDiscount(String(purchase.discount || '0'));
+    setProductSearch('');
+    setProductResults([]);
+    setScannerOpen(false);
+    setCurrentItem({ ...emptyItem });
+    setTemplateDims([]);
+    setRowDims({});
+    setRowCustom({});
+    setRowQty(0);
+
+    // Map purchase items to PurchaseItemData
+    const items: PurchaseItemData[] = (purchase.items || []).map((item: any) => {
+      const hasVar = !!item.variationId;
+      // Extract variation name from productName ("Produto - Variacao" → "Variacao")
+      const varName = hasVar && item.productName.includes(' - ')
+        ? item.productName.split(' - ').slice(1).join(' - ')
+        : '';
+      return {
+        productId: item.productId || '',
+        productName: item.productName,
+        costPrice: Number(item.unitCost || 0),
+        operationalCost: Number(item.operationalCost || 0),
+        taxRatePct: Number(item.taxRatePct || 0),
+        marginPct: Number(item.marginPct || 0),
+        salePrice: Number(item.salePrice || 0),
+        quantity: item.quantity,
+        hasVariations: hasVar,
+        variations: hasVar ? [{
+          id: item.variationId,
+          name: varName,
+          priceModifier: 0,
+          stockQty: item.quantity,
+          lowStockAt: undefined,
+        }] : [],
+      };
+    });
+    setPurchaseItems(items);
+
     const sups = await loadSuppliers();
     setSuppliers(sups);
     setFormOpen(true);
