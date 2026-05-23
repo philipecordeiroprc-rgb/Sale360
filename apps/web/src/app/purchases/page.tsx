@@ -597,7 +597,7 @@ export default function PurchasesPage() {
       )}
 
       {/* ========== CREATE MODAL (simplified) ========== */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title="Nova Compra" size="lg">
+      <Modal open={formOpen} onClose={() => { setFormOpen(false); setEditingId(null); }} title={editingId ? 'Editar Compra' : 'Nova Compra'} size="lg" closeOnOverlayClick={false}>
         <div className="space-y-5">
           {/* ── 1. Supplier ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
