@@ -28,7 +28,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
         where,
         include: {
           product: { select: { id: true, name: true, unit: true, sku: true, stockQty: true, lowStockAt: true } },
-          variation: { select: { id: true, name: true } },
+          variation: { select: { id: true, name: true, stockQty: true, lowStockAt: true } },
         },
         orderBy: { receivedAt: 'asc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
