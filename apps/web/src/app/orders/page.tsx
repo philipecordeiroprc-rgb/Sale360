@@ -1010,7 +1010,7 @@ export default function OrdersPage() {
       </Modal>
 
       {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
-      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm">
+      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm" closeOnOverlayClick={false}>
         <div className="space-y-4">
           <p className="text-slate-400 text-sm">
             {confirmingIsOnline
