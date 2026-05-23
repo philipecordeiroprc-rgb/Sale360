@@ -647,7 +647,7 @@ export default function OrdersPage() {
       )}
 
       {/* ========== SALE MODAL ========== */}
-      <Modal open={saleOpen} onClose={() => setSaleOpen(false)} title="Nova Venda" size="lg">
+      <Modal open={saleOpen} onClose={() => setSaleOpen(false)} title="Nova Venda" size="lg" closeOnOverlayClick={false}>
         <div className="space-y-3">
           {/* Offline banner */}
           {!isOnline && (
