@@ -211,7 +211,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
     // Last sale date per product (dedup from lastSaleItems)
     const lastSaleMap = new Map<string, Date>();
     for (const item of lastSaleItems) {
-      if (item.productId && !lastSaleMap.has(item.productId)) {
+      if (item.productId && item.order && !lastSaleMap.has(item.productId)) {
         lastSaleMap.set(item.productId, new Date(item.order.createdAt));
       }
     }
