@@ -187,7 +187,8 @@ fi
 # ---- Empacotar ----
 log "📦 Compactando backup..."
 cd "$BACKUP_DIR"
-tar czf "${BACKUP_NAME}.tar.gz" "$BACKUP_NAME" 2>> "$LOG_FILE"
+sudo tar czf "${BACKUP_NAME}.tar.gz" "$BACKUP_NAME" 2>> "$LOG_FILE"
+sudo chown opc:opc "${BACKUP_NAME}.tar.gz" 2>/dev/null || true
 BACKUP_SIZE=$(du -h "${BACKUP_NAME}.tar.gz" | cut -f1)
 ok "Backup compactado: ${BACKUP_NAME}.tar.gz (${BACKUP_SIZE})"
 
