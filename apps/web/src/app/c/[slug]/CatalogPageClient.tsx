@@ -1083,9 +1083,18 @@ function VariationSelector({
     );
   }
 
-  // Extract unique values for each dimension
-  const dim1Values = [...new Set(parsed.map((p) => p.dims[0]))];
-  const dim2Values = [...new Set(parsed.map((p) => p.dims[1]))];
+  // Sort helper: numeric sort if all values start with digits, else alphabetical
+  const sortValues = (vals: string[]): string[] => {
+    const allNumeric = vals.every((v) => /^\d/.test(v));
+    if (allNumeric) {
+      return vals.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+    }
+    return vals.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  };
+
+  // Extract unique values for each dimension (sorted)
+  const dim1Values = sortValues([...new Set(parsed.map((p) => p.dims[0]))]);
+  const dim2Values = sortValues([...new Set(parsed.map((p) => p.dims[1]))]);
 
   // Smart-label: detect if dim1 is numeric (Tamanho) or text (Cor)
   const dim1IsNumeric = dim1Values.every((v) => /^\d/.test(v));
