@@ -869,6 +869,7 @@ export default function ProductsPage() {
           onClose={() => { setCostProduct(null); setCostData(null); }}
           title={`Custos - ${costProduct.name}`}
           size="lg"
+          closeOnOverlayClick={false}
         >
           {costLoading ? (
             <div className="space-y-3 animate-pulse py-4">
