@@ -459,7 +459,7 @@ export default function PurchasesPage() {
           <h1 className="text-2xl font-bold text-white">Compras</h1>
           <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
         </div>
-        <button onClick={openCreate}
+        <button onClick={openForm}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
           <Plus size={18} /> Nova Compra
         </button>
@@ -498,7 +498,7 @@ export default function PurchasesPage() {
         <div className="text-center py-12">
           <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
           <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
-          <button onClick={openCreate} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
+          <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
         </div>
       ) : (
         <>
