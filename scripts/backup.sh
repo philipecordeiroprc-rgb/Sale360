@@ -6,6 +6,9 @@
 # ============================================================
 set -euo pipefail
 
+# PATH for cron (OCI CLI lives here)
+export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR="/home/opc/backups"
 BACKUP_NAME="sale360-full-${TIMESTAMP}"
