@@ -118,7 +118,7 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   };
 
   return (
-    <Modal open={open} onClose={onClose} title="Gerenciar Categorias" size="md">
+    <Modal open={open} onClose={onClose} title="Gerenciar Categorias" size="md" closeOnOverlayClick={false}>
       <div className="space-y-4">
         {/* Error */}
         {error && (
