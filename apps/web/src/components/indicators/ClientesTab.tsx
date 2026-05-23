@@ -150,6 +150,13 @@ export function ClientesTab({ data, loading }: { data: CustomerIndicators | null
           <p className="text-slate-400">Nenhum cliente com atividade no período</p>
         </div>
       )}
+
+      <Legenda items={[
+        { term: 'Clientes Ativos', definition: 'Clientes que compraram pelo menos 1 vez no período selecionado.' },
+        { term: '% Recorrentes', definition: '(Clientes com mais de 1 compra / Total de clientes ativos) × 100. Mede fidelização.' },
+        { term: 'Fiado em Aberto', definition: 'Saldo total devido por clientes que compraram fiado e ainda não pagaram.' },
+        { term: 'Ticket Médio por Cliente', definition: 'Total gasto por clientes / nº de pedidos vinculados a clientes.' },
+      ]} />
     </div>
   );
 }
