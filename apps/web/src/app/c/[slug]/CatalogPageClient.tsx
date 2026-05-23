@@ -636,7 +636,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       {cartOpen && (
         <div className="fixed inset-0 z-50 flex">
           {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setCartOpen(false)} />
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
 
           {/* Sidebar */}
           <div className="relative ml-auto w-full max-w-md bg-slate-900 border-l border-slate-800 h-full overflow-y-auto animate-slide-up">
