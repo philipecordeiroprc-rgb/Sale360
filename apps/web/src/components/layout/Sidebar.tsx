@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut,
-  Truck, ShoppingBag, Layers, Tag, X, Store,
+  Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
