@@ -470,7 +470,7 @@ export default function InventoryPage() {
       )}
 
       {/* Adjust Modal */}
-      <Modal open={adjustOpen} onClose={() => setAdjustOpen(false)} title="Ajuste Manual de Estoque" size="sm">
+      <Modal open={adjustOpen} onClose={() => setAdjustOpen(false)} title="Ajuste Manual de Estoque" size="sm" closeOnOverlayClick={false}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-slate-400 mb-1">Produto</label>
