@@ -231,7 +231,7 @@ fi
 log "☁️  Enviando para OCI Object Storage..."
 OCI_UPLOAD_OK=""
 if oci os object put \
-    --auth instance_principal \
+    --profile SALE360-BACKUP \
     --bucket-name "$OCI_BUCKET" \
     --region "$OCI_REGION" \
     --file "${BACKUP_DIR}/${BACKUP_NAME}.tar.gz" \
