@@ -280,7 +280,7 @@ export default function CustomersPage() {
       )}
 
       {/* Form Modal */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Cliente' : 'Novo Cliente'} size="md">
+      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Cliente' : 'Novo Cliente'} size="md" closeOnOverlayClick={false}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-slate-400 mb-1">Nome *</label>
