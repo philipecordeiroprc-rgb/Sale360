@@ -171,6 +171,8 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setNewVarName('');
+    setNewVarQty(0);
     setNotes('');
     setDiscount('0');
     setProductSearch('');
