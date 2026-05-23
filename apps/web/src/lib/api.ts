@@ -606,6 +606,15 @@ export const api = {
       });
     },
   },
+  indicators: {
+    list(params?: { startDate?: string; endDate?: string }) {
+      const sp = new URLSearchParams();
+      if (params?.startDate) sp.set('startDate', params.startDate);
+      if (params?.endDate) sp.set('endDate', params.endDate);
+      const qs = sp.toString();
+      return request<any>(`/api/indicators${qs ? `?${qs}` : ''}`);
+    },
+  },
 };
 
 async function upload(path: string, formData: FormData) {
