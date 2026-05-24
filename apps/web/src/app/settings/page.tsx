@@ -603,7 +603,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Configuracoes</h1>
+          <h1 className="text-2xl font-bold text-white">Configurações</h1>
           <p className="text-slate-400 text-sm mt-1">Gerencie seu sistema</p>
         </div>
       </div>
