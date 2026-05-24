@@ -10,7 +10,7 @@ import {
   productSimpleRowSchema,
   productVariationRowSchema,
   purchaseRowSchema,
-} from '@sale360/core/import-schemas';
+} from '@sale360/core';
 
 /** Convert Brazilian decimal string (25,90) to float (25.90) */
 export function parseBrazilianDecimal(value: string): number {
