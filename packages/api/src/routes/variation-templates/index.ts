@@ -230,6 +230,79 @@ export const variationTemplateRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // Import variation templates (bulk)
+  app.post('/import', async (request, reply) => {
+    const { rows } = request.body as { rows: Record<string, string>[] };
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return reply.status(400).send({ error: 'Nenhuma linha para importar' });
+    }
+
+    const errors: { row: number; message: string }[] = [];
+    const warnings: string[] = [];
+    let imported = 0;
+
+    // Group rows by template name
+    const templateGroups = new Map<string, { dim1Type: string; dim1Label: string; dim1Options: string[]; dim2Type?: string; dim2Label?: string; dim2Options?: string[] }>();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row['Nome do Template'] || '').trim();
+      if (!name) {
+        errors.push({ row: i, message: 'Nome do Template é obrigatório' });
+        continue;
+      }
+      const dim1Type = (row['Dim 1 - Tipo'] || '').trim();
+      const dim1Label = (row['Dim 1 - Rótulo'] || '').trim();
+      const dim1Opts = (row['Dim 1 - Opções'] || '').split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (!dim1Type || !dim1Label || dim1Opts.length === 0) {
+        errors.push({ row: i, message: 'Dim 1 - Tipo, Rótulo e Opções são obrigatórios' });
+        continue;
+      }
+      const dim2Type = (row['Dim 2 - Tipo'] || '').trim() || undefined;
+      const dim2Label = (row['Dim 2 - Rótulo'] || '').trim() || undefined;
+      const dim2OptsStr = (row['Dim 2 - Opções'] || '').trim();
+      const dim2Opts = dim2OptsStr ? dim2OptsStr.split(',').map((s: string) => s.trim()).filter(Boolean) : undefined;
+
+      templateGroups.set(name, { dim1Type, dim1Label, dim1Options: dim1Opts, dim2Type, dim2Label, dim2Options: dim2Opts });
+    }
+
+    if (templateGroups.size === 0 && errors.length > 0) {
+      return reply.status(400).send({ imported: 0, errors, warnings });
+    }
+
+    for (const [name, config] of templateGroups) {
+      try {
+        // Check if template with this name already exists for this tenant
+        const existing = await prisma.variationTemplate.findFirst({
+          where: { name, tenantId: request.tenantId },
+        });
+        if (existing) {
+          warnings.push(`Template "${name}" já existe — pulado`);
+          continue;
+        }
+
+        const dimensions: { type: any; label: string; options: string; orderIndex: number }[] = [
+          { type: config.dim1Type, label: config.dim1Label, options: JSON.stringify(config.dim1Options), orderIndex: 0 },
+        ];
+        if (config.dim2Type && config.dim2Label && config.dim2Options && config.dim2Options.length > 0) {
+          dimensions.push({ type: config.dim2Type, label: config.dim2Label, options: JSON.stringify(config.dim2Options), orderIndex: 1 });
+        }
+
+        await prisma.variationTemplate.create({
+          data: {
+            name,
+            tenantId: request.tenantId,
+            dimensions: { create: dimensions },
+          },
+        });
+        imported++;
+      } catch (err: any) {
+        errors.push({ row: -1, message: `Erro ao criar template "${name}": ${err.message}` });
+      }
+    }
+
+    return reply.status(201).send({ imported, errors, warnings });
+  });
+
   // Delete template (tenant-specific only)
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
