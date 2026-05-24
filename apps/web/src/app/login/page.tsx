@@ -48,8 +48,11 @@ export default function LoginPage() {
         tenants: data.tenants,
       });
 
-      // If user has multiple tenants, let them choose
-      if (data.tenants && data.tenants.length > 1 && data.user.role !== 'SUPER_ADMIN') {
+      // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
+      if (data.tenants && data.tenants.length > 1) {
+        router.push('/select-store');
+      } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
+        // SUPER_ADMIN with single store: also show selector so they can pick admin or store
         router.push('/select-store');
       } else {
         const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
