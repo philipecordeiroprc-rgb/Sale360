@@ -54,6 +54,7 @@ export default function SuppliersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { toast, show } = useToast();
 
   const loadSuppliers = useCallback(async () => {
