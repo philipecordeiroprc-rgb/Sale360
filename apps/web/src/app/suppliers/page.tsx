@@ -349,6 +349,14 @@ export default function SuppliersPage() {
         </div>
       </Modal>
 
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => loadSuppliers()}
+        config={IMPORT_CONFIGS.suppliers}
+      />
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium ${
