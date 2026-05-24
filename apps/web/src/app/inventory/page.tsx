@@ -442,7 +442,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead>
                   <tr className="text-slate-500 text-xs border-b border-slate-800">
                     <th className="text-left px-4 py-3">Data</th>
@@ -451,6 +451,7 @@ export default function InventoryPage() {
                     <th className="text-right px-4 py-3">Qtd</th>
                     <th className="text-right px-4 py-3">Custo Un.</th>
                     <th className="text-right px-4 py-3">Custo Total</th>
+                    <th className="text-left px-4 py-3">Motivo</th>
                     <th className="text-left px-4 py-3">Obs</th>
                   </tr>
                 </thead>
@@ -469,13 +470,17 @@ export default function InventoryPage() {
                             {MOVEMENT_TYPES[m.type] || m.type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-white">{m.product?.name || '—'}</td>
+                        <td className="px-4 py-3 text-white">
+                          {m.product?.name || '—'}
+                          {m.variation?.name ? <span className="text-slate-500 text-xs ml-1">({m.variation.name})</span> : null}
+                        </td>
                         <td className={`px-4 py-3 text-right font-mono ${isOut ? 'text-red-400' : 'text-emerald-400'}`}>
                           {isOut ? '' : '+'}{m.quantity}
                         </td>
                         <td className="px-4 py-3 text-right text-slate-400">{m.unitCost ? formatCurrency(m.unitCost) : '—'}</td>
                         <td className="px-4 py-3 text-right text-slate-400">{m.totalCost ? formatCurrency(m.totalCost) : '—'}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{m.notes || '—'}</td>
+                        <td className="px-4 py-3 text-xs text-slate-300 max-w-[150px] truncate">{m.reason || '—'}</td>
+                        <td className="px-4 py-3 text-xs text-slate-500 max-w-[150px] truncate">{m.notes || '—'}</td>
                       </tr>
                     );
                   })}
