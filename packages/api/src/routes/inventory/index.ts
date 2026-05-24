@@ -127,7 +127,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { productId, variationId, quantity, unitCost, notes } = parsed.data;
+    const { productId, variationId, quantity, unitCost, reason, notes } = parsed.data;
 
     // Validate product exists and belongs to tenant
     if (productId) {
