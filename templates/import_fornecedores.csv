@@ -1,0 +1,6 @@
+Nome*;CNPJ;IE;Email;Telefone;WhatsApp;Contato;Endereço;Número;Complemento;Bairro;Cidade;Estado;CEP;Observações;Ativo
+Distribuidora Alimentos ABC;12.345.678/0001-90;123456789;contato@abc.com.br;(11) 3456-7890;(11) 98765-4321;João Silva;Rua das Palmeiras;100;Sala 2;Centro;São Paulo;SP;01001-000;Entrega toda segunda e quinta;SIM
+Bebidas Nacional Ltda;98.765.432/0001-10;987654321;vendas@bebnacional.com.br;(21) 2345-6789;(21) 99876-5432;Maria Souza;Av. Brasil;500;;Bangu;Rio de Janeiro;RJ;20000-000;;SIM
+Laticínios Serra Verde;45.678.123/0001-55;;compras@serraverde.com.br;(35) 3456-0000;(35) 99988-7777;Carlos Mendes;Rodovia BR 381;Km 5;;Zona Rural;Alfenas;MG;37130-000;Fornecedor de queijos artesanais;SIM
+Higiene Clean Dist;;;contato@clean.com.br;(41) 3210-5000;(41) 98877-6655;Ana Lima;Rua XV de Novembro;300;10º andar;Centro;Curitiba;PR;80000-000;Pedido mínimo R$ 500,00;SIM
+Frios & Congelados Frost;55.999.888/0001-77;555888999;frost@frost.com.br;(19) 3256-0000;(19) 98123-4567;Pedro Alves;Av. Industrial;1200;Galpão 3;Distrito Industrial;Campinas;SP;13000-000;Frete grátis acima de R$ 1.000,00;SIM
