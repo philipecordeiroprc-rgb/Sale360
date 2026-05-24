@@ -106,6 +106,7 @@ export default function PurchasesPage() {
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
