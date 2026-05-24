@@ -305,7 +305,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
-  // Switch tenant (for users with multiple stores)
+  // Switch tenant (for users with multiple stores, or SUPER_ADMIN switching store/admin mode)
   app.post('/switch-tenant', async (request, reply) => {
     const schema = z.object({
       tenantId: z.string().min(1),
@@ -324,9 +324,59 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     try {
       const jwt = await import('jsonwebtoken');
       const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
-      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
+      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string; role?: string };
 
-      // Verify user belongs to this tenant
+      // SUPER_ADMIN switching to admin mode
+      if (payload.role === 'SUPER_ADMIN' && parsed.data.tenantId === '__admin__') {
+        const token = generateToken({
+          userId: payload.userId,
+          role: 'SUPER_ADMIN',
+        });
+        const refreshToken = generateRefreshToken(payload.userId);
+
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          select: { id: true, name: true, email: true, role: true },
+        });
+
+        return {
+          token,
+          refreshToken,
+          user: user ? { id: user.id, role: 'SUPER_ADMIN' as const } : { id: payload.userId, role: 'SUPER_ADMIN' as const },
+          tenant: null,
+        };
+      }
+
+      // SUPER_ADMIN switching to a store (no TenantUser record needed)
+      if (payload.role === 'SUPER_ADMIN') {
+        const tenant = await prisma.tenant.findUnique({ where: { id: parsed.data.tenantId } });
+        if (!tenant) return reply.status(404).send({ error: 'Empresa não encontrada.' });
+        if (tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED') {
+          return reply.status(403).send({ error: 'Empresa indisponível' });
+        }
+
+        const token = generateToken({
+          userId: payload.userId,
+          tenantId: tenant.id,
+          role: 'SUPER_ADMIN',
+        });
+        const refreshToken = generateRefreshToken(payload.userId);
+
+        return {
+          token,
+          refreshToken,
+          user: { id: payload.userId, role: 'SUPER_ADMIN' as const },
+          tenant: {
+            id: tenant.id,
+            slug: tenant.slug,
+            companyName: tenant.companyName,
+            plan: tenant.plan,
+            status: tenant.status,
+          },
+        };
+      }
+
+      // Regular user: verify user belongs to this tenant
       const tenantUser = await prisma.tenantUser.findFirst({
         where: { userId: payload.userId, tenantId: parsed.data.tenantId },
         include: { tenant: true },
