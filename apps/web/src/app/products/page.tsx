@@ -341,15 +341,24 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, SKU ou código de barras..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-          />
+        <div className="flex-1 min-w-[200px] flex gap-2">
+          <div className="flex-1 relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, SKU ou código de barras..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <button
+            onClick={() => { setScannerMode('search'); setScannerOpen(true); }}
+            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-3 rounded-xl text-sm font-medium transition-colors"
+            title="Escanear código de barras para buscar"
+          >
+            <Barcode size={18} />
+          </button>
         </div>
         <button
           onClick={() => setSelectedCategory('all')}
