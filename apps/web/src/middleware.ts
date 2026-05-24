@@ -21,12 +21,13 @@ export function middleware(request: NextRequest) {
   const isResetPassword = pathname.startsWith('/reset-password');
   const isSelectStore = pathname.startsWith('/select-store');
   const isCatalogRoute = pathname.startsWith('/c/');
+  const isGuiaImportacao = pathname.startsWith('/guia-importacao');
 
   // SUPER_ADMIN with active tenant cookie → in store mode
   const hasTenant = !!request.cookies.get('sale360_tenant')?.value;
 
   // Public routes (no auth required)
-  if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute) {
+  if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute || isGuiaImportacao) {
     if (token && pathname === '/login') {
       // SUPER_ADMIN with stores goes to select-store, otherwise to /admin
       if (isSuperAdmin && hasTenant) {
