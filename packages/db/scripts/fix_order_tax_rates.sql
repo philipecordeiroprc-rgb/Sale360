@@ -27,7 +27,7 @@ BEGIN;
 UPDATE order_items oi
 SET "taxRate" = pmc."taxRate"
 FROM orders o
-JOIN "PaymentMethodConfig" pmc
+JOIN payment_method_configs pmc
   ON pmc."tenantId" = o."tenantId"
   AND pmc."paymentMethod" = CASE o."paymentMethod"
     WHEN 'Dinheiro' THEN 'cash'
