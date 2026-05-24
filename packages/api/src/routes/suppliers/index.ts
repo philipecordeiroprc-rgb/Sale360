@@ -118,6 +118,73 @@ export const supplierRoutes: FastifyPluginAsync = async (app) => {
     return updated;
   });
 
+  // Import suppliers (bulk)
+  app.post('/import', async (request, reply) => {
+    const { rows } = request.body as { rows: Record<string, string>[] };
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return reply.status(400).send({ error: 'Nenhuma linha para importar' });
+    }
+
+    const errors: { row: number; message: string }[] = [];
+    const warnings: string[] = [];
+    let imported = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row['Nome'] || '').trim();
+      if (!name) {
+        errors.push({ row: i, message: 'Nome é obrigatório' });
+        continue;
+      }
+
+      // Parse SIM/NAO
+      const ativoStr = (row['Ativo'] || '').trim().toUpperCase();
+      const active = ativoStr === '' ? true : (ativoStr === 'SIM' || ativoStr === 'S' || ativoStr === 'YES');
+
+      // Clean CNPJ (strip formatting)
+      const cnpjRaw = (row['CNPJ'] || '').trim();
+      const cnpj = cnpjRaw ? cnpjRaw.replace(/[^\d]/g, '') : undefined;
+
+      try {
+        // Check duplicate CNPJ if provided
+        if (cnpj) {
+          const dup = await prisma.supplier.findFirst({ where: { cnpj, tenantId: request.tenantId } });
+          if (dup) {
+            warnings.push(`Linha ${i + 1}: CNPJ ${cnpjRaw} já cadastrado para "${dup.name}" — pulado`);
+            continue;
+          }
+        }
+
+        await prisma.supplier.create({
+          data: {
+            tenantId: request.tenantId,
+            name,
+            cnpj,
+            ie: (row['IE'] || '').trim() || undefined,
+            email: (row['Email'] || '').trim() || undefined,
+            phone: (row['Telefone'] || '').trim() || undefined,
+            whatsapp: (row['WhatsApp'] || '').trim() || undefined,
+            contactName: (row['Contato'] || '').trim() || undefined,
+            address: (row['Endereço'] || '').trim() || undefined,
+            addressNumber: (row['Número'] || '').trim() || undefined,
+            complement: (row['Complemento'] || '').trim() || undefined,
+            neighborhood: (row['Bairro'] || '').trim() || undefined,
+            city: (row['Cidade'] || '').trim() || undefined,
+            state: (row['Estado'] || '').trim() || undefined,
+            zipCode: (row['CEP'] || '').trim() || undefined,
+            notes: (row['Observações'] || '').trim() || undefined,
+            active,
+          },
+        });
+        imported++;
+      } catch (err: any) {
+        errors.push({ row: i, message: `Erro ao criar fornecedor "${name}": ${err.message}` });
+      }
+    }
+
+    return reply.status(201).send({ imported, errors, warnings });
+  });
+
   // Delete supplier
   app.delete('/:id', async (request, reply) => {
     const { id } = request.params as { id: string };
