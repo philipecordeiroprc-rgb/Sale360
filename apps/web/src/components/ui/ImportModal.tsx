@@ -42,8 +42,8 @@ export function ImportModal({ open, onClose, onImported, config }: ImportModalPr
     setStep('confirming');
 
     try {
-      // Send only valid rows
-      const validRows = rawData.filter((_, i) => rows[i]?.valid);
+      // Send only valid rows (use cleaned data from validators, not raw Papa Parse output)
+      const validRows = rows.filter(r => r.valid).map(r => r.data);
 
       // Build the request body
       const body: any = { rows: validRows };
