@@ -347,13 +347,19 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         };
       }
 
-      // SUPER_ADMIN switching to a store (no TenantUser record needed)
+      // SUPER_ADMIN switching to a store — use TenantUser role if linked, else OWNER
       if (payload.role === 'SUPER_ADMIN') {
         const tenant = await prisma.tenant.findUnique({ where: { id: parsed.data.tenantId } });
         if (!tenant) return reply.status(404).send({ error: 'Empresa não encontrada.' });
         if (tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED') {
           return reply.status(403).send({ error: 'Empresa indisponível' });
         }
+
+        // If SUPER_ADMIN has a specific TenantUser record, use that role (e.g. CASHIER)
+        const tenantUser = await prisma.tenantUser.findUnique({
+          where: { tenantId_userId: { tenantId: tenant.id, userId: payload.userId } },
+        });
+        const storeRole = tenantUser?.role || 'OWNER';
 
         const token = generateToken({
           userId: payload.userId,
@@ -372,7 +378,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
             companyName: tenant.companyName,
             plan: tenant.plan,
             status: tenant.status,
-            role: 'OWNER' as const,
+            role: storeRole,
           },
         };
       }
