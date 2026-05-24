@@ -155,11 +155,14 @@ export default function InventoryPage() {
 
   const handleAdjust = async () => {
     if (!adjustProductId || !adjustQty || Number(adjustQty) === 0) return;
+    const finalReason = adjustReason === 'Outro' ? adjustReasonCustom : adjustReason;
     setSaving(true);
     try {
       await api.inventory.adjust({
         productId: adjustProductId,
+        variationId: adjustVariationId || undefined,
         quantity: Number(adjustQty),
+        reason: finalReason || undefined,
         notes: adjustNotes || undefined,
       });
       show(`Ajuste de ${Number(adjustQty) > 0 ? '+' : ''}${adjustQty} realizado!`);
