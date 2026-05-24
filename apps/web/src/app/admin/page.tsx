@@ -34,7 +34,40 @@ const STATUSES: Plan[] = [
   { label: 'Cancelado', value: 'CANCELLED' },
 ];
 
+type Tab = 'stores' | 'admins';
+
 export default function AdminPage() {
+  const [tab, setTab] = useState<Tab>('stores');
+
+  return (
+    <div className="p-4 md:p-6">
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit max-w-full overflow-x-auto">
+        <button
+          onClick={() => setTab('stores')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            tab === 'stores' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          <Building2 size={16} /> Lojas
+        </button>
+        <button
+          onClick={() => setTab('admins')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            tab === 'admins' ? 'bg-indigo-500 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+          }`}
+        >
+          <Shield size={16} /> Administradores
+        </button>
+      </div>
+
+      {tab === 'stores' && <StoresTab />}
+      {tab === 'admins' && <AdminsTab />}
+    </div>
+  );
+}
+
+function StoresTab() {
   const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
