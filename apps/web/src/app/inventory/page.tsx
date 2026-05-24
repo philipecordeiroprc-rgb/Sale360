@@ -248,8 +248,14 @@ export default function InventoryPage() {
         </div>
         <button onClick={() => {
           setAdjustProductId(selectedProductId || '');
+          setAdjustProduct(null);
+          setAdjustVariations([]);
+          setAdjustVariationId('');
           setAdjustQty('');
+          setAdjustReason('');
+          setAdjustReasonCustom('');
           setAdjustNotes('');
+          setBatchProductSearch('');
           setAdjustOpen(true);
         }} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
           <RefreshCw size={18} /> Ajuste Manual
