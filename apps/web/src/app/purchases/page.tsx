@@ -488,6 +488,12 @@ export default function PurchasesPage() {
           <h1 className="text-2xl font-bold text-white">Compras</h1>
           <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
         </div>
+        <button
+          onClick={() => setImportOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+        >
+          <Upload size={16} /> Importar
+        </button>
         <button onClick={openForm}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
           <Plus size={18} /> Nova Compra
