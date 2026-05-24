@@ -70,6 +70,26 @@ export default function ProductsPage() {
   const { toast, show } = useToast();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Barcode scanner for search
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'search' | 'form'>('search');
+  const handleBarcodeForSearch = (product: any) => {
+    // When barcode is scanned in search mode, use the scanned code as search query
+    // The scanner already calls api.products.getByBarcode and returns the product
+    // We set the search to the product's barcode to filter
+    if (product?.barcode) {
+      setSearch(product.barcode);
+    }
+    setScannerOpen(false);
+  };
+  const handleBarcodeForForm = (product: any) => {
+    // When barcode is scanned in form mode, fill the barcode field
+    if (product?.barcode) {
+      setFormData(prev => ({ ...prev, barcode: product.barcode }));
+    }
+    setScannerOpen(false);
+  };
+
   // Load products
   const loadProducts = useCallback(async () => {
     setLoading(true);
