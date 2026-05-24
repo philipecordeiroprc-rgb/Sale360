@@ -34,7 +34,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   }
 
   // Admin pages — no sidebar, full width
-  if (isAdminRoute && isSuperAdmin) {
+  if (isAdminRoute && isSuperAdmin && !tenant) {
     return (
       <main className="min-h-screen bg-slate-950">
         <PageTitle />
