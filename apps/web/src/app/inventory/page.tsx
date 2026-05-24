@@ -499,6 +499,7 @@ export default function InventoryPage() {
       {/* Adjust Modal */}
       <Modal open={adjustOpen} onClose={() => setAdjustOpen(false)} title="Ajuste Manual de Estoque" size="sm" closeOnOverlayClick={false}>
         <div className="space-y-4">
+          {/* Product search */}
           <div>
             <label className="block text-sm text-slate-400 mb-1">Produto</label>
             <div className="relative">
@@ -511,15 +512,41 @@ export default function InventoryPage() {
               {batchProducts.length > 0 && (
                 <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-32 overflow-y-auto z-10">
                   {batchProducts.map((p: any) => (
-                    <button key={p.id} onClick={() => { setAdjustProductId(p.id); setBatchProductSearch(p.name); setBatchProducts([]); }}
+                    <button key={p.id} onClick={() => selectProductForAdjust(p)}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600">
-                      {p.name} — Estoque: {p.stockQty}
+                      {p.name} — Estoque: {p.stockQty} {p.hasVariations ? `(${p.variations?.length || 0} variações)` : ''}
                     </button>
                   ))}
                 </div>
               )}
             </div>
+            {adjustProduct && (
+              <p className="text-xs text-emerald-400 mt-1">
+                Produto selecionado: <strong>{adjustProduct.name}</strong> — Estoque atual: {adjustProduct.stockQty}
+              </p>
+            )}
           </div>
+
+          {/* Variation selector — only if product has variations */}
+          {adjustVariations.length > 0 && (
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Variação <span className="text-xs text-slate-500">(opcional)</span></label>
+              <select
+                value={adjustVariationId}
+                onChange={(e) => setAdjustVariationId(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+              >
+                <option value="">Todas as variações</option>
+                {adjustVariations.map((v: any) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} — Estoque: {v.stockQty}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Quantity */}
           <div>
             <label className="block text-sm text-slate-400 mb-1">
               Quantidade <span className="text-xs text-slate-500">(+ para entrada, - para saída)</span>
@@ -528,10 +555,35 @@ export default function InventoryPage() {
               step="any" placeholder="Ex: 10 ou -5"
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
           </div>
+
+          {/* Reason */}
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Observação</label>
+            <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+            <select
+              value={adjustReason}
+              onChange={(e) => { setAdjustReason(e.target.value); if (e.target.value !== 'Outro') setAdjustReasonCustom(''); }}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            >
+              <option value="">Selecione o motivo...</option>
+              {REASON_OPTIONS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+            {adjustReason === 'Outro' && (
+              <input
+                value={adjustReasonCustom}
+                onChange={(e) => setAdjustReasonCustom(e.target.value)}
+                placeholder="Descreva o motivo..."
+                className="mt-2 w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+              />
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">Observação adicional</label>
             <input value={adjustNotes} onChange={(e) => setAdjustNotes(e.target.value)}
-              placeholder="Motivo do ajuste..."
+              placeholder="Detalhes extras (opcional)..."
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
           </div>
 
