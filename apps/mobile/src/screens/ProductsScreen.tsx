@@ -182,6 +182,11 @@ export function ProductsScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => setView('sell')}>
+            <Text style={styles.backBtnText}>← Voltar</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>Produtos</Text>
         <Text style={styles.subtitle}>
           {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} no catálogo
