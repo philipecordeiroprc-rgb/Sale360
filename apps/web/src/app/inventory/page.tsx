@@ -123,6 +123,15 @@ export default function InventoryPage() {
     } catch { setBatchProducts([]); }
   };
 
+  const selectProductForAdjust = (p: any) => {
+    setAdjustProductId(p.id);
+    setAdjustProduct(p);
+    setBatchProductSearch(p.name);
+    setBatchProducts([]);
+    setAdjustVariationId('');
+    setAdjustVariations(p.variations || []);
+  };
+
   const selectProduct = (p: any) => {
     setSelectedProductId(p.id);
     setBatchProductSearch(p.name);
