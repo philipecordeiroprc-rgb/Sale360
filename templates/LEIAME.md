@@ -120,7 +120,7 @@ O sistema criará **1 produto** "Camiseta Turma da Mônica" com **8 variações*
 
 ---
 
-## 5. Fornecedores (`import_fornecedores.csv`)
+## 5. Fornecedores (`import_fornecedores.csv`) (`import_fornecedores.csv`)
 
 | # | Campo | Obrigatório | Tipo | Descrição |
 |---|-------|:-----------:|------|-----------|
