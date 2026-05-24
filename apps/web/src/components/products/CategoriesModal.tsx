@@ -29,6 +29,7 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   const [saving, setSaving] = useState(false);
   const [newTemplateId, setNewTemplateId] = useState('');
   const [templates, setTemplates] = useState<VariationTemplate[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
 
   const loadCategories = async () => {
     try {
