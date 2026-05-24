@@ -38,6 +38,35 @@ const emptyForm: FormData = {
   price: '',
 };
 
+// Compress image on mobile before upload
+function compressImage(file: File, maxWidth: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width;
+      let h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w;
+      canvas.height = h;
+      ctx?.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      // Fallback: read as dataURL without compression
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to read image'));
+      reader.readAsDataURL(file);
+    };
+    img.src = url;
+  });
+}
+
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const show = (message: string, type: 'success' | 'error' = 'success') => {
