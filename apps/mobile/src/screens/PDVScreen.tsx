@@ -8,6 +8,7 @@ import { BarcodeScanner } from '../components/pdv/BarcodeScanner';
 import { CartDrawer } from '../components/pdv/CartDrawer';
 import { PaymentModal } from '../components/pdv/PaymentModal';
 import { SyncIndicator } from '../components/sync/SyncIndicator';
+import { ProductsScreen } from './ProductsScreen';
 import { getDatabase, saveLocalOrder } from '../db/localDatabase';
 
 type ViewMode = 'sell' | 'catalog' | 'commands' | 'customers';
