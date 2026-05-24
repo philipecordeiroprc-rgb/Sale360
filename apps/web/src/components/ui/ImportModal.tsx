@@ -30,9 +30,8 @@ export function ImportModal({ open, onClose, onImported, config }: ImportModalPr
   const [result, setResult] = useState<ImportResult | null>(null);
   const [importing, setImporting] = useState(false);
 
-  const handleFileParsed = useCallback((parsedRows: ParsedRow[], rawRows: Record<string, string>[]) => {
+  const handleFileParsed = useCallback((parsedRows: ParsedRow[], _rawRows: Record<string, string>[]) => {
     setRows(parsedRows);
-    setRawData(rawRows);
     setStep('preview');
   }, []);
 
