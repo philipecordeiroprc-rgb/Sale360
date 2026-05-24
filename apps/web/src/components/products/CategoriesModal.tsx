@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 interface CategoriesModalProps {
