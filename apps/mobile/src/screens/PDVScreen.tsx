@@ -153,6 +153,11 @@ export function PDVScreen() {
     }
   };
 
+  // Show Products screen when on catalog tab
+  if (currentView === 'catalog') {
+    return <ProductsScreen />;
+  }
+
   return (
     <View style={styles.container}>
       {/* TOP BAR */}
