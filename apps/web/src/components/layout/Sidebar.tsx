@@ -53,7 +53,8 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, tenant, isSuperAdmin, availableTenants } = useAuth();
   const storeRole = user?.storeRole || user?.role || '';
-  const userRole = isSuperAdmin ? 'SUPER_ADMIN' : (storeRole || '');
+  // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
+  const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
 
   if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
