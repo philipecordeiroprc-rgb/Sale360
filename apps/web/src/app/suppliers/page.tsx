@@ -249,7 +249,7 @@ export default function SuppliersPage() {
       )}
 
       {/* Form Modal */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Fornecedor' : 'Novo Fornecedor'} size="lg">
+      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Fornecedor' : 'Novo Fornecedor'} size="lg" closeOnOverlayClick={false}>
         <div className="space-y-3">
           <div>
             <label className="block text-sm text-slate-400 mb-1">Nome *</label>

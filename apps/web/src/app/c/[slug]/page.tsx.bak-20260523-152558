@@ -76,7 +76,6 @@ export async function generateMetadata({
   return {
     title: storeName,
     description: `Catálogo de produtos - ${storeName}`,
-    ...(logoUrl ? { icons: { icon: logoUrl, apple: logoUrl } } : {}),
     openGraph: {
       title: storeName,
       description: `Confira os produtos de ${storeName}`,

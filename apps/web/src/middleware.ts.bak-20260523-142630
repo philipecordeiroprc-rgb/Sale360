@@ -1,25 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// First segments that are known system routes (NOT tenant slugs)
-const SYSTEM_ROUTES = new Set([
-  'login', 'admin', 'dashboard', 'products', 'orders', 'customers',
-  'coupons', 'finance', 'inventory', 'purchases', 'suppliers',
-  'settings', 'forgot-password', 'reset-password', 'select-store',
-  'indicadores', 'c',
-]);
-
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('sale360_token')?.value;
   const userStr = request.cookies.get('sale360_user')?.value;
   const { pathname } = request.nextUrl;
-
-  // Path-based store routing: extract first segment as potential tenant slug
-  const firstSegment = pathname.split('/')[1] || '';
-
-  if (firstSegment && !SYSTEM_ROUTES.has(firstSegment)) {
-    return NextResponse.rewrite(new URL(`/c/${firstSegment}`, request.url));
-  }
 
   // Parse user role from cookie
   let userRole = '';

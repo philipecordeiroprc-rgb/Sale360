@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Store, Palette, ImageUp, ShoppingCart, MessageSquare, CreditCard, Upload, Trash2, Plus, GripVertical } from 'lucide-react';
+import { Store, Palette, ImageUp, ShoppingCart, MessageSquare, CreditCard, Upload, Trash2, Plus, GripVertical, Phone } from 'lucide-react';
 import api from '@/lib/api';
+import { BannerUploadModal } from '@/components/products/BannerUploadModal';
 
 interface CatalogData {
   id?: string;
@@ -12,12 +13,16 @@ interface CatalogData {
   document?: string;
   companyName?: string;
   primaryColor: string;
+  backgroundColor: string;
   displayMode: string;
   outOfStockBehavior: string;
   acceptOrders: boolean;
   receiveWhatsApp: boolean;
   whatsAppNumber?: string;
   postOrderMessage?: string;
+  instagram?: string;
+  email?: string;
+  aboutUs?: string;
   logoPath?: string;
   banners: Array<{ id: string; imagePath: string; linkUrl?: string; sortOrder: number }>;
   paymentMethods: Array<{ id?: string; paymentMethod: string; enabled: boolean; dueDays?: number; instructions?: string }>;
@@ -44,6 +49,8 @@ export function CatalogoTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerModalOpen, setBannerModalOpen] = useState(false);
 
   const showMsg = (text: string, type: 'success' | 'error' = 'success') => {
     setMessage({ text, type });
@@ -101,12 +108,20 @@ export function CatalogoTab() {
   const handleUploadBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setBannerFile(file);
+    setBannerModalOpen(true);
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleConfirmBannerUpload = async (file: File, positionY: number) => {
     try {
-      await api.catalogSettings.uploadBanner(file);
+      await api.catalogSettings.uploadBanner(file, positionY);
       showMsg('Banner adicionado!');
-      loadSettings(); // reload to get updated list
+      loadSettings();
     } catch (err: any) {
       showMsg(err.message || 'Erro ao enviar banner', 'error');
+      throw err; // keep modal open on error
     }
   };
 
@@ -149,7 +164,7 @@ export function CatalogoTab() {
 
   if (!data) return <p className="text-slate-400 text-sm">Erro ao carregar configurações.</p>;
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
   return (
     <div className="space-y-5">
@@ -217,7 +232,7 @@ export function CatalogoTab() {
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
           <Palette size={16} className="text-indigo-400" /> Aparência
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <label className="block text-xs text-slate-400 mb-1">Cor Principal</label>
             <div className="flex items-center gap-2">
@@ -233,6 +248,23 @@ export function CatalogoTab() {
                 className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none font-mono"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Cor do Fundo</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={data.backgroundColor}
+                onChange={(e) => updateField('backgroundColor', e.target.value)}
+                className="w-10 h-10 rounded-lg cursor-pointer border-0 bg-transparent"
+              />
+              <input
+                value={data.backgroundColor}
+                onChange={(e) => updateField('backgroundColor', e.target.value)}
+                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none font-mono"
+              />
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">Cor de fundo do catálogo (padrão: azul escuro)</p>
           </div>
           <div>
             <label className="block text-xs text-slate-400 mb-1">Modo de Exibição</label>
@@ -266,7 +298,59 @@ export function CatalogoTab() {
         </div>
       </div>
 
-      {/* ── 3. Logo ── */}
+      {/* ── 3. Contatos ── */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+        <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+          <Phone size={16} className="text-indigo-400" /> Contatos e Informações
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Telefone</label>
+            <input
+              value={data.storePhone || ''}
+              onChange={(e) => updateField('storePhone', e.target.value)}
+              placeholder="(11) 99999-9999"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Instagram</label>
+            <input
+              value={data.instagram || ''}
+              onChange={(e) => updateField('instagram', e.target.value)}
+              placeholder="@sualoja"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-400 mb-1">Email</label>
+            <input
+              value={data.email || ''}
+              onChange={(e) => updateField('email', e.target.value)}
+              placeholder="contato@sualoja.com"
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            />
+          </div>
+        </div>
+        <div className="mt-3">
+          <label className="block text-xs text-slate-400 mb-1">Sobre Nós</label>
+          <textarea
+            value={data.aboutUs || ''}
+            onChange={(e) => updateField('aboutUs', e.target.value)}
+            placeholder="Conte um pouco sobre sua loja..."
+            rows={3}
+            className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none resize-none"
+          />
+        </div>
+        <div className="mt-4 flex justify-end">
+          <button onClick={handleSaveSettings} disabled={saving}
+            className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-xs font-medium transition-colors">
+            Salvar Contatos
+          </button>
+        </div>
+      </div>
+
+      {/* ── 4. Logo ── */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
         <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
           <Upload size={16} className="text-indigo-400" /> Logo
@@ -328,6 +412,14 @@ export function CatalogoTab() {
         <label className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors inline-block">
           <Plus size={14} className="inline mr-1" /> Adicionar Banner
           <input type="file" accept="image/png,image/jpeg" onChange={handleUploadBanner} className="hidden" />
+
+      {/* Banner Upload Preview Modal */}
+      <BannerUploadModal
+        open={bannerModalOpen}
+        onClose={() => { setBannerModalOpen(false); setBannerFile(null); }}
+        file={bannerFile}
+        onUpload={handleConfirmBannerUpload}
+      />
         </label>
         <p className="text-[10px] text-slate-500 mt-1.5">JPG ou PNG. Máx 5MB. Horizontal/paisagem.</p>
       </div>

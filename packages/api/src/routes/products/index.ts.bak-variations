@@ -47,7 +47,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
         where,
         include: {
           category: { select: { id: true, name: true, variationTemplate: { include: { dimensions: true } } } },
-          variations: { orderBy: { name: "asc" } },
+          variations: true,
         },
         orderBy: { name: 'asc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
@@ -93,7 +93,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const { id } = request.params as { id: string };
     const product = await prisma.product.findFirst({
       where: { id, tenantId: request.tenantId },
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
     if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
     return product;
@@ -128,7 +128,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const product = await prisma.product.update({
       where: { id },
       data: parsed.data,
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
 
     return product;
@@ -153,7 +153,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const { code } = request.params as { code: string };
     const product = await prisma.product.findFirst({
       where: { barcode: code, tenantId: request.tenantId, active: true },
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
     if (!product) return reply.status(404).send({ error: 'Produto não encontrado para este código de barras' });
     return product;

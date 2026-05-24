@@ -50,6 +50,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
       onClose={onClose}
       title={`Estoque - ${product.name}`}
       size="sm"
+      closeOnOverlayClick={false}
     >
       <div className="space-y-3">
         {error && (

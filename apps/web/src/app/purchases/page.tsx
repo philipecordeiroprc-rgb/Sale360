@@ -109,6 +109,9 @@ export default function PurchasesPage() {
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
   const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
   const [rowQty, setRowQty] = useState<number>(0);
+  // Manual variation input (when no template)
+  const [newVarName, setNewVarName] = useState('');
+  const [newVarQty, setNewVarQty] = useState<number>(0);
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
@@ -168,6 +171,8 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setNewVarName('');
+    setNewVarQty(0);
     setNotes('');
     setDiscount('0');
     setProductSearch('');
@@ -201,21 +206,25 @@ export default function PurchasesPage() {
       const varName = hasVar && item.productName.includes(' - ')
         ? item.productName.split(' - ').slice(1).join(' - ')
         : '';
+      // Extract base product name (without variation suffix) to avoid duplication on re-save
+      const baseName = hasVar && item.productName.includes(' - ')
+        ? item.productName.split(' - ')[0]
+        : item.productName;
       return {
         productId: item.productId || '',
-        productName: item.productName,
+        productName: baseName,
         costPrice: Number(item.unitCost || 0),
         operationalCost: Number(item.operationalCost || 0),
         taxRatePct: Number(item.taxRatePct || 0),
         marginPct: Number(item.marginPct || 0),
         salePrice: Number(item.salePrice || 0),
-        quantity: item.quantity,
+        quantity: Number(item.quantity),
         hasVariations: hasVar,
         variations: hasVar ? [{
           id: item.variationId,
           name: varName,
           priceModifier: 0,
-          stockQty: item.quantity,
+          stockQty: Number(item.quantity),
           lowStockAt: undefined,
         }] : [],
       };
@@ -249,10 +258,23 @@ export default function PurchasesPage() {
     const hasExistingVars = p.hasVariations || (p.variations?.length > 0);
     const template = p.category?.variationTemplate;
     const hasTemplate = template?.dimensions?.length > 0;
+    setNewVarName('');
+    setNewVarQty(0);
 
     if (hasExistingVars) {
-      // Use existing variations
-      setTemplateDims([]);
+      // Load existing variations + keep template so user can add NEW variations
+      if (hasTemplate) {
+        const dims = template.dimensions.map((d: any) => ({
+          ...d,
+          options: Array.isArray(d.options) ? d.options : (typeof d.options === 'string' ? JSON.parse(d.options) : []),
+        }));
+        setTemplateDims(dims);
+      } else {
+        setTemplateDims([]);
+      }
+      setRowDims({});
+      setRowCustom({});
+      setRowQty(0);
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -924,7 +946,7 @@ export default function PurchasesPage() {
                     </div>
                   </div>
                 ) : currentItem.hasVariations ? (
-                  /* ── Existing variations: show list with qty inputs ── */
+                  /* ── Existing variations: show list with qty inputs + manual add ── */
                   <div className="mb-3 bg-slate-900 rounded-lg p-3">
                     <p className="text-xs text-slate-400 mb-2">Qtd comprada por variação</p>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
@@ -938,8 +960,52 @@ export default function PurchasesPage() {
                           }}
                             min="0" step="1" placeholder="0"
                             className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                          <button
+                            onClick={() => {
+                              const updated = currentItem.variations.filter((_, i) => i !== vi);
+                              setCurrentItem({ ...currentItem, variations: updated });
+                            }}
+                            className="text-slate-500 hover:text-red-400 shrink-0">
+                            <X size={14} />
+                          </button>
                         </div>
                       ))}
+                    </div>
+                    {/* Add new variation manually (no template) */}
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newVarName}
+                        onChange={(e) => setNewVarName(e.target.value)}
+                        placeholder="Nova variação (ex: GG)"
+                        className="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                      />
+                      <input
+                        type="number"
+                        value={newVarQty || ''}
+                        onChange={(e) => setNewVarQty(Number(e.target.value))}
+                        min="0" step="1" placeholder="0"
+                        className="w-16 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
+                      />
+                      <button
+                        onClick={() => {
+                          const name = newVarName.trim();
+                          if (!name || newVarQty <= 0) return;
+                          setCurrentItem({
+                            ...currentItem,
+                            variations: [
+                              ...currentItem.variations,
+                              { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
+                            ],
+                          });
+                          setNewVarName('');
+                          setNewVarQty(0);
+                        }}
+                        disabled={!newVarName.trim() || newVarQty <= 0}
+                        className="px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
+                        title="Adicionar variação">
+                        <Plus size={14} />
+                      </button>
                     </div>
                     <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
                       <span className="text-xs text-slate-400">

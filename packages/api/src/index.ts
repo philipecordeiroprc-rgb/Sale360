@@ -19,6 +19,7 @@ import { inventoryRoutes } from './routes/inventory/index.js';
 import { reportRoutes } from './routes/reports/index.js';
 import { paymentConfigRoutes } from './routes/payment-configs/index.js';
 import { couponRoutes } from './routes/coupons/index.js';
+import { indicatorRoutes } from './routes/indicators/index.js';
 import { catalogSettingsRoutes } from './routes/catalog-settings/index.js';
 import { publicRoutes } from './routes/public/index.js';
 import { adminRoutes } from './routes/admin/index.js';
@@ -161,6 +162,7 @@ async function buildApp() {
     await registerSafe(paymentConfigRoutes, { prefix: '/api/payment-configs' });
     await registerSafe(catalogSettingsRoutes, { prefix: '/api/catalog-settings' });
     await registerSafe(couponRoutes, { prefix: '/api/coupons' });
+    await registerSafe(indicatorRoutes, { prefix: '/api/indicators' });
   });
 
   // SUPER_ADMIN routes (auth + SUPER_ADMIN check)

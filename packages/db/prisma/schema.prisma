@@ -398,6 +398,8 @@ model CatalogBanner {
   id        String   @id @default(cuid())
   catalogId String
   imagePath String
+  positionX Float    @default(50)
+  positionY Float    @default(50)
   linkUrl   String?  // link opcional ao clicar
   sortOrder Int      @default(0)
   active    Boolean  @default(true)

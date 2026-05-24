@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut,
-  Truck, ShoppingBag, Layers, Tag, X, Store,
+  Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
@@ -21,6 +21,7 @@ const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/customers', label: 'Clientes', icon: Users, roles: ['OWNER', 'CASHIER'] },
   { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
+  { href: '/indicadores', label: 'Indicadores', icon: BarChart3, roles: ['OWNER'] },
   { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },
 ];
 

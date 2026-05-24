@@ -11,12 +11,16 @@ const updateSchema = z.object({
   document: z.string().optional(),
   companyName: z.string().optional(),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  backgroundColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   displayMode: z.enum(['grid', 'list']).optional(),
   outOfStockBehavior: z.enum(['hide', 'show_disabled', 'show']).optional(),
   acceptOrders: z.boolean().optional(),
   receiveWhatsApp: z.boolean().optional(),
   whatsAppNumber: z.string().optional(),
   postOrderMessage: z.string().optional(),
+  instagram: z.string().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  aboutUs: z.string().optional(),
   active: z.boolean().optional(),
 });
 
@@ -150,10 +154,14 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
       _max: { sortOrder: true },
     });
 
+    const positionX = parseFloat((request.query as any).positionX) || 50;
+    const positionY = parseFloat((request.query as any).positionY) || 50;
     const bannerPath = `banners/${filename}`;
     const banner = await prisma.catalogBanner.create({
       data: {
         catalogId: existing!.id,
+        positionX,
+        positionY,
         imagePath: bannerPath,
         sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
       },

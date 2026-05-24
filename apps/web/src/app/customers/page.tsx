@@ -280,7 +280,7 @@ export default function CustomersPage() {
       )}
 
       {/* Form Modal */}
-      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Cliente' : 'Novo Cliente'} size="md">
+      <Modal open={formOpen} onClose={() => setFormOpen(false)} title={editingId ? 'Editar Cliente' : 'Novo Cliente'} size="md" closeOnOverlayClick={false}>
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-slate-400 mb-1">Nome *</label>
@@ -327,7 +327,7 @@ export default function CustomersPage() {
       </Modal>
 
       {/* Detail Modal */}
-      <Modal open={detailOpen} onClose={() => { setDetailOpen(false); setDetailCustomer(null); }} title="Histórico do Cliente" size="lg">
+      <Modal open={detailOpen} onClose={() => { setDetailOpen(false); setDetailCustomer(null); }} title="Histórico do Cliente" size="lg" closeOnOverlayClick={false}>
         {detailLoading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (

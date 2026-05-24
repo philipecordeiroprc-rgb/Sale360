@@ -546,10 +546,11 @@ export const api = {
       formData.append('file', file);
       return upload('/api/catalog-settings/logo', formData);
     },
-    uploadBanner(file: File) {
+    uploadBanner(file: File, positionY?: number) {
       const formData = new FormData();
       formData.append('file', file);
-      return upload('/api/catalog-settings/banners', formData);
+      const qs = positionY != null ? `?positionY=${positionY}` : '';
+      return upload(`/api/catalog-settings/banners${qs}`, formData);
     },
     deleteBanner(id: string) {
       return request<any>(`/api/catalog-settings/banners/${id}`, { method: 'DELETE' });
@@ -604,6 +605,15 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ tenantSlug, code, subtotal }),
       });
+    },
+  },
+  indicators: {
+    list(params?: { startDate?: string; endDate?: string }) {
+      const sp = new URLSearchParams();
+      if (params?.startDate) sp.set('startDate', params.startDate);
+      if (params?.endDate) sp.set('endDate', params.endDate);
+      const qs = sp.toString();
+      return request<any>(`/api/indicators${qs ? `?${qs}` : ''}`);
     },
   },
 };
