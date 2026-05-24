@@ -38,8 +38,8 @@ export default function SelectStorePage() {
     }
   };
 
-  // If no tenants available, redirect to login
-  if (availableTenants.length === 0) {
+  // If no tenants available and not SUPER_ADMIN, show empty state
+  if (availableTenants.length === 0 && !isSuperAdmin) {
     return (
       <div className="min-h-dvh bg-slate-950 flex items-center justify-center p-4">
         <div className="text-center">
