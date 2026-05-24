@@ -98,7 +98,7 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "
   sudo tar -xzf /tmp/sale360-deploy.tar.gz --overwrite
   sudo rm /tmp/sale360-deploy.tar.gz
   echo '✅ Source files sync''d'
-  bash scripts/deploy.sh --$SCOPE
+  bash scripts/server-deploy.sh --$SCOPE
 "
 
 # Cleanup local tarball
