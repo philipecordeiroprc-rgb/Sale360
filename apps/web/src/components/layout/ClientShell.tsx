@@ -25,7 +25,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
   const isSelectStore = pathname === '/select-store';
 
   // Auth pages — no sidebar, full width
-  if (isAuthPage) {
+  if (isAuthPage || isSelectStore) {
     return <><PageTitle />{children}</>;
   }
 
