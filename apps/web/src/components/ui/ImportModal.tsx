@@ -104,7 +104,6 @@ export function ImportModal({ open, onClose, onImported, config }: ImportModalPr
   const resetAndClose = useCallback(() => {
     setStep('guide');
     setRows([]);
-    setRawData([]);
     setResult(null);
     setImporting(false);
     onClose();
