@@ -400,47 +400,53 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     }
 
     await prisma.$transaction(async (tx) => {
+      // Check if this order actually consumed stock (has costPrice set on items)
+      const hasConsumedStock = order.items.some(item => item.costPrice != null);
+
       for (const item of order.items) {
         if (item.productId) {
-          // Create SALE_CANCEL movement
-          await tx.inventoryMovement.create({
-            data: {
-              tenantId: request.tenantId,
-              productId: item.productId,
-              variationId: (item as any).variationId || null,
-              type: 'SALE_CANCEL',
-              quantity: item.quantity,
-              unitCost: item.costPrice ? Number(item.costPrice) : 0,
-              totalCost: item.totalCost ? Number(item.totalCost) : 0,
-              orderId: order.id,
-              notes: `Cancelamento venda #${order.orderNumber} - ${item.productName}`,
-            },
-          });
+          // Only restore stock and create cancel movement if stock was consumed
+          if (hasConsumedStock) {
+            // Create SALE_CANCEL movement
+            await tx.inventoryMovement.create({
+              data: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                variationId: (item as any).variationId || null,
+                type: 'SALE_CANCEL',
+                quantity: item.quantity,
+                unitCost: item.costPrice ? Number(item.costPrice) : 0,
+                totalCost: item.totalCost ? Number(item.totalCost) : 0,
+                orderId: order.id,
+                notes: `Cancelamento venda #${order.orderNumber} - ${item.productName}`,
+              },
+            });
 
-          // Return stock as a new batch (preserves cost history)
-          await tx.inventoryBatch.create({
-            data: {
-              tenantId: request.tenantId,
-              productId: item.productId,
-              variationId: (item as any).variationId || null,
-              quantity: item.quantity,
-              remainingQty: item.quantity,
-              unitCost: item.costPrice ? Number(item.costPrice) : 0,
-              receivedAt: new Date(),
-            },
-          });
+            // Return stock as a new batch (preserves cost history)
+            await tx.inventoryBatch.create({
+              data: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                variationId: (item as any).variationId || null,
+                quantity: item.quantity,
+                remainingQty: item.quantity,
+                unitCost: item.costPrice ? Number(item.costPrice) : 0,
+                receivedAt: new Date(),
+              },
+            });
 
-          // Update product/variation stock
-          if ((item as any).variationId) {
-            await tx.productVariation.update({
-              where: { id: (item as any).variationId },
+            // Update product/variation stock
+            if ((item as any).variationId) {
+              await tx.productVariation.update({
+                where: { id: (item as any).variationId },
+                data: { stockQty: { increment: item.quantity } },
+              });
+            }
+            await tx.product.update({
+              where: { id: item.productId },
               data: { stockQty: { increment: item.quantity } },
             });
           }
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stockQty: { increment: item.quantity } },
-          });
         }
       }
 
