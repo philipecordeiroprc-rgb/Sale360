@@ -55,7 +55,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const storeRole = user?.storeRole || user?.role || '';
   const userRole = isSuperAdmin ? 'SUPER_ADMIN' : (storeRole || '');
 
-  if (isSuperAdmin) return null;
+  if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
   const visibleItems = navItems.filter(item => item.roles.includes(userRole as Role));
 
