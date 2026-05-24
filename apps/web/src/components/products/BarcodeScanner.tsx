@@ -55,11 +55,17 @@ export function BarcodeScanner({ onDetected, onCodeScanned, onError, isOpen, onC
       }
     } catch {
       if (!stoppedRef.current) {
-        setStatus('notfound');
-        setErrorMsg(`Produto não encontrado para o código: ${code}`);
+        if (onCodeScanned) {
+          // If caller wants raw codes, pass the code directly
+          Quagga.stop();
+          onCodeScanned(code);
+        } else {
+          setStatus('notfound');
+          setErrorMsg(`Produto não encontrado para o código: ${code}`);
+        }
       }
     }
-  }, [onDetected]);
+  }, [onDetected, onCodeScanned]);
 
   // Camera lifecycle – Quagga2
   useEffect(() => {
