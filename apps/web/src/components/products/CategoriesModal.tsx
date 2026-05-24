@@ -260,6 +260,13 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
           )}
         </div>
       </div>
+      {/* Import Modal (nested inside CategoriesModal) */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => { loadCategories(); onChanged(); }}
+        config={IMPORT_CONFIGS.categories}
+      />
     </Modal>
   );
 }
