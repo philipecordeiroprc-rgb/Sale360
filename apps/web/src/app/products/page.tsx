@@ -994,6 +994,20 @@ export default function ProductsPage() {
           ) : null}
         </Modal>
       )}
+
+      {/* Barcode Scanner Overlay */}
+      {scannerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <BarcodeScanner
+              isOpen={scannerOpen}
+              onClose={() => setScannerOpen(false)}
+              onDetected={scannerMode === 'search' ? handleBarcodeForSearch : handleBarcodeForForm}
+              onError={(msg) => show(msg, 'error')}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
