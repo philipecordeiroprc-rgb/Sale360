@@ -7,6 +7,7 @@ import api from '@/lib/api';
 
 interface BarcodeScannerProps {
   onDetected: (product: any) => void;
+  onCodeScanned?: (code: string) => void;
   onError: (message: string) => void;
   isOpen: boolean;
   onClose: () => void;
