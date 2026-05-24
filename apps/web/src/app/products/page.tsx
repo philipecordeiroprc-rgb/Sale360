@@ -863,7 +863,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Price + Low Stock */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-400 text-sm mb-1">Preço de Venda (R$)</label>
               <input type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })}
