@@ -829,9 +829,19 @@ export default function ProductsPage() {
             </div>
             <div>
               <label className="block text-slate-400 text-sm mb-1">Código de Barras</label>
-              <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                placeholder="789..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+              <div className="flex gap-2">
+                <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  placeholder="789..."
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+                <button
+                  type="button"
+                  onClick={() => { setScannerMode('form'); setScannerOpen(true); }}
+                  className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-3 rounded-xl text-sm font-medium transition-colors"
+                  title="Escanear código de barras"
+                >
+                  <Barcode size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
