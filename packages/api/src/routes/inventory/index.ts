@@ -161,6 +161,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           quantity,
           unitCost: cost,
           totalCost: quantity * cost,
+          reason: reason || undefined,
           notes: notes || 'Ajuste manual de estoque',
         },
       });
