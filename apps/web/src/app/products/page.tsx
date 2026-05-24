@@ -1096,6 +1096,14 @@ export default function ProductsPage() {
         </Modal>
       )}
 
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => { loadProducts(); }}
+        config={IMPORT_CONFIGS[importType]}
+      />
+
       {/* Barcode Scanner Overlay */}
       {scannerOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
