@@ -1,0 +1,9 @@
+Nome*;Descrição;SKU;Código de Barras;Categoria;Preço de Venda*;Custo Unitário;Custo Operacional;Taxa (%);Estoque Inicial;Estoque Mínimo;Unidade;Ativo;Fracionado
+Arroz Branco 5kg;Arroz tipo 1 agulhinha pacote 5kg;ARZ001;7891234567890;Alimentos;25,90;18,50;1,20;2,5;50;10;UN;SIM;NÃO
+Feijão Carioca 1kg;Feijão carioca tipo 1;FEI001;7892345678901;Alimentos;8,90;5,80;0,50;2,5;100;20;UN;SIM;NÃO
+Refrigerante Cola 2L;;REF001;7893456789012;Bebidas;12,90;7,00;0,80;3,0;200;30;UN;SIM;NÃO
+Leite Integral 1L;;LEI001;7894567890123;Laticínios;6,50;4,20;0,30;2,0;150;25;UN;SIM;NÃO
+Pão Francês kg;;PAO001;;Padaria;19,90;8,00;2,00;2,5;30;5;KG;SIM;SIM
+Queijo Minas kg;;QUE001;;Laticínios;45,00;28,00;2,50;2,5;15;3;KG;SIM;SIM
+Sabão em Pó 1kg;;SAB001;7895678901234;Limpeza;9,90;6,50;0,60;2,5;80;15;UN;SIM;NÃO
+Detergente 500ml;;DET001;7896789012345;Limpeza;3,50;1,80;0,30;2,5;120;20;UN;SIM;NÃO
