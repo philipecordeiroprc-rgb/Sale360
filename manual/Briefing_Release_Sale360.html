@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sale360 — PDV Inteligente. Do balcão à gestão.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --indigo:   #4f46e5;
+    --indigo-lt:#6366f1;
+    --indigo-dk:#3730a3;
+    --emerald:  #10b981;
+    --amber:    #f59e0b;
+    --red:      #ef4444;
+    --bg:       #0a0a12;
+    --bg2:      #0f0f1e;
+    --bg3:      #13132a;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --border:   rgba(99,102,241,0.15);
+  }
+
+  html { scroll-behavior: smooth; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 48px;
+    background: rgba(10,10,18,0.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo img { width: 28px; height: 28px; border-radius: 8px; }
+  .nav-logo-text { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.5px; color: #fff; }
+  .nav-logo-text span { color: var(--indigo-lt); }
+  .nav-links { display: flex; gap: 28px; list-style: none; }
+  .nav-links a { color: var(--muted); font-size: 0.875rem; text-decoration: none; transition: color .3s; }
+  .nav-links a:hover { color: var(--indigo-lt); }
+  .nav-cta {
+    padding: 9px 22px; border-radius: 8px; font-size: 0.85rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--indigo), #6366f1);
+    color: #fff; text-decoration: none; transition: opacity .3s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 130px 24px 80px;
+    background:
+      radial-gradient(ellipse 90% 60% at 50% 0%, rgba(79,70,229,0.2) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 10% 90%, rgba(16,185,129,0.08) 0%, transparent 60%),
+      var(--bg);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 5px 16px; border-radius: 100px;
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+    font-size: 0.78rem; font-weight: 600; color: var(--muted); margin-bottom: 28px;
+  }
+  .badge span { color: var(--indigo-lt); }
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 4.5rem); font-weight: 900;
+    line-height: 1.05; letter-spacing: -2px; max-width: 860px; margin-bottom: 20px;
+    background: linear-gradient(135deg, #fff 0%, #c7d2fe 55%, #a5b4fc 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: clamp(1rem, 1.5vw, 1.2rem); color: var(--muted);
+    max-width: 640px; line-height: 1.7; margin-bottom: 44px;
+  }
+  .btn-group { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 64px; }
+  .btn-primary {
+    padding: 14px 36px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, var(--indigo), #6366f1);
+    color: #fff; font-size: 1rem; font-weight: 700; text-decoration: none;
+    box-shadow: 0 8px 24px rgba(79,70,229,0.3);
+    transition: transform .3s, box-shadow .3s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(79,70,229,0.45); }
+  .btn-ghost {
+    padding: 14px 32px; border-radius: 10px;
+    background: transparent; border: 1px solid rgba(99,102,241,0.3);
+    color: var(--indigo-lt); font-size: 1rem; font-weight: 600; text-decoration: none;
+    transition: background .3s, border-color .3s;
+  }
+  .btn-ghost:hover { background: rgba(99,102,241,0.08); border-color: var(--indigo-lt); }
+
+  .hero-stats {
+    display: flex; gap: 48px; justify-content: center; flex-wrap: wrap;
+    border-top: 1px solid var(--border); padding-top: 40px; width: 100%; max-width: 750px;
+  }
+  .hero-stat { text-align: center; }
+  .hero-stat-num {
+    font-size: 2rem; font-weight: 900; letter-spacing: -1px;
+    background: linear-gradient(135deg, #fff, #a5b4fc);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero-stat-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+  /* SECTIONS */
+  .sec { padding: 96px 24px; }
+  .sec-inner { max-width: 1100px; margin: 0 auto; }
+  .sec-tag {
+    display: inline-block; font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--indigo-lt); margin-bottom: 12px;
+  }
+  .sec-title {
+    font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 800;
+    letter-spacing: -1px; color: #f1f5f9; margin-bottom: 14px;
+  }
+  .sec-sub {
+    font-size: 1.05rem; color: var(--muted); line-height: 1.7;
+    max-width: 580px; margin-bottom: 52px;
+  }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); }
+
+  /* DORES */
+  #dores { background: var(--bg2); }
+  .dores-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+  .dores-col { padding: 32px; border-radius: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+  .dores-col-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .dores-col-icon { font-size: 1.6rem; }
+  .dores-col-title { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+  .dores-col-sub { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .dor-item { display: flex; gap: 12px; margin-bottom: 16px; align-items: flex-start; }
+  .dor-x {
+    width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.65rem; color: #f87171;
+  }
+  .dor-text { font-size: 0.875rem; color: var(--muted); line-height: 1.5; }
+  .dor-text strong { color: #e2e8f0; font-weight: 600; }
+
+  /* SOLUÇÃO */
+  #solucao { background: var(--bg); }
+  .solucao-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .solucao-visual {
+    border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  }
+  .solucao-visual img { width: 100%; display: block; }
+  .solucao-checks { display: flex; flex-direction: column; gap: 20px; margin-top: 32px; }
+  .solucao-check { display: flex; gap: 14px; align-items: flex-start; }
+  .check-icon {
+    width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+    background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3);
+    display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  }
+  .check-text h4 { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .check-text p  { font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+
+  /* PÚBLICO */
+  #publico { background: var(--bg2); }
+  .publico-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+  .publico-card {
+    padding: 28px; border-radius: 14px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    text-align: center; transition: transform .3s, border-color .3s;
+  }
+  .publico-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.35); }
+  .publico-icon { font-size: 2.2rem; margin-bottom: 12px; }
+  .publico-name { font-size: 1rem; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
+  .publico-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* FUNCIONALIDADES */
+  #funcionalidades { background: var(--bg); }
+  .func-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .func-card {
+    padding: 28px; border-radius: 14px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    transition: transform .3s, border-color .3s;
+  }
+  .func-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,0.35); }
+  .func-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .func-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(99,102,241,0.12); display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  }
+  .func-card h3 { font-size: 0.95rem; font-weight: 700; color: #f1f5f9; }
+  .func-card p  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+  /* TELAS */
+  #telas { background: var(--bg2); }
+  .telas-filter { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 36px; }
+  .filter-btn {
+    padding: 7px 18px; border-radius: 100px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 0.8rem; font-weight: 600;
+    cursor: pointer; transition: all .25s; font-family: inherit;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: rgba(99,102,241,0.15); border-color: rgba(99,102,241,0.4); color: #a5b4fc;
+  }
+  .telas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+  .tela-card {
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--bg3);
+    transition: transform .3s, border-color .3s, box-shadow .3s;
+    cursor: pointer;
+  }
+  .tela-card:hover {
+    transform: translateY(-5px); border-color: rgba(99,102,241,0.4);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+  }
+  .tela-img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; object-position: top; }
+  .tela-info { padding: 16px 20px; }
+  .tela-tag {
+    font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 10px; border-radius: 100px; display: inline-block; margin-bottom: 8px;
+  }
+  .tag-pdv     { background: rgba(99,102,241,0.15); color: #818cf8; }
+  .tag-admin   { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .tag-catalog { background: rgba(16,185,129,0.12); color: #34d399; }
+  .tela-info h4 { font-size: 0.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .tela-info p  { font-size: 0.8rem; color: var(--muted); }
+
+  /* LIGHTBOX */
+  .lightbox {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.92); align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 90vw; max-height: 88vh; border-radius: 10px; border: 1px solid var(--border); }
+  .lightbox-close {
+    position: fixed; top: 20px; right: 24px;
+    background: none; border: none; color: var(--muted); font-size: 2rem; cursor: pointer;
+    transition: color .2s;
+  }
+  .lightbox-close:hover { color: #fff; }
+
+  /* DESTAQUE OFFLINE */
+  #offline { background: var(--bg); }
+  .offline-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+  .offline-flow { display: flex; flex-direction: column; gap: 20px; }
+  .offline-step {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px; border-radius: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  }
+  .offline-step-num {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--indigo), #6366f1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem; font-weight: 800; color: #fff;
+  }
+  .offline-step h4 { font-size: 0.9rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .offline-step p  { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* SEGURANÇA */
+  #seguranca { background: var(--bg); }
+  .seg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .seg-item {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 20px; border-radius: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  }
+  .seg-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+    background: var(--emerald); box-shadow: 0 0 8px rgba(16,185,129,0.5);
+  }
+  .seg-item h4 { font-size: 0.875rem; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
+  .seg-item p  { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* CTA */
+  #cta {
+    background: linear-gradient(135deg, rgba(79,70,229,0.15) 0%, rgba(16,185,129,0.05) 100%);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 100px 24px; text-align: center;
+  }
+  .cta-inner { max-width: 640px; margin: 0 auto; }
+  .cta-title {
+    font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -1px;
+    color: #f1f5f9; margin-bottom: 16px; line-height: 1.1;
+  }
+  .cta-title em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--indigo-lt), var(--emerald));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .cta-sub { font-size: 1.05rem; color: var(--muted); margin-bottom: 36px; line-height: 1.6; }
+  .cta-contact { margin-top: 32px; font-size: 0.9rem; color: var(--muted); }
+  .cta-contact a { color: var(--indigo-lt); text-decoration: none; font-weight: 600; }
+
+  footer {
+    background: var(--bg2); border-top: 1px solid var(--border);
+    padding: 40px 24px; text-align: center;
+  }
+  .footer-logo { font-size: 1.3rem; font-weight: 900; color: #fff; margin-bottom: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .footer-logo img { width: 22px; height: 22px; border-radius: 6px; }
+  .footer-logo span { color: var(--indigo-lt); }
+  .footer-sub { font-size: 0.82rem; color: var(--muted); margin-bottom: 20px; }
+  .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px; }
+  .footer-links a { font-size: 0.82rem; color: var(--muted); text-decoration: none; transition: color .3s; }
+  .footer-links a:hover { color: var(--indigo-lt); }
+  .footer-copy { font-size: 0.72rem; color: #1e293b; }
+
+  @media (max-width: 900px) {
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .dores-cols { grid-template-columns: 1fr; }
+    .solucao-grid { grid-template-columns: 1fr; }
+    .offline-cols { grid-template-columns: 1fr; }
+    .solucao-grid > div:first-child { order: 2; }
+    .solucao-grid > div:last-child  { order: 1; }
+    .sec { padding: 64px 20px; }
+    #hero { padding: 110px 20px 60px; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero-content > * { animation: fadeUp 0.6s ease both; }
+  .hero-content > *:nth-child(1) { animation-delay: .1s; }
+  .hero-content > *:nth-child(2) { animation-delay: .25s; }
+  .hero-content > *:nth-child(3) { animation-delay: .4s; }
+  .hero-content > *:nth-child(4) { animation-delay: .55s; }
+  .hero-content > *:nth-child(5) { animation-delay: .7s; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <img src="../apps/web/public/icon-192.png" alt="Sale360" onerror="this.style.display='none'" />
+    <div class="nav-logo-text">SALE<span>360</span></div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#dores">O Problema</a></li>
+    <li><a href="#funcionalidades">Funcionalidades</a></li>
+    <li><a href="#offline">Offline</a></li>
+    <li><a href="#telas">Telas</a></li>
+    <li><a href="#seguranca">Segurança</a></li>
+  </ul>
+  <a href="#cta" class="nav-cta">Solicitar demo →</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-content" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+    <div class="badge"><span>2026</span> · PDV SaaS Multiplataforma · JVP Tecnologia</div>
+    <h1>Venda mais,<br/>mesmo sem internet.</h1>
+    <p class="hero-sub">
+      O Sale360 é o PDV completo para o varejo: vendas, estoque, financeiro e catálogo online — tudo integrado, funcionando online e offline. Do pequeno negócio à rede de lojas.
+    </p>
+    <div class="btn-group">
+      <a href="#cta" class="btn-primary">Quero conhecer →</a>
+      <a href="#telas" class="btn-ghost">Ver o sistema</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-num">100%</div>
+        <div class="hero-stat-lbl">Offline-First</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">11</div>
+        <div class="hero-stat-lbl">Módulos integrados</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">3</div>
+        <div class="hero-stat-lbl">Perfis de acesso</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-num">Web + App</div>
+        <div class="hero-stat-lbl">Multiplataforma</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DORES -->
+<section id="dores" class="sec" style="max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">O Problema</span>
+    <h2 class="sec-title">Reconhece alguma dessas situações?</h2>
+    <p class="sec-sub">O varejo brasileiro ainda depende de sistemas ultrapassados — ou pior, de papel e planilha.</p>
+    <div class="dores-cols">
+      <div class="dores-col">
+        <div class="dores-col-header">
+          <div class="dores-col-icon">😤</div>
+          <div>
+            <div class="dores-col-title">Para o Dono da Loja</div>
+            <div class="dores-col-sub">Gerir sem informação é prejuízo certo</div>
+          </div>
+        </div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Estoque descontrolado</strong> — não sabe o que tem, o que vendeu e o que precisa comprar.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Vendas perdidas sem internet</strong> — sistema trava, fila cresce e o cliente vai embora.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Financeiro no caderno</strong> — sem visão de faturamento, lucro ou fluxo de caixa em tempo real.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Precificação no chute</strong> — não sabe o custo real da mercadoria vendida, margem é uma incógnita.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Sem catálogo online</strong> — o cliente pergunta se tem o produto e você não tem como mostrar.</div></div>
+      </div>
+      <div class="dores-col">
+        <div class="dores-col-header">
+          <div class="dores-col-icon">😔</div>
+          <div>
+            <div class="dores-col-title">Para o Vendedor</div>
+            <div class="dores-col-sub">Ferramenta ruim = venda menor</div>
+          </div>
+        </div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Cadastro manual de cliente</strong> — toda venda repete nome, telefone, endereço do zero.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Não sabe o estoque real</strong> — vende produto que não tem, gera atrito com o cliente.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Cupom fiscal e pedido separados</strong> — retrabalho de digitar a mesma venda duas vezes.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Sem histórico do cliente</strong> — não sabe o que ele já comprou, perde oportunidade de venda adicional.</div></div>
+        <div class="dor-item"><div class="dor-x">✕</div><div class="dor-text"><strong>Comissão impossível de calcular</strong> — no fim do mês ninguém sabe quem vendeu quanto.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SOLUÇÃO -->
+<section id="solucao" class="sec" style="max-width:none;">
+  <div class="sec-inner">
+    <div class="solucao-grid">
+      <div>
+        <span class="sec-tag">A Solução</span>
+        <h2 class="sec-title">Um sistema que trabalha junto com você.</h2>
+        <p style="font-size:1.05rem;color:var(--muted);line-height:1.7;margin-bottom:8px;">
+          O Sale360 foi projetado para o varejo real: funciona 100% offline, sincroniza automaticamente quando a internet volta e oferece uma experiência simples tanto no celular quanto no computador. Do caixa ao relatório gerencial, tudo no mesmo lugar.
+        </p>
+        <div class="solucao-checks">
+          <div class="solucao-check">
+            <div class="check-icon">📡</div>
+            <div class="check-text">
+              <h4>Offline-first de verdade</h4>
+              <p>O PDV continua funcionando mesmo sem internet. As vendas ficam salvas no dispositivo e sincronizam automaticamente quando a conexão voltar.</p>
+            </div>
+          </div>
+          <div class="solucao-check">
+            <div class="check-icon">📦</div>
+            <div class="check-text">
+              <h4>Estoque inteligente com FIFO/PEPS</h4>
+              <p>Controle de lotes com custo real por entrada. O sistema consome automaticamente os lotes mais antigos e calcula o CMV exato de cada venda.</p>
+            </div>
+          </div>
+          <div class="solucao-check">
+            <div class="check-icon">🏪</div>
+            <div class="check-text">
+              <h4>Multi-loja com administração central</h4>
+              <p>Gerencie várias lojas com um único login. Cada loja tem seu estoque, suas vendas e seu financeiro independentes.</p>
+            </div>
+          </div>
+          <div class="solucao-check">
+            <div class="check-icon">🌐</div>
+            <div class="check-text">
+              <h4>Catálogo público para o cliente</h4>
+              <p>Cada loja ganha uma vitrine online automaticamente. Seus clientes navegam pelos produtos, veem preços e fazem pedidos pelo link.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="solucao-visual">
+          <img src="screenshots/03_dashboard.png" alt="Dashboard Sale360" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- OFFLINE DESTAQUE -->
+<section id="offline" class="sec" style="background:var(--bg2);max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">Diferencial</span>
+    <h2 class="sec-title">Offline-first: o PDV nunca para.</h2>
+    <p class="sec-sub">O maior diferencial do Sale360. Enquanto outros sistemas travam quando a internet cai, o Sale360 continua operando normalmente.</p>
+    <div class="offline-cols">
+      <div class="offline-flow">
+        <div class="offline-step">
+          <div class="offline-step-num">1</div>
+          <div>
+            <h4>Venda normal, sempre</h4>
+            <p>O vendedor registra a venda no PDV exatamente como faria online. Produtos, cliente, pagamento — tudo funciona offline.</p>
+          </div>
+        </div>
+        <div class="offline-step">
+          <div class="offline-step-num">2</div>
+          <div>
+            <h4>Dados salvos no dispositivo</h4>
+            <p>As vendas ficam armazenadas localmente (IndexedDB no navegador, SQLite no app mobile) com fila de sincronização.</p>
+          </div>
+        </div>
+        <div class="offline-step">
+          <div class="offline-step-num">3</div>
+          <div>
+            <h4>Sincronização automática</h4>
+            <p>Quando a internet volta, o sistema envia as vendas pendentes para o servidor. O estoque é atualizado com baixa por FIFO/PEPS, o financeiro é consolidado e os indicadores refletem a realidade.</p>
+          </div>
+        </div>
+        <div class="offline-step">
+          <div class="offline-step-num">4</div>
+          <div>
+            <h4>Resolução de conflitos</h4>
+            <p>Se houver conflito (ex: produto vendido offline já sem estoque), o sistema notifica e oferece opções de resolução.</p>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="border-radius:16px;overflow:hidden;border:1px solid var(--border);box-shadow:0 24px 64px rgba(0,0,0,0.4);">
+          <img src="screenshots/04_orders.png" alt="Vendas Sale360" style="width:100%;display:block;" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);padding:16px;text-align:center;">
+            <div style="font-size:2rem;font-weight:900;color:#818cf8;margin-bottom:4px;">Push</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Envia vendas locais<br/>para o servidor</div>
+          </div>
+          <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--bg3);padding:16px;text-align:center;">
+            <div style="font-size:2rem;font-weight:900;color:#34d399;margin-bottom:4px;">Pull</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Baixa produtos, clientes<br/>e vendas de outros PDVs</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- PÚBLICO -->
+<section id="publico" class="sec" style="background:var(--bg2);max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">Para quem é</span>
+    <h2 class="sec-title">Quem usa o Sale360?</h2>
+    <p class="sec-sub">Perfis de acesso com permissões específicas para cada função dentro da loja.</p>
+    <div class="publico-grid">
+      <div class="publico-card">
+        <div class="publico-icon">👑</div>
+        <div class="publico-name">Super Admin</div>
+        <div class="publico-desc">Visão da plataforma: gerencia todas as lojas, planos, usuários e assinaturas. Acessa qualquer loja como administrador.</div>
+      </div>
+      <div class="publico-card">
+        <div class="publico-icon">🏪</div>
+        <div class="publico-name">Administrador (Owner)</div>
+        <div class="publico-desc">Acesso total à loja: dashboard, vendas, produtos, estoque, compras, fornecedores, clientes, financeiro, indicadores e configurações.</div>
+      </div>
+      <div class="publico-card">
+        <div class="publico-icon">🛒</div>
+        <div class="publico-name">Vendedor (Cashier)</div>
+        <div class="publico-desc">Foco no balcão: PDV, consulta de produtos, cadastro de clientes e dashboard simplificado. Não acessa financeiro nem estoque.</div>
+      </div>
+      <div class="publico-card">
+        <div class="publico-icon">🛍️</div>
+        <div class="publico-name">Cliente Final</div>
+        <div class="publico-desc">Acessa o catálogo público da loja pelo link. Navega pelos produtos, vê preços e faz pedidos — sem precisar instalar nada.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FUNCIONALIDADES -->
+<section id="funcionalidades" class="sec" style="max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">Funcionalidades</span>
+    <h2 class="sec-title">Tudo que sua loja precisa para vender mais.</h2>
+    <p class="sec-sub">Módulos integrados — cada parte do sistema conversa com as outras, eliminando retrabalho.</p>
+    <div class="func-grid">
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">📊</div><h3>Dashboard em Tempo Real</h3></div>
+        <p>Visão geral da loja: vendas do dia, ticket médio, produtos mais vendidos, estoque baixo. Tudo atualizado automaticamente, mesmo após sincronização de vendas offline.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🛒</div><h3>PDV Completo</h3></div>
+        <p>Registro de vendas com busca rápida de produtos, seleção de cliente, múltiplos meios de pagamento (dinheiro, cartão, PIX) e desconto. Funciona 100% offline.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">📦</div><h3>Gestão de Produtos</h3></div>
+        <p>Cadastro completo com variações (tamanho, cor, sabor), categorias, preço de venda, código de barras e imagem. Organização por categorias com busca rápida.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🏗️</div><h3>Estoque com Lotes (FIFO/PEPS)</h3></div>
+        <p>Controle de inventário por lotes com custo unitário real. O sistema consome automaticamente os lotes mais antigos (PEPS), calcula o custo exato da mercadoria vendida e mantém a rentabilidade visível.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">📥</div><h3>Compras & Entradas</h3></div>
+        <p>Registro de compras de mercadoria com criação automática de lotes no estoque. Cada entrada gera um lote com quantidade, custo unitário e data — pronto para o FIFO.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🚚</div><h3>Fornecedores</h3></div>
+        <p>Cadastro completo de fornecedores com CNPJ, contato e histórico de compras. Vincule produtos aos seus fornecedores para facilitar reposições.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">👥</div><h3>Clientes</h3></div>
+        <p>Cadastro de clientes com nome, telefone, endereço e histórico completo de compras. Perfeito para programas de fidelidade e vendas recorrentes.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🏷️</div><h3>Cupons de Desconto</h3></div>
+        <p>Criação de cupons com valor fixo ou percentual, data de validade e limite de uso. Aplique na venda com um clique e acompanhe a efetividade.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">💰</div><h3>Financeiro</h3></div>
+        <p>Fluxo de caixa completo com entradas e saídas categorizadas. Cada venda gera automaticamente uma entrada no caixa. Visão diária, semanal e mensal.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">📈</div><h3>Indicadores & Relatórios</h3></div>
+        <p>Métricas do negócio: faturamento, ticket médio, produtos mais vendidos, margem de lucro. Visualize por período e compare o desempenho entre lojas.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🌐</div><h3>Catálogo Online</h3></div>
+        <p>Vitrine digital automática para cada loja. Seus clientes acessam pelo navegador, veem os produtos com fotos e preços — sem instalar nada.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🔐</div><h3>Multi-Tenant com Isolamento Total</h3></div>
+        <p>Cada loja é um tenant independente com dados completamente isolados. Um administrador de plataforma gerencia tudo de um painel central.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">🔄</div><h3>Sincronização Inteligente</h3></div>
+        <p>Engine de sync própria com push/pull. Dispositivos enviam suas vendas locais e recebem atualizações do servidor. Conflitos são detectados e resolvidos.</p>
+      </div>
+      <div class="func-card">
+        <div class="func-head"><div class="func-icon">⚙️</div><h3>Configurações por Loja</h3></div>
+        <p>Cada loja configura seu perfil: nome, slug, endereço, telefone. O catálogo público e os comprovantes usam esses dados automaticamente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TELAS -->
+<section id="telas" class="sec" style="background:var(--bg2);max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">Screenshots</span>
+    <h2 class="sec-title">Veja o sistema em funcionamento.</h2>
+    <p class="sec-sub">Telas reais do Sale360 — sem mockup, sem ilustração. Exatamente o que sua loja vai usar.</p>
+    <div class="telas-filter">
+      <button class="filter-btn active" onclick="filterTelas('all', this)">Todas</button>
+      <button class="filter-btn" onclick="filterTelas('pdv', this)">PDV</button>
+      <button class="filter-btn" onclick="filterTelas('admin', this)">Admin</button>
+      <button class="filter-btn" onclick="filterTelas('catalog', this)">Catálogo</button>
+    </div>
+    <div class="telas-grid" id="telasGrid">
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/01_login.png')">
+        <img class="tela-img" src="screenshots/01_login.png" alt="Login Sale360" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Tela de Login</h4>
+          <p>Login com email e senha. Suporte a múltiplas lojas por usuário com seleção após autenticação.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/02_select_store.png')">
+        <img class="tela-img" src="screenshots/02_select_store.png" alt="Selecionar Loja" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Seleção de Loja</h4>
+          <p>Usuários com múltiplas lojas escolhem qual acessar. Super admins veem opção "Administrar Plataforma".</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/03_dashboard.png')">
+        <img class="tela-img" src="screenshots/03_dashboard.png" alt="Dashboard" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Dashboard</h4>
+          <p>Visão geral com cards de vendas, produtos, clientes e indicadores principais da loja.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/04_orders.png')">
+        <img class="tela-img" src="screenshots/04_orders.png" alt="Vendas" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Vendas</h4>
+          <p>Histórico completo de vendas com filtros por status (concluído, cancelado), data e forma de pagamento.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/04b_new_sale_modal.png')">
+        <img class="tela-img" src="screenshots/04b_new_sale_modal.png" alt="Nova Venda" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Nova Venda (PDV)</h4>
+          <p>Modal de venda rápida com busca de produtos, seleção de cliente e meios de pagamento.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/05_products.png')">
+        <img class="tela-img" src="screenshots/05_products.png" alt="Produtos" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Produtos</h4>
+          <p>Lista de produtos com busca, categorias, variações (sabor/tamanho) e controle de estoque.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/05b_product_detail.png')">
+        <img class="tela-img" src="screenshots/05b_product_detail.png" alt="Detalhe do Produto" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Detalhe do Produto</h4>
+          <p>Visão expandida com variações, níveis de estoque individuais, preços e código de barras.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/06_inventory.png')">
+        <img class="tela-img" src="screenshots/06_inventory.png" alt="Estoque" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Estoque</h4>
+          <p>Controle de inventário com quantidades por produto e variação. Visão consolidada do estoque atual.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/06b_inventory_batches.png')">
+        <img class="tela-img" src="screenshots/06b_inventory_batches.png" alt="Lotes de Estoque" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Lotes de Estoque (FIFO)</h4>
+          <p>Expansão dos lotes: data de entrada, quantidade, custo unitário e quantidade restante em cada lote.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/07_purchases.png')">
+        <img class="tela-img" src="screenshots/07_purchases.png" alt="Compras" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Compras</h4>
+          <p>Registro de entradas de mercadoria. Cada compra gera lotes automaticamente no estoque.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/08_suppliers.png')">
+        <img class="tela-img" src="screenshots/08_suppliers.png" alt="Fornecedores" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Fornecedores</h4>
+          <p>Cadastro de fornecedores com dados de contato, CNPJ e produtos vinculados.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/09_customers.png')">
+        <img class="tela-img" src="screenshots/09_customers.png" alt="Clientes" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Clientes</h4>
+          <p>Lista de clientes com nome, telefone, endereço e total de compras realizadas.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/10_coupons.png')">
+        <img class="tela-img" src="screenshots/10_coupons.png" alt="Cupons" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Cupons de Desconto</h4>
+          <p>Gestão de cupons: valor, percentual, validade e acompanhamento de uso.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/11_finance.png')">
+        <img class="tela-img" src="screenshots/11_finance.png" alt="Financeiro" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Financeiro</h4>
+          <p>Fluxo de caixa com entradas e saídas. Cada venda gera automaticamente um registro financeiro.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/12_indicators.png')">
+        <img class="tela-img" src="screenshots/12_indicators.png" alt="Indicadores" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Indicadores</h4>
+          <p>Gráficos de faturamento, ticket médio, produtos mais vendidos e margem por período.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="pdv" onclick="openLightbox('screenshots/13_settings.png')">
+        <img class="tela-img" src="screenshots/13_settings.png" alt="Configurações" />
+        <div class="tela-info">
+          <span class="tela-tag tag-pdv">PDV</span>
+          <h4>Configurações</h4>
+          <p>Dados da loja: nome, slug para catálogo, endereço e telefone para comprovantes.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="admin" onclick="openLightbox('screenshots/14_admin_tenants.png')">
+        <img class="tela-img" src="screenshots/14_admin_tenants.png" alt="Admin Lojas" />
+        <div class="tela-info">
+          <span class="tela-tag tag-admin">Admin</span>
+          <h4>Painel Admin — Lojas</h4>
+          <p>Visão de todas as lojas da plataforma com status do plano e ações de gerenciamento.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="admin" onclick="openLightbox('screenshots/15_admin_users.png')">
+        <img class="tela-img" src="screenshots/15_admin_users.png" alt="Admin Usuários" />
+        <div class="tela-info">
+          <span class="tela-tag tag-admin">Admin</span>
+          <h4>Painel Admin — Usuários</h4>
+          <p>Gestão de usuários da plataforma com papéis e vínculos com lojas.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="admin" onclick="openLightbox('screenshots/15b_admin_subscriptions.png')">
+        <img class="tela-img" src="screenshots/15b_admin_subscriptions.png" alt="Admin Assinaturas" />
+        <div class="tela-info">
+          <span class="tela-tag tag-admin">Admin</span>
+          <h4>Painel Admin — Assinaturas</h4>
+          <p>Gestão de planos e assinaturas das lojas. Upgrade, downgrade e status de pagamento.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="catalog" onclick="openLightbox('screenshots/16_catalog.png')">
+        <img class="tela-img" src="screenshots/16_catalog.png" alt="Catálogo Desktop" />
+        <div class="tela-info">
+          <span class="tela-tag tag-catalog">Catálogo</span>
+          <h4>Catálogo Público — Desktop</h4>
+          <p>Vitrine online da loja acessível pelo navegador. Produtos com foto, preço e busca.</p>
+        </div>
+      </div>
+      <div class="tela-card" data-grupo="catalog" onclick="openLightbox('screenshots/16b_catalog_mobile.png')">
+        <img class="tela-img" src="screenshots/16b_catalog_mobile.png" alt="Catálogo Mobile" />
+        <div class="tela-info">
+          <span class="tela-tag tag-catalog">Catálogo</span>
+          <h4>Catálogo Público — Mobile</h4>
+          <p>Mesma vitrine otimizada para celular. O cliente navega e compra pelo smartphone.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">×</button>
+  <img id="lightboxImg" src="" alt="" />
+</div>
+
+<div class="divider"></div>
+
+<!-- SEGURANÇA -->
+<section id="seguranca" class="sec" style="max-width:none;">
+  <div class="sec-inner">
+    <span class="sec-tag">Confiança</span>
+    <h2 class="sec-title">Seguro, escalável e em conformidade.</h2>
+    <p class="sec-sub">O Sale360 foi desenvolvido com padrões profissionais de segurança e arquitetura multi-tenant.</p>
+    <div class="seg-grid">
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>Autenticação JWT com Refresh Token</h4>
+          <p>Tokens de acesso de curta duração com refresh tokens para manter a sessão segura. Senhas com hash bcrypt — ninguém vê a senha do usuário.</p>
+        </div>
+      </div>
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>Multi-Tenant com Isolamento Total</h4>
+          <p>Cada loja tem dados completamente isolados. Um vendedor da Loja A nunca acessa dados da Loja B. Tenant ID validado em todas as requisições.</p>
+        </div>
+      </div>
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>Controle de Acesso por Perfil</h4>
+          <p>Super Admin, Owner e Cashier com permissões granulares. Cada rota da API valida o papel do usuário antes de executar qualquer operação.</p>
+        </div>
+      </div>
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>HTTPS em Todo o Tráfego</h4>
+          <p>Toda comunicação entre cliente e servidor é criptografada via TLS. Dados nunca trafegam em texto puro na rede.</p>
+        </div>
+      </div>
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>PostgreSQL com Neon Tech</h4>
+          <p>Banco de dados serverless com pooling de conexões, backups automáticos e baixa latência (servidor em São Paulo).</p>
+        </div>
+      </div>
+      <div class="seg-item">
+        <div class="seg-dot"></div>
+        <div>
+          <h4>Hospedagem Oracle Cloud Brasil</h4>
+          <p>Servidores na região de São Paulo — latência abaixo de 30ms para todo o Brasil e conformidade com a legislação nacional.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section id="cta">
+  <div class="cta-inner">
+    <div class="cta-title">Pronto para transformar<br/>a gestão da sua <em>loja?</em></div>
+    <p class="cta-sub">Agende uma demonstração gratuita. Mostramos o Sale360 funcionando com os produtos da sua loja, sem compromisso.</p>
+    <div class="btn-group" style="justify-content:center;">
+      <a href="mailto:contato@jvptecnologia.com.br?subject=Quero%20conhecer%20o%20Sale360" class="btn-primary">Solicitar demonstração →</a>
+      <a href="https://www.jvptecnologia.com.br" target="_blank" rel="noopener" class="btn-ghost">Conhecer a JVP</a>
+    </div>
+    <div class="cta-contact">
+      Fale diretamente: <a href="mailto:contato@jvptecnologia.com.br">contato@jvptecnologia.com.br</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <img src="../apps/web/public/icon-192.png" alt="" onerror="this.style.display='none'" />
+    SALE<span>360</span>
+  </div>
+  <div class="footer-sub">Desenvolvido por JVP Tecnologia · PDV Inteligente — Do balcão à gestão</div>
+  <div class="footer-links">
+    <a href="/privacidade">Política de Privacidade</a>
+    <a href="/termos">Termos de Uso</a>
+    <a href="https://www.jvptecnologia.com.br" target="_blank" rel="noopener">jvptecnologia.com.br</a>
+    <a href="mailto:contato@jvptecnologia.com.br">contato@jvptecnologia.com.br</a>
+  </div>
+  <div class="footer-copy">© 2026 JVP Tecnologia · Todos os direitos reservados</div>
+</footer>
+
+<script>
+  (function() {
+    function svgPlaceholder(text) {
+      var enc = encodeURIComponent;
+      return 'data:image/svg+xml,' + enc(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360">' +
+        '<rect fill="%2313132a" width="640" height="360" rx="8"/>' +
+        '<rect fill="none" stroke="%2333385a" stroke-width="1" x="0.5" y="0.5" width="639" height="359" rx="8"/>' +
+        '<text fill="%2364748b" font-family="Inter,sans-serif" font-size="13" text-anchor="middle" dominant-baseline="middle" x="320" y="180">' +
+        (text || 'Screenshot indisponível').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') +
+        '</text></svg>'
+      );
+    }
+
+    function fixImg(img) {
+      if (img.dataset.fixed) return;
+      img.dataset.fixed = '1';
+      img.src = svgPlaceholder(img.alt);
+      var card = img.closest('.tela-card');
+      if (card) card.onclick = null;
+    }
+
+    document.querySelectorAll('img').forEach(function(img) {
+      img.addEventListener('error', function() { fixImg(this); });
+      if (img.complete && img.naturalWidth === 0 && img.src) fixImg(img);
+    });
+
+    var lbImg = document.getElementById('lightboxImg');
+    if (lbImg) {
+      lbImg.addEventListener('error', function() {
+        this.src = svgPlaceholder('Screenshot indisponível');
+      });
+    }
+  })();
+
+  function filterTelas(grupo, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tela-card').forEach(card => {
+      if (grupo === 'all' || card.dataset.grupo === grupo) {
+        card.style.display = '';
+      } else {
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function openLightbox(src) {
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightbox').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+</script>
+</body>
+</html>
