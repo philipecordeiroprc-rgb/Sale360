@@ -27,7 +27,6 @@ const STEP_LABELS: Record<Step, string> = {
 export function ImportModal({ open, onClose, onImported, config }: ImportModalProps) {
   const [step, setStep] = useState<Step>('guide');
   const [rows, setRows] = useState<ParsedRow[]>([]);
-  const [rawData, setRawData] = useState<Record<string, string>[]>([]);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [importing, setImporting] = useState(false);
 
