@@ -322,7 +322,7 @@ export const api = {
       const qs = sp.toString();
       return request<any>(`/api/inventory/movements${qs ? `?${qs}` : ''}`);
     },
-    adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; notes?: string }) {
+    adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; reason?: string; notes?: string }) {
       return request<any>('/api/inventory/adjust', { method: 'POST', body: JSON.stringify(data) });
     },
   },
