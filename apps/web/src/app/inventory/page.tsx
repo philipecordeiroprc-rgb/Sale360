@@ -16,6 +16,16 @@ const MOVEMENT_TYPES: Record<string, string> = {
   TRANSFER: 'Transferência',
 };
 
+const REASON_OPTIONS = [
+  'Perda / Avariado',
+  'Vencimento',
+  'Erro de inventário',
+  'Amostra / Brinde',
+  'Devolução fornecedor',
+  'Correção de estoque',
+  'Outro',
+];
+
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const show = (message: string, type: 'success' | 'error' = 'success') => {
