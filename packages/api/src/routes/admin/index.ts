@@ -393,6 +393,30 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
+  // Update user platform role (promote/demote SUPER_ADMIN)
+  app.put('/users/:userId/role', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+    const schema = z.object({
+      role: z.enum(['USER', 'SUPER_ADMIN']),
+    });
+
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: { role: parsed.data.role },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    });
+
+    return updated;
+  });
+
   // List all users (across all tenants)
   app.get('/users', async (request) => {
     const { search, page = '1', limit = '50' } = request.query as Record<string, string>;
