@@ -1,0 +1,15 @@
+Nome do Produto*;Categoria;Preço Base*;Tamanho;Cor;Qtd*;Preço Extra;SKU;Código de Barras;Estoque Mínimo
+Camiseta Infantil Turma da Mônica;Roupas;49,90;2;Rosa;5;0,00;CAM-TM-2-RS;7891000000001;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;2;Azul Claro;8;0,00;CAM-TM-2-AZ;7891000000002;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;4;Rosa;6;0,00;CAM-TM-4-RS;7891000000003;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;4;Azul Claro;10;0,00;CAM-TM-4-AZ;7891000000004;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;6;Rosa;4;0,00;CAM-TM-6-RS;7891000000005;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;6;Azul Claro;7;0,00;CAM-TM-6-AZ;7891000000006;2
+Camiseta Infantil Turma da Mônica;Roupas;49,90;8;Rosa;3;0,00;CAM-TM-8-RS;7891000000007;1
+Camiseta Infantil Turma da Mônica;Roupas;49,90;8;Azul Claro;5;0,00;CAM-TM-8-AZ;7891000000008;1
+Regata Adulto Verão;Roupas;39,90;P;Vermelha;12;0,00;REG-VER-P-VM;7892000000001;3
+Regata Adulto Verão;Roupas;39,90;P;Preta;10;0,00;REG-VER-P-PR;7892000000002;3
+Regata Adulto Verão;Roupas;39,90;M;Vermelha;15;0,00;REG-VER-M-VM;7892000000003;3
+Regata Adulto Verão;Roupas;39,90;M;Preta;12;0,00;REG-VER-M-PR;7892000000004;3
+Regata Adulto Verão;Roupas;39,90;G;Vermelha;8;0,00;REG-VER-G-VM;7892000000005;3
+Regata Adulto Verão;Roupas;39,90;G;Preta;6;0,00;REG-VER-G-PR;7892000000006;3
