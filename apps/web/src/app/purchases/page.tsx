@@ -1129,6 +1129,14 @@ export default function PurchasesPage() {
         </div>
       </Modal>
 
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => loadPurchases()}
+        config={IMPORT_CONFIGS.purchases}
+      />
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl text-sm font-medium ${
