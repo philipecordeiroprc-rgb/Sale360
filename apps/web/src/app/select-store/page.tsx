@@ -20,7 +20,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 export default function SelectStorePage() {
   const router = useRouter();
-  const { availableTenants, switchTenant, logout, user } = useAuth();
+  const { availableTenants, switchTenant, logout, user, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
 
