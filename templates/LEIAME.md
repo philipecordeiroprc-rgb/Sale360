@@ -6,7 +6,9 @@ Formatos: **CSV com separador `;` (ponto e vírgula)** e encoding **UTF-8**.
 
 ---
 
-## 1. Produtos (`import_produtos.csv`)
+## 1. Produtos Simples (`import_produtos.csv`)
+
+> Para produtos COM variações (roupas, calçados, bebidas com múltiplos tamanhos/sabores), use o template `import_produtos_variacoes.csv` (seção 4).
 
 | # | Campo | Obrigatório | Tipo | Descrição |
 |---|-------|:-----------:|------|-----------|
