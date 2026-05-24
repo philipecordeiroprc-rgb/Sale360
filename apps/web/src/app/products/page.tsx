@@ -371,6 +371,36 @@ export default function ProductsPage() {
             <Tags size={15} />
             Categorias
           </button>
+          <div className="relative group">
+            <button
+              onClick={() => { setImportType('products'); setImportOpen(true); }}
+              className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Upload size={15} />
+              Importar
+            </button>
+            {/* Dropdown for import type */}
+            <div className="absolute right-0 top-full mt-1 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-30 hidden group-hover:block">
+              <button
+                onClick={() => { setImportType('products'); setImportOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-t-xl text-sm text-white transition-colors"
+              >
+                Produtos Simples
+              </button>
+              <button
+                onClick={() => { setImportType('productsVariations'); setImportOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 text-sm text-white transition-colors"
+              >
+                Produtos com Variações
+              </button>
+              <button
+                onClick={() => { setCategoriesOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-b-xl text-sm text-slate-300 transition-colors border-t border-slate-800"
+              >
+                Importar Categorias...
+              </button>
+            </div>
+          </div>
           <button
             onClick={handleCreate}
             className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
