@@ -1114,13 +1114,6 @@ function VariationSelector({
   const selectedVar = selectedId ? byId.get(selectedId) : null;
   const selectedDims = selectedVar ? parseDims(selectedVar.name) : null;
 
-  // Helper: compute actual price from either price or priceModifier
-  const getVarPrice = (v: any): number => {
-    if (v.price != null) return Number(v.price);
-    const mod = v.priceModifier != null ? Number(v.priceModifier) : 0;
-    return basePrice + mod;
-  };
-
   return (
     <div className="mb-4 space-y-3">
       {/* Dimension 1 — horizontal chips */}
