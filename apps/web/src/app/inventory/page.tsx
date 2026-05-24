@@ -129,7 +129,20 @@ export default function InventoryPage() {
     setBatchProductSearch(p.name);
     setBatchProducts([]);
     setAdjustVariationId('');
-    setAdjustVariations(p.variations || []);
+    // Sort variations: color alphabetically, then size numerically
+    // "2 azul", "4 azul", "6 azul", "2 caramelo", "4 caramelo"...
+    const sorted = [...(p.variations || [])].sort((a: any, b: any) => {
+      const aName: string = a.name || '';
+      const bName: string = b.name || '';
+      const aNum = parseInt(aName.match(/^(\d+)/)?.[1] || '0', 10);
+      const bNum = parseInt(bName.match(/^(\d+)/)?.[1] || '0', 10);
+      const aText = aName.replace(/^\d+\s*/, '').trim().toLowerCase();
+      const bText = bName.replace(/^\d+\s*/, '').trim().toLowerCase();
+      // First by text (color) alphabetically, then by number (size)
+      if (aText !== bText) return aText.localeCompare(bText, 'pt-BR');
+      return aNum - bNum;
+    });
+    setAdjustVariations(sorted);
   };
 
   const selectProduct = (p: any) => {
