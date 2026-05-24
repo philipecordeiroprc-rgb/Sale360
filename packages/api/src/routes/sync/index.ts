@@ -114,7 +114,89 @@ export const syncRoutes: FastifyPluginAsync = async (app) => {
         });
         const orderNumber = (lastOrder?.orderNumber || 0) + 1;
 
-        // Create order
+        // Process each item with FIFO/PEPS (same logic as regular sale)
+        const itemsData: any[] = [];
+        for (const item of (data.items || [])) {
+          let costPrice: number | undefined;
+          let totalCost: number | undefined;
+
+          if (item.productId) {
+            // FIFO: consume from oldest batches
+            let remaining = item.quantity;
+            let totalCostAcc = 0;
+            const batches = await prisma.inventoryBatch.findMany({
+              where: {
+                tenantId: request.tenantId,
+                productId: item.productId,
+                variationId: item.variationId || null,
+                remainingQty: { gt: 0 },
+              },
+              orderBy: { receivedAt: 'asc' },
+            });
+
+            for (const batch of batches) {
+              if (remaining <= 0) break;
+              const consume = Math.min(Number(batch.remainingQty), remaining);
+              const batchCost = Number(batch.unitCost);
+
+              // Decrement batch remaining quantity
+              await prisma.inventoryBatch.update({
+                where: { id: batch.id },
+                data: { remainingQty: { decrement: consume } },
+              });
+
+              // Create SALE_OUT movement
+              await prisma.inventoryMovement.create({
+                data: {
+                  tenantId: request.tenantId,
+                  productId: item.productId,
+                  variationId: item.variationId || null,
+                  type: 'SALE_OUT',
+                  quantity: -consume,
+                  unitCost: batchCost,
+                  totalCost: -(consume * batchCost),
+                  batchId: batch.id,
+                  notes: `Venda offline #${orderNumber} - ${item.productName}`,
+                },
+              });
+
+              totalCostAcc += consume * batchCost;
+              remaining -= consume;
+            }
+
+            // Weighted average cost for this item
+            costPrice = totalCostAcc / item.quantity;
+            totalCost = totalCostAcc;
+
+            // Update product/variation stock
+            if (item.variationId) {
+              await prisma.productVariation.update({
+                where: { id: item.variationId },
+                data: { stockQty: { decrement: item.quantity } },
+              });
+            }
+            await prisma.product.update({
+              where: { id: item.productId },
+              data: {
+                stockQty: { decrement: item.quantity },
+                costPrice: Math.round(costPrice * 100) / 100,
+              },
+            });
+          }
+
+          itemsData.push({
+            productId: item.productId || null,
+            variationId: item.variationId || null,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            costPrice,
+            totalCost,
+          });
+        }
+
+        // Create order with items (including cost data)
         const order = await prisma.order.create({
           data: {
             tenantId: request.tenantId,
@@ -133,29 +215,11 @@ export const syncRoutes: FastifyPluginAsync = async (app) => {
             syncStatus: 'SYNCED',
             createdAtDevice: new Date(createdAtDevice),
             items: {
-              create: (data.items || []).map((item: any) => ({
-                productId: item.productId,
-                productName: item.productName,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                total: item.total,
-              })),
+              create: itemsData,
             },
           },
           include: { items: true },
         });
-
-        // Decrement stock for each item
-        if (data.items) {
-          for (const item of data.items) {
-            if (item.productId) {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: { stockQty: { decrement: item.quantity } },
-              });
-            }
-          }
-        }
 
         // Cash flow
         await prisma.cashFlow.create({
