@@ -418,19 +418,17 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           });
 
           // Return stock as a new batch (preserves cost history)
-          if (item.costPrice) {
-            await tx.inventoryBatch.create({
-              data: {
-                tenantId: request.tenantId,
-                productId: item.productId,
-                variationId: (item as any).variationId || null,
-                quantity: item.quantity,
-                remainingQty: item.quantity,
-                unitCost: Number(item.costPrice),
-                receivedAt: new Date(),
-              },
-            });
-          }
+          await tx.inventoryBatch.create({
+            data: {
+              tenantId: request.tenantId,
+              productId: item.productId,
+              variationId: (item as any).variationId || null,
+              quantity: item.quantity,
+              remainingQty: item.quantity,
+              unitCost: item.costPrice ? Number(item.costPrice) : 0,
+              receivedAt: new Date(),
+            },
+          });
 
           // Update product/variation stock
           if ((item as any).variationId) {
