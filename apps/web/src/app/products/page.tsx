@@ -635,18 +635,27 @@ export default function ProductsPage() {
                                 const input = document.createElement('input');
                                 input.type = 'file';
                                 input.accept = 'image/*';
+                                input.style.display = 'none';
+                                document.body.appendChild(input);
                                 input.onchange = async (ev: any) => {
                                   const file = ev.target.files?.[0];
-                                  if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onload = async () => {
-                                    try {
-                                      await api.products.update(product.id, { imageUrl: reader.result as string });
-                                      show('Foto atualizada!');
-                                      await loadProducts();
-                                    } catch { show('Erro ao salvar foto', 'error'); }
-                                  };
-                                  reader.readAsDataURL(file);
+                                  if (!file) { document.body.removeChild(input); return; }
+                                  let imageData: string;
+                                  if (file.size > 300 * 1024) {
+                                    imageData = await compressImage(file, 800, 0.7);
+                                  } else {
+                                    imageData = await new Promise((resolve) => {
+                                      const reader = new FileReader();
+                                      reader.onload = () => resolve(reader.result as string);
+                                      reader.readAsDataURL(file);
+                                    });
+                                  }
+                                  try {
+                                    await api.products.update(product.id, { imageUrl: imageData });
+                                    show('Foto atualizada!');
+                                    await loadProducts();
+                                  } catch { show('Erro ao salvar foto. A imagem pode estar muito grande.', 'error'); }
+                                  document.body.removeChild(input);
                                 };
                                 input.click();
                               }}
