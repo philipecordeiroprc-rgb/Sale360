@@ -12,7 +12,7 @@ import { useSync } from '@/hooks/useSync';
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, tenant } = useAuth();
   const { sync, isSyncing, isOnline, pendingCount } = useSync();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -21,10 +21,16 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     pathname === '/login' ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
+  const isCatalogRoute = pathname.startsWith('/c/');
 
   // Auth pages — no sidebar, full width
   if (isAuthPage) {
     return <><PageTitle />{children}</>;
+  }
+
+  // Catalog pages — public, no sidebar, standalone
+  if (isCatalogRoute) {
+    return <>{children}</>;
   }
 
   // Admin pages — no sidebar, full width
