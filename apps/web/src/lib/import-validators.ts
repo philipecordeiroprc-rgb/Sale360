@@ -12,6 +12,31 @@ import {
   purchaseRowSchema,
 } from '@sale360/core';
 
+/**
+ * Clean Excel text-formula wrapper from CSV values.
+ * Excel uses ="value" syntax to force text format (prevents scientific notation on barcodes).
+ * This strips the wrapper, returning the raw inner value.
+ */
+export function cleanExcelValue(value: string): string {
+  if (!value) return value;
+  const trimmed = value.trim();
+  if (trimmed.startsWith('="') && trimmed.endsWith('"')) {
+    return trimmed.slice(2, -1);
+  }
+  return value;
+}
+
+/**
+ * Clean all values in a parsed CSV row (handles Excel ="value" format and whitespace).
+ */
+export function cleanRowValues(row: Record<string, string>): Record<string, string> {
+  const cleaned: Record<string, string> = {};
+  for (const [key, value] of Object.entries(row)) {
+    cleaned[key] = cleanExcelValue(value);
+  }
+  return cleaned;
+}
+
 /** Convert Brazilian decimal string (25,90) to float (25.90) */
 export function parseBrazilianDecimal(value: string): number {
   if (!value || value.trim() === '') return 0;
