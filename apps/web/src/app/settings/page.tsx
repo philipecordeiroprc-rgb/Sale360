@@ -609,7 +609,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit max-w-full overflow-x-auto">
         {availableTabs.map((tab) => (
           <button
             key={tab.key}
