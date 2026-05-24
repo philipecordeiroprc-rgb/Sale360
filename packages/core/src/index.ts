@@ -2,6 +2,8 @@
 // Sale360 Core — Shared business logic
 // ============================================================
 
+export * from './import-schemas';
+
 // --- Plans & Feature Flags ---
 
 export type Plan = 'PRO' | 'GROW' | 'PRIME';
