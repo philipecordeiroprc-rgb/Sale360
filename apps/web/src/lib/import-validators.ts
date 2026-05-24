@@ -71,9 +71,11 @@ export function validateRows(
   schema: ZodObject<ZodRawShape>,
 ): ParsedRow[] {
   return rows.map((row, index) => {
-    const result = schema.safeParse(row);
+    // Clean Excel text-format wrappers (="value") before validation
+    const cleaned = cleanRowValues(row);
+    const result = schema.safeParse(cleaned);
     if (result.success) {
-      return { index, data: row, valid: true, errors: [] };
+      return { index, data: cleaned, valid: true, errors: [] };
     }
     const fieldErrors = result.error.flatten().fieldErrors;
     const errors: { column: string; message: string }[] = [];
@@ -84,7 +86,7 @@ export function validateRows(
         }
       }
     }
-    return { index, data: row, valid: false, errors };
+    return { index, data: cleaned, valid: false, errors };
   });
 }
 
