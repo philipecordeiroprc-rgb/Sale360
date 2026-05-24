@@ -372,6 +372,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
             companyName: tenant.companyName,
             plan: tenant.plan,
             status: tenant.status,
+            role: 'OWNER' as const,
           },
         };
       }
