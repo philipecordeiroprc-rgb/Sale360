@@ -70,9 +70,10 @@ tar -czf "$TMP_TAR" \
   --exclude='.git' \
   "${SYNC_DIRS[@]}" \
   "${SYNC_FILES[@]}" 2>/dev/null || {
-    # Fallback: use git archive if tar --exclude fails (Windows tar)
+    # Fallback: use git ls-files (only existing files) if tar --exclude fails (Windows tar)
     echo "⚠️  tar com --exclude falhou, tentando git ls-files..."
     git ls-files "${SYNC_DIRS[@]}" "${SYNC_FILES[@]}" | \
+      while IFS= read -r f; do [ -f "$f" ] && echo "$f"; done | \
       tar -czf "$TMP_TAR" -T - 2>/dev/null || {
         echo "❌ Falha ao criar tarball"
         exit 1
