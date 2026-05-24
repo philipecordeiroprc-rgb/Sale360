@@ -1172,7 +1172,6 @@ function VariationSelector({
             const v = relevant[0];
             const out = Number(v.stockQty) <= 0;
             const isSelected = selectedId === v.id;
-            const varPrice = getVarPrice(v);
 
             return (
               <button
