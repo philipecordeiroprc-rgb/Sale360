@@ -104,6 +104,10 @@ export default function ProductsPage() {
   const [costData, setCostData] = useState<any>(null);
   const [costLoading, setCostLoading] = useState(false);
 
+  // Import
+  const [importOpen, setImportOpen] = useState(false);
+  const [importType, setImportType] = useState<'products' | 'productsVariations'>('products');
+
   const { toast, show } = useToast();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
