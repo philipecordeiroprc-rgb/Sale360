@@ -13,7 +13,7 @@ interface BarcodeScannerProps {
   onClose: () => void;
 }
 
-export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: BarcodeScannerProps) {
+export function BarcodeScanner({ onDetected, onCodeScanned, onError, isOpen, onClose }: BarcodeScannerProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const usbInputRef = useRef<HTMLInputElement | null>(null);
   const stoppedRef = useRef(false);
