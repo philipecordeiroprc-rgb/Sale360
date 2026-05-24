@@ -206,11 +206,12 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         if (item.productId) {
           // Tax rate from payment method config (product taxRate is for pricing reference only)
           let taxRate: number | undefined;
+          const normalizedMethod = normalizePaymentMethod(orderData.paymentMethod);
           const paymentConfig = await tx.paymentMethodConfig.findUnique({
             where: {
               tenantId_paymentMethod: {
                 tenantId: request.tenantId,
-                paymentMethod: orderData.paymentMethod,
+                paymentMethod: normalizedMethod,
               },
             },
             select: { taxRate: true },
