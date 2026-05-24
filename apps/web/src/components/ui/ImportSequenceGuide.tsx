@@ -1,5 +1,5 @@
 'use client';
-import { Download, ArrowRight, ArrowDown, CheckCircle2, Circle } from 'lucide-react';
+import { Download, ArrowRight, ArrowDown, CheckCircle2, Circle, BookOpen, ExternalLink } from 'lucide-react';
 import type { ImportType } from '@/lib/import-types';
 import { IMPORT_CONFIGS } from '@/lib/import-configs';
 
