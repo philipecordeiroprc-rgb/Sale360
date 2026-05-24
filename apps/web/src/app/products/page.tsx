@@ -827,7 +827,7 @@ export default function ProductsPage() {
           </div>
 
           {/* SKU + Barcode */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-400 text-sm mb-1">SKU</label>
               <input type="text" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
