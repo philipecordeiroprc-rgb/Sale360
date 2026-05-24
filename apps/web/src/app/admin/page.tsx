@@ -331,3 +331,130 @@ function StoresTab() {
 }
 
 function AdminsTab() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const showMsg = (text: string, type: 'success' | 'error' = 'success') => {
+    setMessage({ text, type });
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const data = await api.admin.users.list({ search: search || undefined });
+      setUsers(data?.users || []);
+    } catch {
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [search]);
+
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const toggleRole = async (userId: string, currentRole: string) => {
+    const newRole = currentRole === 'SUPER_ADMIN' ? 'USER' : 'SUPER_ADMIN';
+    const label = newRole === 'SUPER_ADMIN' ? 'promover a' : 'remover de';
+    if (!confirm(`Confirmar ${label} SUPER_ADMIN?`)) return;
+
+    try {
+      await api.admin.users.updateRole(userId, newRole as 'USER' | 'SUPER_ADMIN');
+      showMsg(`Usuário ${label} SUPER_ADMIN`);
+      fetchUsers();
+    } catch (err: any) {
+      showMsg(err.message || 'Erro ao atualizar', 'error');
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    fetchUsers();
+  };
+
+  return (
+    <div>
+      {message && (
+        <div className={`mb-4 px-4 py-2.5 rounded-xl text-sm font-medium ${
+          message.type === 'error' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+        }`}>
+          {message.text}
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-xl font-bold text-white">Administradores da Plataforma</h2>
+          <p className="text-slate-400 text-sm mt-0.5">Gerencie quem tem acesso ao painel SUPER_ADMIN</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSearch} className="mb-4">
+        <div className="relative max-w-md">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nome ou email..."
+            className="w-full pl-9 pr-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-white text-sm placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+          />
+        </div>
+      </form>
+
+      <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-x-auto">
+        <table className="w-full min-w-[600px]">
+          <thead>
+            <tr className="border-b border-slate-800">
+              <th className="text-left px-4 py-2.5 text-xs font-medium text-slate-400">Nome</th>
+              <th className="text-left px-4 py-2.5 text-xs font-medium text-slate-400">Email</th>
+              <th className="text-center px-4 py-2.5 text-xs font-medium text-slate-400">Lojas</th>
+              <th className="text-center px-4 py-2.5 text-xs font-medium text-slate-400">Role</th>
+              <th className="text-center px-4 py-2.5 text-xs font-medium text-slate-400">Criado em</th>
+              <th className="text-center px-4 py-2.5 text-xs font-medium text-slate-400">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500 text-sm">Carregando...</td></tr>
+            ) : users.length === 0 ? (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500 text-sm">Nenhum usuário encontrado.</td></tr>
+            ) : (
+              users.map((u: any) => (
+                <tr key={u.id} className="border-b border-slate-800/50 hover:bg-slate-800/30">
+                  <td className="px-4 py-2.5 text-white text-sm">{u.name}</td>
+                  <td className="px-4 py-2.5 text-slate-400 text-sm">{u.email}</td>
+                  <td className="px-4 py-2.5 text-center text-slate-400 text-sm">{u._count?.tenants ?? '—'}</td>
+                  <td className="px-4 py-2.5 text-center">
+                    <span className={`inline-block px-1.5 py-0.5 rounded-md text-[11px] font-medium ${
+                      u.role === 'SUPER_ADMIN' ? 'bg-purple-400/10 text-purple-400' : 'bg-slate-400/10 text-slate-400'
+                    }`}>
+                      {u.role === 'SUPER_ADMIN' ? 'SUPER_ADMIN' : 'Usuário'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-center text-slate-400 text-xs">
+                    {new Date(u.createdAt).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="px-4 py-2.5 text-center">
+                    <button
+                      onClick={() => toggleRole(u.id, u.role)}
+                      className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
+                        u.role === 'SUPER_ADMIN'
+                          ? 'text-red-400 hover:text-red-300 hover:bg-red-400/10'
+                          : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-400/10'
+                      }`}
+                    >
+                      {u.role === 'SUPER_ADMIN' ? 'Remover' : 'Promover'}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
