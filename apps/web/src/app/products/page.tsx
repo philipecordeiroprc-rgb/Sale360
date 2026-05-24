@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
   Tags, X, Layers, DollarSign,
@@ -8,9 +9,14 @@ import {
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
-import { BarcodeScanner } from '@/components/products/BarcodeScanner';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 import { getProducts, getCategories, cacheProducts, cacheCategories } from '@/lib/offline-db';
+
+// Dynamic import to avoid SSR issues with Quagga2/sharp
+const BarcodeScanner = dynamic(
+  () => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })),
+  { ssr: false }
+);
 
 interface FormData {
   name: string;
