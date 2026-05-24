@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
-  Tags, X, Layers, DollarSign,
+  Tags, X, Layers, DollarSign, Upload,
 } from 'lucide-react';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
