@@ -72,7 +72,12 @@ export default function InventoryPage() {
   // Adjust
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjustProductId, setAdjustProductId] = useState('');
+  const [adjustProduct, setAdjustProduct] = useState<any>(null);
+  const [adjustVariations, setAdjustVariations] = useState<any[]>([]);
+  const [adjustVariationId, setAdjustVariationId] = useState('');
   const [adjustQty, setAdjustQty] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustReasonCustom, setAdjustReasonCustom] = useState('');
   const [adjustNotes, setAdjustNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
