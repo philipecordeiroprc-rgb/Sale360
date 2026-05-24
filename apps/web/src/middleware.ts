@@ -22,9 +22,16 @@ export function middleware(request: NextRequest) {
   const isSelectStore = pathname.startsWith('/select-store');
   const isCatalogRoute = pathname.startsWith('/c/');
 
+  // SUPER_ADMIN with active tenant cookie → in store mode
+  const hasTenant = !!request.cookies.get('sale360_tenant')?.value;
+
   // Public routes (no auth required)
   if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute) {
     if (token && pathname === '/login') {
+      // SUPER_ADMIN with stores goes to select-store, otherwise to /admin
+      if (isSuperAdmin && hasTenant) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
       return NextResponse.redirect(new URL(isSuperAdmin ? '/admin' : '/dashboard', request.url));
     }
     return NextResponse.next();
@@ -42,7 +49,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // SUPER_ADMIN redirect to /admin from non-admin pages (allow catalog)
+  // SUPER_ADMIN in store mode: allow store pages, don't force redirect to /admin
+  if (isSuperAdmin && hasTenant && !isAdminRoute) {
+    return NextResponse.next();
+  }
+
+  // SUPER_ADMIN in admin mode: redirect non-admin pages to /admin
   if (isSuperAdmin && !isAdminRoute && !isCatalogRoute) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
