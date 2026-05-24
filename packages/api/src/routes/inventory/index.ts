@@ -7,6 +7,7 @@ const adjustSchema = z.object({
   variationId: z.string().optional(),
   quantity: z.number().refine((v) => v !== 0, 'Quantidade não pode ser zero'),
   unitCost: z.number().optional(),
+  reason: z.string().optional(),
   notes: z.string().optional(),
 });
 
