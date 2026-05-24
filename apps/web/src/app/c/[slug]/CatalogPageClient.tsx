@@ -1195,11 +1195,6 @@ function VariationSelector({
                 }`}
               >
                 {d2}
-                {varPrice !== basePrice && (
-                  <span className="ml-0.5 opacity-75 text-[10px]">
-                    {varPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </span>
-                )}
               </button>
             );
           })}
