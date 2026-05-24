@@ -153,6 +153,12 @@ export default function SuppliersPage() {
           <p className="text-slate-400 text-sm mt-1">{total} fornecedores cadastrados</p>
         </div>
         <button
+          onClick={() => setImportOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+        >
+          <Upload size={16} /> Importar
+        </button>
+        <button
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors"
         >
