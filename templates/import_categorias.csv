@@ -1,0 +1,12 @@
+Nome*;Cor (hex);Ordem;Template de Variação
+Alimentos;#22c55e;1;
+Bebidas;#3b82f6;2;
+Laticínios;#facc15;3;Peso (Granel)
+Padaria;#f97316;4;Peso (Granel)
+Limpeza;#06b6d4;5;
+Higiene Pessoal;#ec4899;6;
+Açougue;#ef4444;7;Peso (Granel)
+Hortifruti;#84cc16;8;Peso (Granel)
+Bebidas Alcoólicas;#a855f7;9;
+Congelados;#6366f1;10;
+Mercearia;#eab308;11;
