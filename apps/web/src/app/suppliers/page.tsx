@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, Edit2, ToggleLeft, ToggleRight, Trash2, Phone, Mail, Building2, X } from 'lucide-react';
+import { Plus, Search, Edit2, ToggleLeft, ToggleRight, Trash2, Phone, Mail, Building2, X, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import api from '@/lib/api';
 
 interface FormData {
