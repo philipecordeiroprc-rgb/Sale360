@@ -35,13 +35,30 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
     }
 
-    // SUPER_ADMIN login — no tenant context needed
+    // SUPER_ADMIN login — also load linked stores for hybrid access
     if (user.role === 'SUPER_ADMIN') {
       const token = generateToken({
         userId: user.id,
         role: 'SUPER_ADMIN',
       });
       const refreshToken = generateRefreshToken(user.id);
+
+      // Load linked stores (if any) so SUPER_ADMIN can switch between stores and admin
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id,
+        slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName,
+        plan: tu.tenant.plan,
+        status: tu.tenant.status,
+        role: tu.role,
+        pin: tu.pin,
+      }));
 
       return {
         token,
@@ -53,6 +70,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           role: 'SUPER_ADMIN',
         },
         tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
       };
     }
 
