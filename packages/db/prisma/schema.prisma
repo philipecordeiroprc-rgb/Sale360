@@ -329,6 +329,7 @@ model InventoryMovement {
   orderId     String?      // vínculo com venda
   purchaseId  String?      // vínculo com compra
   notes       String?
+  reason      String?      // motivo do ajuste (auditoria)
   createdAt   DateTime     @default(now())
 
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
