@@ -15,7 +15,7 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 export function ProductsScreen() {
   const {
-    token, products, categories, setProducts, setCategories,
+    token, products, categories, setView, setProducts, setCategories,
   } = useStore();
 
   const [searchQuery, setSearchQuery] = useState('');
