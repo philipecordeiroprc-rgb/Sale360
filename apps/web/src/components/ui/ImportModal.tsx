@@ -101,7 +101,7 @@ export function ImportModal({ open, onClose, onImported, config }: ImportModalPr
     } finally {
       setImporting(false);
     }
-  }, [rawData, rows, config, onImported]);
+  }, [rows, config, onImported]);
 
   const resetAndClose = useCallback(() => {
     setStep('guide');
