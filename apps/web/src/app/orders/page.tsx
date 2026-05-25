@@ -623,6 +623,14 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
+                        {isFiado(o.paymentMethod) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED' && o.customer?.phone && (
+                          <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o))}
+                            target="_blank" rel="noopener noreferrer"
+                            className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors"
+                            title="Cobrar via WhatsApp">
+                            <WhatsAppIcon size={16} />
+                          </a>
+                        )}
                         {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
                           <button onClick={() => handleConfirmOnline(o.id)}
                             className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
