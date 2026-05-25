@@ -21,7 +21,7 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     pathname === '/login' ||
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
-  const isCatalogRoute = pathname.startsWith('/c/');
+  const isCatalogRoute = isCatalogPath(pathname);
   const isSelectStore = pathname === '/select-store';
 
   // Auth pages — no sidebar, full width
