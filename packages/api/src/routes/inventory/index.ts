@@ -147,7 +147,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // Determine direction: explicit "type" takes precedence, otherwise derive from quantity sign
-    let movementType: string;
+    let movementType: MovementType;
     let effectiveQty: number;
     if (type === 'ADJUSTMENT_OUT') {
       movementType = 'ADJUSTMENT_OUT';
