@@ -473,7 +473,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                 />
               );
               return banner.linkUrl ? (
-                <a key={banner.id} href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-full">
+                <a key={banner.id} href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-full md:flex md:justify-center">
                   {img}
                 </a>
               ) : (
