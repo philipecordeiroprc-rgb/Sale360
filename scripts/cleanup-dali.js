@@ -70,6 +70,13 @@ async function cleanup() {
   await p.$executeRaw`DELETE FROM categories WHERE "tenantId" = ${TENANT}`;
   console.log('OK Categories');
 
+  // 5. Variation dimensions + templates (imported during tests)
+  await p.$executeRaw`DELETE FROM variation_dimensions WHERE "templateId" IN (SELECT id FROM variation_templates WHERE "tenantId" = ${TENANT})`;
+  console.log('OK VariationDimensions');
+
+  await p.$executeRaw`DELETE FROM variation_templates WHERE "tenantId" = ${TENANT}`;
+  console.log('OK VariationTemplates');
+
   // 5. Verify
   const counts = await p.$queryRaw`
     SELECT 'orders' as t, count(*)::int as c FROM orders WHERE "tenantId" = ${TENANT}
