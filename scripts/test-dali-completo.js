@@ -164,7 +164,7 @@ async function main() {
       }),
     });
     if (p1.ok) {
-      const r1 = await api(`/purchases/${p1.data.id}/receive`, { method: 'POST' });
+      const r1 = await api(`/purchases/${p1.data.id}/receive`, { method: 'POST', body: JSON.stringify({}) });
       if (r1.ok) { created.purchases.push(r1.data); console.log('✅ Compra #1 recebida: Água x50 lote PEPS criado'); }
       else console.log('⚠️  Receive #1:', r1.data.error);
     } else console.log('⚠️  Compra #1:', p1.data.error);
