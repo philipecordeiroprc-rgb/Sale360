@@ -1,6 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+function isCatalogPath(pathname: string): boolean {
+  if (pathname === '/') return false;
+  if (pathname.startsWith('/c/')) return true; // backward compat
+  const APP_SEGMENTS = new Set([
+    'login', 'forgot-password', 'reset-password', 'select-store',
+    'dashboard', 'admin', 'coupons', 'customers', 'finance',
+    'guia-importacao', 'indicadores', 'inventory', 'orders',
+    'products', 'purchases', 'settings', 'suppliers',
+  ]);
+  const first = pathname.split('/')[1];
+  if (!first) return false;
+  return !APP_SEGMENTS.has(first);
+}
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('sale360_token')?.value;
   const userStr = request.cookies.get('sale360_user')?.value;
