@@ -477,7 +477,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                   {img}
                 </a>
               ) : (
-                <div key={banner.id} className="flex-shrink-0 w-full">{img}</div>
+                <div key={banner.id} className="flex-shrink-0 w-full md:flex md:justify-center">{img}</div>
               );
             })}
           </div>
