@@ -606,6 +606,25 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         },
       });
 
+      // If payment method changed at confirmation, update item tax rates
+      if (paymentMethod) {
+        const normalizedMethod = normalizePaymentMethod(paymentMethod as string);
+        const paymentConfig = await tx.paymentMethodConfig.findUnique({
+          where: {
+            tenantId_paymentMethod: {
+              tenantId: request.tenantId,
+              paymentMethod: normalizedMethod,
+            },
+          },
+          select: { taxRate: true },
+        });
+        const newTaxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { taxRate: newTaxRate },
+        });
+      }
+
       // Register in cash flow
       await tx.cashFlow.create({
         data: {
