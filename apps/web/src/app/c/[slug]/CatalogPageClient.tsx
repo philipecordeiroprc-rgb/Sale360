@@ -298,6 +298,10 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       show('Informe seu nome', 'error');
       return;
     }
+    if (!cart.customerPhone.trim()) {
+      show('Informe seu telefone', 'error');
+      return;
+    }
     setSubmitting(true);
     try {
       const result = await api.public.createOrder({
