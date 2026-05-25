@@ -52,29 +52,29 @@ function getWhatsAppMessage(order: any): string {
   const total = Number(order.total).toFixed(2).replace('.', ',');
   const date = new Date(order.createdAt).toLocaleDateString('pt-BR');
 
-  const items = (order.items || []) as any[];
-  const maxProducts = 4;
-  const productLines = items.slice(0, maxProducts).map((item: any) =>
+  const itemLines = items.slice(0, maxProducts).map((item: any) =>
     `📦 ${item.quantity}x ${item.productName}`
-  ).join('\n');
-  const extraLine = items.length > maxProducts
-    ? `\n📦 ...e mais ${items.length - maxProducts} itens`
-    : '';
+  );
+  if (items.length > maxProducts) {
+    itemLines.push(`📦 ...e mais ${items.length - maxProducts} itens`);
+  }
+  const productsBlock = itemLines.join('\n');
 
-  return [
+  const blocks = [
     `🤖 *Lembrete automático de pagamento*`,
     ``,
     `Olá ${customerName}! Sua compra #${orderNumber} está em *aberto*:`,
     ``,
-    productLines,
-    extraLine,
+    productsBlock,
     `💰 *Total:* R$ ${total}`,
     `📅 *Data:* ${date}`,
     ``,
     `Se já pagou, desconsidere esta mensagem 🙂`,
     ``,
     `_Mensagem automática. Dúvidas, fale conosco!_`,
-  ].filter(Boolean).join('\n');
+  ];
+
+  return blocks.join('\n');
 }
 
 function getWhatsAppUrl(phone: string, message: string): string {
