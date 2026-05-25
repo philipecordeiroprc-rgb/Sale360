@@ -46,6 +46,19 @@ function isFiado(method: string | null | undefined): boolean {
   return method === 'credit_store' || method === 'Fiado';
 }
 
+function getWhatsAppMessage(order: any): string {
+  const customerName = order.customer?.name || order.customerName || 'Cliente';
+  const orderNumber = order.orderNumber;
+  const total = Number(order.total).toFixed(2).replace('.', ',');
+  const date = new Date(order.createdAt).toLocaleDateString('pt-BR');
+  return `Olá ${customerName}! Passando pra lembrar que a compra #${orderNumber} no valor de R$ ${total} feita em ${date} está em aberto. Se já pagou, desconsidere. Qualquer dúvida, tamo à disposição!`;
+}
+
+function getWhatsAppUrl(phone: string, message: string): string {
+  const cleanPhone = phone.replace(/\D/g, '');
+  return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
+}
+
 const CONFIRM_PAYMENT_METHODS = [
   { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
   { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
