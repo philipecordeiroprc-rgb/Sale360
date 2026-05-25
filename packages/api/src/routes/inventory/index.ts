@@ -128,7 +128,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { productId, variationId, quantity, unitCost, reason, notes } = parsed.data;
+    const { productId, variationId, quantity, type, unitCost, reason, notes } = parsed.data;
 
     // Validate product exists and belongs to tenant
     if (productId) {
@@ -146,9 +146,21 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       if (!variation) return reply.status(404).send({ error: 'Variação não encontrada' });
     }
 
-    const isIn = quantity > 0;
-    const movementType = isIn ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
-    const absQty = Math.abs(quantity);
+    // Determine direction: explicit "type" takes precedence, otherwise derive from quantity sign
+    let movementType: string;
+    let effectiveQty: number;
+    if (type === 'ADJUSTMENT_OUT') {
+      movementType = 'ADJUSTMENT_OUT';
+      effectiveQty = -Math.abs(quantity); // always negative for OUT
+    } else if (type === 'ADJUSTMENT_IN') {
+      movementType = 'ADJUSTMENT_IN';
+      effectiveQty = Math.abs(quantity); // always positive for IN
+    } else {
+      const isIn = quantity > 0;
+      movementType = isIn ? 'ADJUSTMENT_IN' : 'ADJUSTMENT_OUT';
+      effectiveQty = quantity;
+    }
+    const absQty = Math.abs(effectiveQty);
     const cost = unitCost || 0;
 
     await prisma.$transaction(async (tx) => {
