@@ -291,9 +291,7 @@ export default function OrdersPage() {
 
   const handleCreateSale = async () => {
     if (cart.length === 0) { show('Adicione produtos', 'error'); return; }
-    if (!selectedCustomer?.id && !(useWalkIn && walkInName.trim())) {
-      show('Selecione ou informe o cliente', 'error'); return;
-    }
+    // Cliente é opcional para vendas diretas no PDV (vendedor está presente)
     setSaving(true);
 
     const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
