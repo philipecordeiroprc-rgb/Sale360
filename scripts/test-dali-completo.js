@@ -244,15 +244,15 @@ async function main() {
   // 10. AJUSTES DE ESTOQUE
   console.log('\n━━━ 10. AJUSTES DE ESTOQUE ━━━');
   const adj1 = await api('/inventory/adjust', {
-    method: 'POST', body: JSON.stringify({ productId: created.products[1]?.id, type: 'ADJUSTMENT_IN', quantity: 10, reason: 'Sobra de inventário' }),
+    method: 'POST', body: JSON.stringify({ productId: created.products[1]?.id, quantity: 10, reason: 'Sobra de inventário' }),
   });
-  if (adj1.ok) { created.adjustments.push(adj1.data); console.log('✅ Ajuste +10 Arroz (ADJUSTMENT_IN)'); }
+  if (adj1.ok) { created.adjustments.push(adj1.data); console.log('✅ Ajuste +10 Arroz'); }
   else console.log('⚠️  Ajuste IN:', adj1.data.error);
 
   const adj2 = await api('/inventory/adjust', {
-    method: 'POST', body: JSON.stringify({ productId: created.products[0]?.id, type: 'ADJUSTMENT_OUT', quantity: 3, reason: 'Perda — validade vencida' }),
+    method: 'POST', body: JSON.stringify({ productId: created.products[0]?.id, quantity: -3, reason: 'Perda — validade vencida' }),
   });
-  if (adj2.ok) { created.adjustments.push(adj2.data); console.log('✅ Ajuste -3 Água (ADJUSTMENT_OUT)'); }
+  if (adj2.ok) { created.adjustments.push(adj2.data); console.log('✅ Ajuste -3 Água'); }
   else console.log('⚠️  Ajuste OUT:', adj2.data.error);
 
   // 11. VERIFICAÇÃO FINAL
