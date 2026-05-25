@@ -52,6 +52,8 @@ function getWhatsAppMessage(order: any): string {
   const total = Number(order.total).toFixed(2).replace('.', ',');
   const date = new Date(order.createdAt).toLocaleDateString('pt-BR');
 
+  const items = (order.items || []) as any[];
+  const maxProducts = 4;
   const itemLines = items.slice(0, maxProducts).map((item: any) =>
     `📦 ${item.quantity}x ${item.productName}`
   );
