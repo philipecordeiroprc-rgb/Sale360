@@ -10,6 +10,20 @@ import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { useSync } from '@/hooks/useSync';
 
+function isCatalogPath(pathname: string): boolean {
+  if (pathname === '/') return false;
+  if (pathname.startsWith('/c/')) return true; // backward compat
+  const APP_SEGMENTS = new Set([
+    'login', 'forgot-password', 'reset-password', 'select-store',
+    'dashboard', 'admin', 'coupons', 'customers', 'finance',
+    'guia-importacao', 'indicadores', 'inventory', 'orders',
+    'products', 'purchases', 'settings', 'suppliers',
+  ]);
+  const first = pathname.split('/')[1];
+  if (!first) return false;
+  return !APP_SEGMENTS.has(first);
+}
+
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isSuperAdmin, tenant } = useAuth();
