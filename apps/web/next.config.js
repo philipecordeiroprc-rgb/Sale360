@@ -6,6 +6,14 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+  async rewrites() {
+    return [
+      {
+        source: '/:slug((?!_next|api|favicon|templates|c$)[^/]+)',
+        destination: '/c/:slug',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
