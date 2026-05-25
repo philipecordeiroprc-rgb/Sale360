@@ -223,7 +223,7 @@ async function main() {
 
     // Cancel first order
     if (created.orders.length > 0) {
-      const cancel = await api(`/orders/${created.orders[0].id}/cancel`, { method: 'POST' });
+      const cancel = await api(`/orders/${created.orders[0].id}/cancel`, { method: 'POST', body: JSON.stringify({}) });
       console.log(cancel.ok ? '✅ Cancelamento venda #' + created.orders[0].orderNumber + ' — estoque revertido' : '⚠️  Cancel: ' + cancel.data.error);
     }
   }
