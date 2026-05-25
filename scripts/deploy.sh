@@ -44,7 +44,7 @@ fi
 
 SYNC_FILES=(
   "apps/web/package.json"
-  "apps/web/next.config.ts"
+  "apps/web/next.config.js"
   "apps/web/tsconfig.json"
   "apps/web/postcss.config.mjs"
   "apps/web/tailwind.config.ts"
