@@ -99,9 +99,16 @@ async function cleanup() {
     UNION ALL SELECT 'deliveries', count(*)::int FROM deliveries WHERE "orderId" IN (SELECT id FROM orders WHERE "tenantId" = ${TENANT})
     UNION ALL SELECT 'commission_items', count(*)::int FROM commission_items WHERE "tenantId" = ${TENANT}
     UNION ALL SELECT 'coupon_categories', count(*)::int FROM coupon_categories WHERE "couponId" IN (SELECT id FROM coupons WHERE "tenantId" = ${TENANT})
+    UNION ALL SELECT 'variation_dimensions', count(*)::int FROM variation_dimensions WHERE "templateId" IN (SELECT id FROM variation_templates WHERE "tenantId" = ${TENANT})
+    UNION ALL SELECT 'variation_templates', count(*)::int FROM variation_templates WHERE "tenantId" = ${TENANT}
+    UNION ALL SELECT 'tenant_users', count(*)::int FROM tenant_users WHERE "tenantId" = ${TENANT}
+    UNION ALL SELECT 'catalog_settings', count(*)::int FROM catalog_settings WHERE "tenantId" = ${TENANT}
+    UNION ALL SELECT 'payment_method_configs', count(*)::int FROM payment_method_configs WHERE "tenantId" = ${TENANT}
+    UNION ALL SELECT 'devices', count(*)::int FROM devices WHERE "tenantId" = ${TENANT}
   `;
 
   console.log('\nVerificacao pos-limpeza:');
+  console.log('APAGADOS (devem estar 0):');
   counts.forEach(r => console.log('  ' + r.t.padEnd(25) + ': ' + r.c));
 
   // Verify kept data
