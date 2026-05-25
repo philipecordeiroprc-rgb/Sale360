@@ -114,7 +114,7 @@ async function cleanup() {
     'table_commands','command_items','coupon_products','purchase_items','credit_transactions',
     'deliveries','commission_items','coupon_categories','variation_dimensions','variation_templates'];
   deletedTables.forEach(name => {
-    const r = counts.find((c: any) => c.t === name);
+    const r = counts.find((c) => c.t === name);
     const ok = r && r.c === 0;
     console.log((ok ? '  ✅' : '  ❌') + ' ' + name.padEnd(25) + ': ' + (r ? r.c : '?'));
   });
@@ -122,7 +122,7 @@ async function cleanup() {
   console.log('\nMANTIDOS:');
   const keptTables = ['tenant_users','catalog_settings','payment_method_configs','devices'];
   keptTables.forEach(name => {
-    const r = counts.find((c: any) => c.t === name);
+    const r = counts.find((c) => c.t === name);
     console.log('  🔒 ' + name.padEnd(25) + ': ' + (r ? r.c : '?'));
   });
 
