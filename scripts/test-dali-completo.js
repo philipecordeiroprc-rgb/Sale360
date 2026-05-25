@@ -182,6 +182,18 @@ async function main() {
       const r2 = await api(`/purchases/${p2.data.id}/receive`, { method: 'POST', body: JSON.stringify({}) });
       if (r2.ok) { created.purchases.push(r2.data); console.log('✅ Compra #2 recebida: Arroz x30 + Feijão x40, 2 lotes PEPS'); }
       else console.log('⚠️  Receive #2:', r2.data.error);
+
+      const p3 = await api('/purchases', {
+        method: 'POST', body: JSON.stringify({
+          supplierId: created.suppliers[1]?.id,
+          items: [{ productId: created.products[3]?.id, productName: 'Boné Trucker', quantity: 50, unitCost: 25.00, total: 1250.00 }],
+        }),
+      });
+      if (p3.ok) {
+        const r3 = await api(`/purchases/${p3.data.id}/receive`, { method: 'POST', body: JSON.stringify({}) });
+        if (r3.ok) { created.purchases.push(r3.data); console.log('✅ Compra #3 recebida: Boné Trucker x50 lote PEPS criado'); }
+        else console.log('⚠️  Receive #3:', r3.data.error);
+      } else console.log('⚠️  Compra #3:', p3.data.error);
     } else console.log('⚠️  Compra #2:', p2.data.error);
   }
 
