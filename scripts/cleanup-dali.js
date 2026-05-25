@@ -109,19 +109,22 @@ async function cleanup() {
 
   console.log('\nVerificacao pos-limpeza:');
   console.log('APAGADOS (devem estar 0):');
-  counts.forEach(r => console.log('  ' + r.t.padEnd(25) + ': ' + r.c));
+  const deletedTables = ['orders','products','categories','customers','suppliers','coupons','purchases',
+    'inventory_batches','cash_flows','inventory_movements','product_variations','order_items',
+    'table_commands','command_items','coupon_products','purchase_items','credit_transactions',
+    'deliveries','commission_items','coupon_categories','variation_dimensions','variation_templates'];
+  deletedTables.forEach(name => {
+    const r = counts.find((c: any) => c.t === name);
+    const ok = r && r.c === 0;
+    console.log((ok ? '  ✅' : '  ❌') + ' ' + name.padEnd(25) + ': ' + (r ? r.c : '?'));
+  });
 
-  // Verify kept data
-  const kept = await p.$queryRaw`
-    SELECT 'users' as t, count(*)::int as c FROM tenant_users WHERE "tenantId" = ${TENANT}
-    UNION ALL SELECT 'catalog_settings', count(*)::int FROM catalog_settings WHERE "tenantId" = ${TENANT}
-    UNION ALL SELECT 'payment_methods', count(*)::int FROM payment_method_configs WHERE "tenantId" = ${TENANT}
-    UNION ALL SELECT 'devices', count(*)::int FROM devices WHERE "tenantId" = ${TENANT}
-    UNION ALL SELECT 'integrations', count(*)::int FROM integrations WHERE "tenantId" = ${TENANT}
-    UNION ALL SELECT 'variation_templates', count(*)::int FROM variation_templates WHERE "tenantId" = ${TENANT}
-  `;
-  console.log('\nDados mantidos:');
-  kept.forEach(r => console.log('  ' + r.t.padEnd(25) + ': ' + r.c));
+  console.log('\nMANTIDOS:');
+  const keptTables = ['tenant_users','catalog_settings','payment_method_configs','devices'];
+  keptTables.forEach(name => {
+    const r = counts.find((c: any) => c.t === name);
+    console.log('  🔒 ' + name.padEnd(25) + ': ' + (r ? r.c : '?'));
+  });
 
   console.log('\nLimpaza concluida com sucesso!');
 }
