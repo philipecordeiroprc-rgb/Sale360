@@ -6,6 +6,7 @@ const adjustSchema = z.object({
   productId: z.string().optional(),
   variationId: z.string().optional(),
   quantity: z.number().refine((v) => v !== 0, 'Quantidade não pode ser zero'),
+  type: z.enum(['ADJUSTMENT_IN', 'ADJUSTMENT_OUT']).optional(),
   unitCost: z.number().optional(),
   reason: z.string().optional(),
   notes: z.string().optional(),
