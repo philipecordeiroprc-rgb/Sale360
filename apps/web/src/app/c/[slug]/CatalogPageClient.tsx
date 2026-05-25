@@ -469,7 +469,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                   key={banner.id}
                   src={getImageUrl(banner.imagePath) || ''}
                   alt=""
-                  className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full max-w-2xl"
+                  className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full md:max-w-2xl"
                 />
               );
               return banner.linkUrl ? (
