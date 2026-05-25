@@ -250,6 +250,6 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       }
     });
 
-    return reply.status(201).send({ success: true, type: movementType, quantity });
+    return reply.status(201).send({ success: true, type: movementType, quantity: effectiveQty });
   });
 };
