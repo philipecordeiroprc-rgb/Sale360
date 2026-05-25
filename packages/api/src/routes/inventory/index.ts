@@ -171,16 +171,16 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           productId,
           variationId: variationId || undefined,
           type: movementType,
-          quantity,
+          quantity: effectiveQty,
           unitCost: cost,
-          totalCost: quantity * cost,
+          totalCost: effectiveQty * cost,
           reason: reason || undefined,
           notes: notes || 'Ajuste manual de estoque',
         },
       });
 
       // Create or update batch
-      if (isIn) {
+      if (movementType === 'ADJUSTMENT_IN') {
         await tx.inventoryBatch.create({
           data: {
             tenantId: request.tenantId,
