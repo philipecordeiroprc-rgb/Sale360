@@ -150,44 +150,16 @@ export function QuickAddSheet({ open, product, onClose, onAdd, cartItems }: Quic
 
         {/* Variations */}
         {hasVariations && (
-          <div>
-            <label className="block text-xs text-slate-400 mb-2 font-medium">Variação</label>
-            <div className="flex flex-wrap gap-2">
-              {product.variations.map((v: any) => {
-                const vStock = Number(v.stockQty || 0);
-                const vInCart = cartItems.filter(
-                  (c) => c.productId === product.id && c.variationId === v.id
-                ).reduce((sum, c) => sum + c.quantity, 0);
-                const vAvailable = vStock - vInCart;
-                const outOfStock = vAvailable <= 0;
-                const selected = selectedVariation?.id === v.id;
-
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => !outOfStock && setSelectedVariation(v)}
-                    disabled={outOfStock}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
-                      selected
-                        ? 'bg-indigo-500 text-white'
-                        : outOfStock
-                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
-                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
-                    }`}
-                  >
-                    {v.name}
-                    {v.priceModifier > 0 && (
-                      <span className="ml-1 opacity-70">(+R$ {Number(v.priceModifier).toFixed(2)})</span>
-                    )}
-                    <span className="ml-1 text-[10px] opacity-50">({vStock})</span>
-                  </button>
-                );
-              })}
-            </div>
-            {hasVariations && !selectedVariation && (
-              <p className="text-xs text-amber-400 mt-1.5">Selecione uma variação</p>
-            )}
-          </div>
+          <VariationSelector
+            variations={product.variations}
+            selectedId={selectedVariation?.id || null}
+            onSelect={(v) => setSelectedVariation(v)}
+            cartItems={cartItems}
+            productId={product.id}
+          />
+        )}
+        {hasVariations && !selectedVariation && (
+          <p className="text-xs text-amber-400 mt-1.5">Selecione uma variação</p>
         )}
 
         {/* Quantity */}
