@@ -462,7 +462,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       {/* ========== BANNERS ========== */}
       {banners.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 mt-4">
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="flex gap-3 overflow-x-auto pb-2 md:justify-center">
             {banners.map((banner) => {
               const img = (
                 <img
