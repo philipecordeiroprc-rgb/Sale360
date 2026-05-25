@@ -23,7 +23,7 @@ OCI_NAMESPACE="grqxj1nvh4zj"
 COMPARTMENT_ID=$(curl -s -m 2 http://169.254.169.254/opc/v1/instance/ 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin)["compartmentId"])' 2>/dev/null || echo "")
 
 # Neon DB connection (extraído do systemd)
-DB_URL="${DATABASE_URL:-postgresql://neondb_owner:npg_Xk2TdJrqNx5p@ep-holy-rain-actxoqs3-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require}"
+DB_URL="${DATABASE_URL:-postgresql://sale360:sale360_oci_1e53ebfc387adbc1f5a27c9efd80ca1c@127.0.0.1:5432/sale360?sslmode=disable}"
 # Extrai partes da URL para pg_dump
 DB_HOST=$(echo "$DB_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
 DB_PORT=$(echo "$DB_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
