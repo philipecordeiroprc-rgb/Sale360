@@ -179,7 +179,7 @@ async function main() {
       }),
     });
     if (p2.ok) {
-      const r2 = await api(`/purchases/${p2.data.id}/receive`, { method: 'POST' });
+      const r2 = await api(`/purchases/${p2.data.id}/receive`, { method: 'POST', body: JSON.stringify({}) });
       if (r2.ok) { created.purchases.push(r2.data); console.log('✅ Compra #2 recebida: Arroz x30 + Feijão x40, 2 lotes PEPS'); }
       else console.log('⚠️  Receive #2:', r2.data.error);
     } else console.log('⚠️  Compra #2:', p2.data.error);
