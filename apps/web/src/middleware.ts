@@ -20,7 +20,7 @@ export function middleware(request: NextRequest) {
   const isForgotPassword = pathname.startsWith('/forgot-password');
   const isResetPassword = pathname.startsWith('/reset-password');
   const isSelectStore = pathname.startsWith('/select-store');
-  const isCatalogRoute = pathname.startsWith('/c/');
+  const isCatalogRoute = isCatalogPath(pathname);
   const isGuiaImportacao = pathname.startsWith('/guia-importacao');
 
   // SUPER_ADMIN with active tenant cookie → in store mode
