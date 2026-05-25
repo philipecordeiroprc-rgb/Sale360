@@ -876,7 +876,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => setSaleOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button onClick={handleCreateSale}
-              disabled={saving || cart.length === 0 || (!selectedCustomer?.id && !(useWalkIn && walkInName.trim()))}
+              disabled={saving || cart.length === 0}
               className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Finalizando...' : `Finalizar Venda (R$ ${totalWithDiscount.toFixed(2)})`}
             </button>
