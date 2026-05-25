@@ -64,11 +64,10 @@ function getWhatsAppMessage(order: any): string {
   return [
     `🤖 *Lembrete automático de pagamento*`,
     ``,
-    `Olá ${customerName}! Sua compra #${orderNumber} está em aberto:`,
+    `Olá ${customerName}! Sua compra #${orderNumber} está em *aberto*:`,
     ``,
     productLines,
     extraLine,
-    ``,
     `💰 *Total:* R$ ${total}`,
     `📅 *Data:* ${date}`,
     ``,
