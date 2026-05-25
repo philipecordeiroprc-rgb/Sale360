@@ -35,13 +35,30 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
     }
 
-    // SUPER_ADMIN login — no tenant context needed
+    // SUPER_ADMIN login — also load linked stores for hybrid access
     if (user.role === 'SUPER_ADMIN') {
       const token = generateToken({
         userId: user.id,
         role: 'SUPER_ADMIN',
       });
       const refreshToken = generateRefreshToken(user.id);
+
+      // Load linked stores (if any) so SUPER_ADMIN can switch between stores and admin
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id,
+        slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName,
+        plan: tu.tenant.plan,
+        status: tu.tenant.status,
+        role: tu.role,
+        pin: tu.pin,
+      }));
 
       return {
         token,
@@ -53,6 +70,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           role: 'SUPER_ADMIN',
         },
         tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
       };
     }
 
@@ -239,9 +257,17 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       },
     });
 
-    await sendResetEmail(email, token, user.name);
+    const result = await sendResetEmail(email, token, user.name);
 
-    return { message: 'Se o email estiver cadastrado, você receberá um link de recuperação.' };
+    if (!result.success) {
+      console.log('[AUTH] Email not sent, reset link:', result.link);
+    }
+
+    return {
+      message: 'Se o email estiver cadastrado, você receberá um link de recuperação.',
+      emailSent: result.success,
+      resetLink: result.success ? undefined : result.link,
+    };
   });
 
   // Reset password
@@ -279,7 +305,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
-  // Switch tenant (for users with multiple stores)
+  // Switch tenant (for users with multiple stores, or SUPER_ADMIN switching store/admin mode)
   app.post('/switch-tenant', async (request, reply) => {
     const schema = z.object({
       tenantId: z.string().min(1),
@@ -298,9 +324,66 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     try {
       const jwt = await import('jsonwebtoken');
       const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
-      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
+      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string; role?: string };
 
-      // Verify user belongs to this tenant
+      // SUPER_ADMIN switching to admin mode
+      if (payload.role === 'SUPER_ADMIN' && parsed.data.tenantId === '__admin__') {
+        const token = generateToken({
+          userId: payload.userId,
+          role: 'SUPER_ADMIN',
+        });
+        const refreshToken = generateRefreshToken(payload.userId);
+
+        const user = await prisma.user.findUnique({
+          where: { id: payload.userId },
+          select: { id: true, name: true, email: true, role: true },
+        });
+
+        return {
+          token,
+          refreshToken,
+          user: user ? { id: user.id, role: 'SUPER_ADMIN' as const } : { id: payload.userId, role: 'SUPER_ADMIN' as const },
+          tenant: null,
+        };
+      }
+
+      // SUPER_ADMIN switching to a store — use TenantUser role if linked, else OWNER
+      if (payload.role === 'SUPER_ADMIN') {
+        const tenant = await prisma.tenant.findUnique({ where: { id: parsed.data.tenantId } });
+        if (!tenant) return reply.status(404).send({ error: 'Empresa não encontrada.' });
+        if (tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED') {
+          return reply.status(403).send({ error: 'Empresa indisponível' });
+        }
+
+        // If SUPER_ADMIN has a specific TenantUser record, use that role (e.g. CASHIER)
+        const tenantUser = await prisma.tenantUser.findUnique({
+          where: { tenantId_userId: { tenantId: tenant.id, userId: payload.userId } },
+        });
+        const storeRole = tenantUser?.role || 'OWNER';
+
+        const token = generateToken({
+          userId: payload.userId,
+          tenantId: tenant.id,
+          role: 'SUPER_ADMIN',
+        });
+        const refreshToken = generateRefreshToken(payload.userId);
+
+        return {
+          token,
+          refreshToken,
+          user: { id: payload.userId, role: 'SUPER_ADMIN' as const },
+          tenant: {
+            id: tenant.id,
+            slug: tenant.slug,
+            companyName: tenant.companyName,
+            plan: tenant.plan,
+            status: tenant.status,
+            role: storeRole,
+          },
+        };
+      }
+
+      // Regular user: verify user belongs to this tenant
       const tenantUser = await prisma.tenantUser.findFirst({
         where: { userId: payload.userId, tenantId: parsed.data.tenantId },
         include: { tenant: true },

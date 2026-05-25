@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Store, Palette, ImageUp, ShoppingCart, MessageSquare, CreditCard, Upload, Trash2, Plus, GripVertical, Phone } from 'lucide-react';
 import api from '@/lib/api';
-import { BannerUploadModal } from '@/components/products/BannerUploadModal';
 
 interface CatalogData {
   id?: string;
@@ -49,8 +48,6 @@ export function CatalogoTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [bannerModalOpen, setBannerModalOpen] = useState(false);
 
   const showMsg = (text: string, type: 'success' | 'error' = 'success') => {
     setMessage({ text, type });
@@ -108,20 +105,12 @@ export function CatalogoTab() {
   const handleUploadBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setBannerFile(file);
-    setBannerModalOpen(true);
-    // Reset input so same file can be re-selected
-    e.target.value = '';
-  };
-
-  const handleConfirmBannerUpload = async (file: File, positionY: number) => {
     try {
-      await api.catalogSettings.uploadBanner(file, positionY);
+      await api.catalogSettings.uploadBanner(file);
       showMsg('Banner adicionado!');
-      loadSettings();
+      loadSettings(); // reload to get updated list
     } catch (err: any) {
       showMsg(err.message || 'Erro ao enviar banner', 'error');
-      throw err; // keep modal open on error
     }
   };
 
@@ -412,14 +401,6 @@ export function CatalogoTab() {
         <label className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors inline-block">
           <Plus size={14} className="inline mr-1" /> Adicionar Banner
           <input type="file" accept="image/png,image/jpeg" onChange={handleUploadBanner} className="hidden" />
-
-      {/* Banner Upload Preview Modal */}
-      <BannerUploadModal
-        open={bannerModalOpen}
-        onClose={() => { setBannerModalOpen(false); setBannerFile(null); }}
-        file={bannerFile}
-        onUpload={handleConfirmBannerUpload}
-      />
         </label>
         <p className="text-[10px] text-slate-500 mt-1.5">JPG ou PNG. Máx 5MB. Horizontal/paisagem.</p>
       </div>

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 interface CategoriesModalProps {
@@ -27,6 +29,7 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   const [saving, setSaving] = useState(false);
   const [newTemplateId, setNewTemplateId] = useState('');
   const [templates, setTemplates] = useState<VariationTemplate[]>([]);
+  const [importOpen, setImportOpen] = useState(false);
 
   const loadCategories = async () => {
     try {
@@ -120,6 +123,15 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
   return (
     <Modal open={open} onClose={onClose} title="Gerenciar Categorias" size="md" closeOnOverlayClick={false}>
       <div className="space-y-4">
+        {/* Import button */}
+        <button
+          onClick={() => setImportOpen(true)}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-xl text-sm font-medium transition-colors"
+        >
+          <Upload size={15} />
+          Importar Categorias via CSV
+        </button>
+
         {/* Error */}
         {error && (
           <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-3 text-red-400 text-sm flex items-center justify-between">
@@ -248,6 +260,13 @@ export function CategoriesModal({ open, onClose, onChanged }: CategoriesModalPro
           )}
         </div>
       </div>
+      {/* Import Modal (nested inside CategoriesModal) */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => { loadCategories(); onChanged(); }}
+        config={IMPORT_CONFIGS.categories}
+      />
     </Modal>
   );
 }

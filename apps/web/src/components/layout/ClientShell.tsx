@@ -10,17 +10,9 @@ import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { OfflineIndicator } from '@/components/ui/OfflineIndicator';
 import { useSync } from '@/hooks/useSync';
 
-// Same set as middleware — paths that are system routes, NOT store slugs
-const SYSTEM_ROUTES = new Set([
-  'login', 'admin', 'dashboard', 'products', 'orders', 'customers',
-  'coupons', 'finance', 'inventory', 'purchases', 'suppliers',
-  'settings', 'forgot-password', 'reset-password', 'select-store',
-  'indicadores', 'c',
-]);
-
 export function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isSuperAdmin } = useAuth();
+  const { isSuperAdmin, tenant } = useAuth();
   const { sync, isSyncing, isOnline, pendingCount } = useSync();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -30,23 +22,20 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/forgot-password') ||
     pathname.startsWith('/reset-password');
   const isCatalogRoute = pathname.startsWith('/c/');
-
-  // Detect store slug in path: first segment is not a known system route
-  const firstSegment = pathname.split('/')[1] || '';
-  const isStoreRoute = firstSegment !== '' && !SYSTEM_ROUTES.has(firstSegment);
+  const isSelectStore = pathname === '/select-store';
 
   // Auth pages — no sidebar, full width
-  if (isAuthPage) {
+  if (isAuthPage || isSelectStore) {
     return <><PageTitle />{children}</>;
   }
 
   // Catalog pages — public, no sidebar, standalone
-  if (isCatalogRoute || isStoreRoute) {
+  if (isCatalogRoute) {
     return <>{children}</>;
   }
 
   // Admin pages — no sidebar, full width
-  if (isAdminRoute && isSuperAdmin) {
+  if (isAdminRoute && isSuperAdmin && !tenant) {
     return (
       <main className="min-h-screen bg-slate-950">
         <PageTitle />

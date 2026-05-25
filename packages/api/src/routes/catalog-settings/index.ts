@@ -154,14 +154,10 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
       _max: { sortOrder: true },
     });
 
-    const positionX = parseFloat((request.query as any).positionX) || 50;
-    const positionY = parseFloat((request.query as any).positionY) || 50;
     const bannerPath = `banners/${filename}`;
     const banner = await prisma.catalogBanner.create({
       data: {
         catalogId: existing!.id,
-        positionX,
-        positionY,
         imagePath: bannerPath,
         sortOrder: (maxSort._max.sortOrder ?? -1) + 1,
       },

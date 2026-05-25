@@ -1,25 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// First segments that are known system routes (NOT tenant slugs)
-const SYSTEM_ROUTES = new Set([
-  'login', 'admin', 'dashboard', 'products', 'orders', 'customers',
-  'coupons', 'finance', 'inventory', 'purchases', 'suppliers',
-  'settings', 'forgot-password', 'reset-password', 'select-store',
-  'indicadores', 'c',
-]);
-
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('sale360_token')?.value;
   const userStr = request.cookies.get('sale360_user')?.value;
   const { pathname } = request.nextUrl;
-
-  // Path-based store routing: extract first segment as potential tenant slug
-  const firstSegment = pathname.split('/')[1] || '';
-
-  if (firstSegment && !SYSTEM_ROUTES.has(firstSegment)) {
-    return NextResponse.rewrite(new URL(`/c/${firstSegment}`, request.url));
-  }
 
   // Parse user role from cookie
   let userRole = '';
@@ -36,10 +21,18 @@ export function middleware(request: NextRequest) {
   const isResetPassword = pathname.startsWith('/reset-password');
   const isSelectStore = pathname.startsWith('/select-store');
   const isCatalogRoute = pathname.startsWith('/c/');
+  const isGuiaImportacao = pathname.startsWith('/guia-importacao');
+
+  // SUPER_ADMIN with active tenant cookie → in store mode
+  const hasTenant = !!request.cookies.get('sale360_tenant')?.value;
 
   // Public routes (no auth required)
-  if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute) {
+  if (pathname === '/login' || isForgotPassword || isResetPassword || isCatalogRoute || isGuiaImportacao) {
     if (token && pathname === '/login') {
+      // SUPER_ADMIN with stores goes to select-store, otherwise to /admin
+      if (isSuperAdmin && hasTenant) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
       return NextResponse.redirect(new URL(isSuperAdmin ? '/admin' : '/dashboard', request.url));
     }
     return NextResponse.next();
@@ -57,7 +50,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // SUPER_ADMIN redirect to /admin from non-admin pages (allow catalog)
+  // SUPER_ADMIN in store mode: allow store pages, don't force redirect to /admin
+  if (isSuperAdmin && hasTenant && !isAdminRoute) {
+    return NextResponse.next();
+  }
+
+  // SUPER_ADMIN in admin mode: redirect non-admin pages to /admin
   if (isSuperAdmin && !isAdminRoute && !isCatalogRoute) {
     return NextResponse.redirect(new URL('/admin', request.url));
   }
@@ -71,5 +69,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next|api|favicon\\.ico|sitemap\\.xml|robots\\.txt|manifest\\.json|.*\\.png|.*\\.svg|.*\\.ico).*)'],
+  matcher: ['/((?!_next|api|templates|favicon\\.ico|sitemap\\.xml|robots\\.txt|manifest\\.json|.*\\.png|.*\\.svg|.*\\.ico|.*\\.csv|.*\\.md).*)'],
 };

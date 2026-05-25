@@ -329,6 +329,7 @@ model InventoryMovement {
   orderId     String?      // vínculo com venda
   purchaseId  String?      // vínculo com compra
   notes       String?
+  reason      String?      // motivo do ajuste (auditoria)
   createdAt   DateTime     @default(now())
 
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -398,8 +399,6 @@ model CatalogBanner {
   id        String   @id @default(cuid())
   catalogId String
   imagePath String
-  positionX Float    @default(50)
-  positionY Float    @default(50)
   linkUrl   String?  // link opcional ao clicar
   sortOrder Int      @default(0)
   active    Boolean  @default(true)

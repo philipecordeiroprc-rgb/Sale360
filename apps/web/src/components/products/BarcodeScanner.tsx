@@ -7,12 +7,13 @@ import api from '@/lib/api';
 
 interface BarcodeScannerProps {
   onDetected: (product: any) => void;
+  onCodeScanned?: (code: string) => void;
   onError: (message: string) => void;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: BarcodeScannerProps) {
+export function BarcodeScanner({ onDetected, onCodeScanned, onError, isOpen, onClose }: BarcodeScannerProps) {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const usbInputRef = useRef<HTMLInputElement | null>(null);
   const stoppedRef = useRef(false);
@@ -54,11 +55,17 @@ export function BarcodeScanner({ onDetected, onError, isOpen, onClose }: Barcode
       }
     } catch {
       if (!stoppedRef.current) {
-        setStatus('notfound');
-        setErrorMsg(`Produto não encontrado para o código: ${code}`);
+        if (onCodeScanned) {
+          // If caller wants raw codes, pass the code directly
+          Quagga.stop();
+          onCodeScanned(code);
+        } else {
+          setStatus('notfound');
+          setErrorMsg(`Produto não encontrado para o código: ${code}`);
+        }
       }
     }
-  }, [onDetected]);
+  }, [onDetected, onCodeScanned]);
 
   // Camera lifecycle – Quagga2
   useEffect(() => {

@@ -16,6 +16,16 @@ const MOVEMENT_TYPES: Record<string, string> = {
   TRANSFER: 'Transferência',
 };
 
+const REASON_OPTIONS = [
+  'Perda / Avariado',
+  'Vencimento',
+  'Erro de inventário',
+  'Amostra / Brinde',
+  'Devolução fornecedor',
+  'Correção de estoque',
+  'Outro',
+];
+
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const show = (message: string, type: 'success' | 'error' = 'success') => {
@@ -62,7 +72,12 @@ export default function InventoryPage() {
   // Adjust
   const [adjustOpen, setAdjustOpen] = useState(false);
   const [adjustProductId, setAdjustProductId] = useState('');
+  const [adjustProduct, setAdjustProduct] = useState<any>(null);
+  const [adjustVariations, setAdjustVariations] = useState<any[]>([]);
+  const [adjustVariationId, setAdjustVariationId] = useState('');
   const [adjustQty, setAdjustQty] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustReasonCustom, setAdjustReasonCustom] = useState('');
   const [adjustNotes, setAdjustNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -108,6 +123,28 @@ export default function InventoryPage() {
     } catch { setBatchProducts([]); }
   };
 
+  const selectProductForAdjust = (p: any) => {
+    setAdjustProductId(p.id);
+    setAdjustProduct(p);
+    setBatchProductSearch(p.name);
+    setBatchProducts([]);
+    setAdjustVariationId('');
+    // Sort variations: color alphabetically, then size numerically
+    // "2 azul", "4 azul", "6 azul", "2 caramelo", "4 caramelo"...
+    const sorted = [...(p.variations || [])].sort((a: any, b: any) => {
+      const aName: string = a.name || '';
+      const bName: string = b.name || '';
+      const aNum = parseInt(aName.match(/^(\d+)/)?.[1] || '0', 10);
+      const bNum = parseInt(bName.match(/^(\d+)/)?.[1] || '0', 10);
+      const aText = aName.replace(/^\d+\s*/, '').trim().toLowerCase();
+      const bText = bName.replace(/^\d+\s*/, '').trim().toLowerCase();
+      // First by text (color) alphabetically, then by number (size)
+      if (aText !== bText) return aText.localeCompare(bText, 'pt-BR');
+      return aNum - bNum;
+    });
+    setAdjustVariations(sorted);
+  };
+
   const selectProduct = (p: any) => {
     setSelectedProductId(p.id);
     setBatchProductSearch(p.name);
@@ -131,11 +168,14 @@ export default function InventoryPage() {
 
   const handleAdjust = async () => {
     if (!adjustProductId || !adjustQty || Number(adjustQty) === 0) return;
+    const finalReason = adjustReason === 'Outro' ? adjustReasonCustom : adjustReason;
     setSaving(true);
     try {
       await api.inventory.adjust({
         productId: adjustProductId,
+        variationId: adjustVariationId || undefined,
         quantity: Number(adjustQty),
+        reason: finalReason || undefined,
         notes: adjustNotes || undefined,
       });
       show(`Ajuste de ${Number(adjustQty) > 0 ? '+' : ''}${adjustQty} realizado!`);
@@ -221,8 +261,14 @@ export default function InventoryPage() {
         </div>
         <button onClick={() => {
           setAdjustProductId(selectedProductId || '');
+          setAdjustProduct(null);
+          setAdjustVariations([]);
+          setAdjustVariationId('');
           setAdjustQty('');
+          setAdjustReason('');
+          setAdjustReasonCustom('');
           setAdjustNotes('');
+          setBatchProductSearch('');
           setAdjustOpen(true);
         }} className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
           <RefreshCw size={18} /> Ajuste Manual
@@ -415,7 +461,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden overflow-x-auto">
-              <table className="w-full text-sm min-w-[700px]">
+              <table className="w-full text-sm min-w-[800px]">
                 <thead>
                   <tr className="text-slate-500 text-xs border-b border-slate-800">
                     <th className="text-left px-4 py-3">Data</th>
@@ -424,6 +470,7 @@ export default function InventoryPage() {
                     <th className="text-right px-4 py-3">Qtd</th>
                     <th className="text-right px-4 py-3">Custo Un.</th>
                     <th className="text-right px-4 py-3">Custo Total</th>
+                    <th className="text-left px-4 py-3">Motivo</th>
                     <th className="text-left px-4 py-3">Obs</th>
                   </tr>
                 </thead>
@@ -442,13 +489,17 @@ export default function InventoryPage() {
                             {MOVEMENT_TYPES[m.type] || m.type}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-white">{m.product?.name || '—'}</td>
+                        <td className="px-4 py-3 text-white">
+                          {m.product?.name || '—'}
+                          {m.variation?.name ? <span className="text-slate-500 text-xs ml-1">({m.variation.name})</span> : null}
+                        </td>
                         <td className={`px-4 py-3 text-right font-mono ${isOut ? 'text-red-400' : 'text-emerald-400'}`}>
                           {isOut ? '' : '+'}{m.quantity}
                         </td>
                         <td className="px-4 py-3 text-right text-slate-400">{m.unitCost ? formatCurrency(m.unitCost) : '—'}</td>
                         <td className="px-4 py-3 text-right text-slate-400">{m.totalCost ? formatCurrency(m.totalCost) : '—'}</td>
-                        <td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{m.notes || '—'}</td>
+                        <td className="px-4 py-3 text-xs text-slate-300 max-w-[150px] truncate">{m.reason || '—'}</td>
+                        <td className="px-4 py-3 text-xs text-slate-500 max-w-[150px] truncate">{m.notes || '—'}</td>
                       </tr>
                     );
                   })}
@@ -472,6 +523,7 @@ export default function InventoryPage() {
       {/* Adjust Modal */}
       <Modal open={adjustOpen} onClose={() => setAdjustOpen(false)} title="Ajuste Manual de Estoque" size="sm" closeOnOverlayClick={false}>
         <div className="space-y-4">
+          {/* Product search */}
           <div>
             <label className="block text-sm text-slate-400 mb-1">Produto</label>
             <div className="relative">
@@ -484,15 +536,41 @@ export default function InventoryPage() {
               {batchProducts.length > 0 && (
                 <div className="absolute top-full mt-1 w-full bg-slate-700 border border-slate-600 rounded-lg max-h-32 overflow-y-auto z-10">
                   {batchProducts.map((p: any) => (
-                    <button key={p.id} onClick={() => { setAdjustProductId(p.id); setBatchProductSearch(p.name); setBatchProducts([]); }}
+                    <button key={p.id} onClick={() => selectProductForAdjust(p)}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-600">
-                      {p.name} — Estoque: {p.stockQty}
+                      {p.name} — Estoque: {p.stockQty} {p.hasVariations ? `(${p.variations?.length || 0} variações)` : ''}
                     </button>
                   ))}
                 </div>
               )}
             </div>
+            {adjustProduct && (
+              <p className="text-xs text-emerald-400 mt-1">
+                Produto selecionado: <strong>{adjustProduct.name}</strong> — Estoque atual: {adjustProduct.stockQty}
+              </p>
+            )}
           </div>
+
+          {/* Variation selector — only if product has variations */}
+          {adjustVariations.length > 0 && (
+            <div>
+              <label className="block text-sm text-slate-400 mb-1">Variação <span className="text-xs text-slate-500">(opcional)</span></label>
+              <select
+                value={adjustVariationId}
+                onChange={(e) => setAdjustVariationId(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+              >
+                <option value="">Todas as variações</option>
+                {adjustVariations.map((v: any) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name} — Estoque: {v.stockQty}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Quantity */}
           <div>
             <label className="block text-sm text-slate-400 mb-1">
               Quantidade <span className="text-xs text-slate-500">(+ para entrada, - para saída)</span>
@@ -501,10 +579,35 @@ export default function InventoryPage() {
               step="any" placeholder="Ex: 10 ou -5"
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
           </div>
+
+          {/* Reason */}
           <div>
-            <label className="block text-sm text-slate-400 mb-1">Observação</label>
+            <label className="block text-sm text-slate-400 mb-1">Motivo *</label>
+            <select
+              value={adjustReason}
+              onChange={(e) => { setAdjustReason(e.target.value); if (e.target.value !== 'Outro') setAdjustReasonCustom(''); }}
+              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+            >
+              <option value="">Selecione o motivo...</option>
+              {REASON_OPTIONS.map((r) => (
+                <option key={r} value={r}>{r}</option>
+              ))}
+            </select>
+            {adjustReason === 'Outro' && (
+              <input
+                value={adjustReasonCustom}
+                onChange={(e) => setAdjustReasonCustom(e.target.value)}
+                placeholder="Descreva o motivo..."
+                className="mt-2 w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+              />
+            )}
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm text-slate-400 mb-1">Observação adicional</label>
             <input value={adjustNotes} onChange={(e) => setAdjustNotes(e.target.value)}
-              placeholder="Motivo do ajuste..."
+              placeholder="Detalhes extras (opcional)..."
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
           </div>
 

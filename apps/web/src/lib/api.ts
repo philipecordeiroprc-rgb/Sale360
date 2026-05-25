@@ -322,7 +322,7 @@ export const api = {
       const qs = sp.toString();
       return request<any>(`/api/inventory/movements${qs ? `?${qs}` : ''}`);
     },
-    adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; notes?: string }) {
+    adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; reason?: string; notes?: string }) {
       return request<any>('/api/inventory/adjust', { method: 'POST', body: JSON.stringify(data) });
     },
   },
@@ -486,6 +486,9 @@ export const api = {
         const qs = sp.toString();
         return request<{ users: any[]; total: number; page: number; totalPages: number }>(`/api/admin/users${qs ? `?${qs}` : ''}`);
       },
+      updateRole(userId: string, role: 'USER' | 'SUPER_ADMIN') {
+        return request<any>(`/api/admin/users/${userId}/role`, { method: 'PUT', body: JSON.stringify({ role }) });
+      },
       resetPassword(userId: string, password: string) {
         return request<any>(`/api/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
       },
@@ -546,11 +549,10 @@ export const api = {
       formData.append('file', file);
       return upload('/api/catalog-settings/logo', formData);
     },
-    uploadBanner(file: File, positionY?: number) {
+    uploadBanner(file: File) {
       const formData = new FormData();
       formData.append('file', file);
-      const qs = positionY != null ? `?positionY=${positionY}` : '';
-      return upload(`/api/catalog-settings/banners${qs}`, formData);
+      return upload('/api/catalog-settings/banners', formData);
     },
     deleteBanner(id: string) {
       return request<any>(`/api/catalog-settings/banners/${id}`, { method: 'DELETE' });

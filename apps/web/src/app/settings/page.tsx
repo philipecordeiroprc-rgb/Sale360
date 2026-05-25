@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store } from 'lucide-react';
+import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store, Copy } from 'lucide-react';
 import { CatalogoTab } from './CatalogoTab';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -161,8 +161,7 @@ function UsuariosTab() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [resetModal, setResetModal] = useState<{ userId: string; userName: string } | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
   const { toast, show } = useToast();
 
   const loadUsers = async () => {
@@ -235,26 +234,21 @@ function UsuariosTab() {
     }
   };
 
-  const openResetPassword = (userId: string, userName: string) => {
-    setResetModal({ userId, userName });
-    setNewPassword('');
+  const openResetPassword = async (userId: string, userName: string) => {
+    setResetModal({ userId, userName, loading: true, resetLink: '', emailSent: false });
+    try {
+      const result = await api.tenant.users.sendResetLink(userId);
+      setResetModal({ userId, userName, loading: false, resetLink: result.resetLink, emailSent: result.emailSent });
+    } catch (err: any) {
+      show(err.message || 'Erro ao gerar link', 'error');
+      setResetModal(null);
+    }
   };
 
-  const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      show('Senha deve ter no minimo 6 caracteres', 'error');
-      return;
-    }
-    if (!resetModal) return;
-    setSaving(true);
-    try {
-      await api.tenant.users.resetPassword(resetModal.userId, newPassword);
-      show('Senha redefinida!');
-      setResetModal(null);
-    } catch (err: any) {
-      show(err.message || 'Erro ao redefinir', 'error');
-    } finally {
-      setSaving(false);
+  const copyResetLink = () => {
+    if (resetModal?.resetLink) {
+      navigator.clipboard.writeText(resetModal.resetLink);
+      show('Link copiado!');
     }
   };
 
@@ -432,27 +426,49 @@ function UsuariosTab() {
               </button>
             </div>
 
-            <p className="text-slate-400 text-sm mb-4">
-              Nova senha para <strong className="text-white">{resetModal.userName}</strong>
-            </p>
+            {resetModal.loading ? (
+              <div className="text-center py-8">
+                <Loader2 size={32} className="animate-spin text-indigo-400 mx-auto mb-4" />
+                <p className="text-slate-400 text-sm">
+                  Gerando link para <strong className="text-white">{resetModal.userName}</strong>...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {resetModal.emailSent ? (
+                  <div className="bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-3 text-emerald-400 text-sm">
+                    Email enviado com sucesso para o usuario.
+                  </div>
+                ) : (
+                  <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl px-4 py-3 text-amber-400 text-sm">
+                    Nao foi possivel enviar o email. Envie o link manualmente.
+                  </div>
+                )}
 
-            <div className="space-y-4">
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nova senha (min 6 caracteres)"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                minLength={6}
-              />
-              <button
-                onClick={handleResetPassword}
-                disabled={saving}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-white py-3 rounded-xl font-semibold transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Redefinindo...' : 'Redefinir Senha'}
-              </button>
-            </div>
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Link de redefinicao</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={resetModal.resetLink}
+                      readOnly
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-xs focus:outline-none"
+                    />
+                    <button
+                      onClick={copyResetLink}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0"
+                    >
+                      <Copy size={14} />
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-slate-500 text-xs">
+                  O link expira em 1 hora. Envie este link para o usuario por WhatsApp, email ou outro canal.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -587,13 +603,13 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Configuracoes</h1>
+          <h1 className="text-2xl font-bold text-white">Configurações</h1>
           <p className="text-slate-400 text-sm mt-1">Gerencie seu sistema</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit">
+      <div className="flex gap-1 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-1 w-fit max-w-full overflow-x-auto">
         {availableTabs.map((tab) => (
           <button
             key={tab.key}

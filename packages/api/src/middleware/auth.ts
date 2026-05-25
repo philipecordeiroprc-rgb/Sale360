@@ -44,9 +44,27 @@ export async function authMiddleware(
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
-    // SUPER_ADMIN — no tenant context needed
+    // SUPER_ADMIN — admin mode (no tenant) or store mode (has tenantId)
     if (payload.role === 'SUPER_ADMIN') {
-      request.tenantId = '';
+      if (payload.tenantId) {
+        // Store mode: verify tenant and act as store user
+        const tenant = await prisma.tenant.findUnique({
+          where: { id: payload.tenantId },
+          select: { id: true, status: true },
+        });
+        if (!tenant) {
+          reply.status(401).send({ error: 'Empresa não encontrada' });
+          return;
+        }
+        if (tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED') {
+          reply.status(403).send({ error: 'Empresa indisponível' });
+          return;
+        }
+        request.tenantId = payload.tenantId;
+      } else {
+        // Admin mode: no tenant context
+        request.tenantId = '';
+      }
       request.userId = payload.userId;
       request.deviceId = payload.deviceId;
       request.userRole = payload.role;

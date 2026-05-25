@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut,
-  Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3,
+  Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3, Shield,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
@@ -53,9 +53,10 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, tenant, isSuperAdmin, availableTenants } = useAuth();
   const storeRole = user?.storeRole || user?.role || '';
-  const userRole = isSuperAdmin ? 'SUPER_ADMIN' : (storeRole || '');
+  // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
+  const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
 
-  if (isSuperAdmin) return null;
+  if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
   const visibleItems = navItems.filter(item => item.roles.includes(userRole as Role));
 
@@ -124,8 +125,20 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         {/* User */}
         <div className="p-3 border-t border-slate-800 space-y-2">
-          {/* Store switcher (multiple tenants) */}
-          {availableTenants.length > 1 && (
+          {/* SUPER_ADMIN: link to admin panel */}
+          {isSuperAdmin && (
+            <Link
+              href="/admin"
+              onClick={handleNav}
+              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-purple-400 hover:text-purple-300 hover:bg-purple-400/10 transition-colors text-[11px]"
+            >
+              <Shield size={13} />
+              <span>Administrar Plataforma</span>
+            </Link>
+          )}
+
+          {/* Store switcher (multiple tenants or SUPER_ADMIN with stores) */}
+          {(availableTenants.length > 1 || (isSuperAdmin && availableTenants.length > 0)) && (
             <Link
               href="/select-store"
               onClick={handleNav}

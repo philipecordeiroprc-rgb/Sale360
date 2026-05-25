@@ -291,6 +291,9 @@ export default function OrdersPage() {
 
   const handleCreateSale = async () => {
     if (cart.length === 0) { show('Adicione produtos', 'error'); return; }
+    if (!selectedCustomer?.id && !(useWalkIn && walkInName.trim())) {
+      show('Selecione ou informe o cliente', 'error'); return;
+    }
     setSaving(true);
 
     const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -875,7 +878,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => setSaleOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button onClick={handleCreateSale}
-              disabled={saving || cart.length === 0}
+              disabled={saving || cart.length === 0 || (!selectedCustomer?.id && !(useWalkIn && walkInName.trim()))}
               className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Finalizando...' : `Finalizar Venda (R$ ${totalWithDiscount.toFixed(2)})`}
             </button>

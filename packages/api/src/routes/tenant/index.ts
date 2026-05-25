@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { prisma } from '@sale360/db';
+import { sendResetEmail } from '../../services/email.js';
 import { z } from 'zod';
 
 export const tenantRoutes: FastifyPluginAsync = async (app) => {
@@ -250,6 +252,38 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
 
     return { message: 'Senha redefinida com sucesso.' };
+  });
+
+  // Send reset link to user (admin triggers email)
+  app.post('/users/:userId/send-reset-link', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    // Verify user belongs to this tenant
+    const tenantUser = await prisma.tenantUser.findUnique({
+      where: { tenantId_userId: { tenantId: request.tenantId, userId } },
+      include: { user: { select: { id: true, name: true, email: true } } },
+    });
+    if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
+
+    // Generate token (1 hour expiry)
+    const token = randomBytes(32).toString('hex');
+    await prisma.passwordResetToken.create({
+      data: {
+        userId: tenantUser.user.id,
+        token,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    const result = await sendResetEmail(tenantUser.user.email, token, tenantUser.user.name);
+
+    return {
+      message: result.success
+        ? 'Email enviado com sucesso.'
+        : 'Token gerado, mas o envio de email falhou.',
+      resetLink: result.link,
+      emailSent: result.success,
+    };
   });
 
   // ============================================================

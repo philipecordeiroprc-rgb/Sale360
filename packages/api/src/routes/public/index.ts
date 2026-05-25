@@ -106,8 +106,6 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       },
       banners: settings.banners.map((b) => ({
         id: b.id,
-        positionX: b.positionX,
-        positionY: b.positionY,
         imagePath: b.imagePath,
         linkUrl: b.linkUrl,
       })),

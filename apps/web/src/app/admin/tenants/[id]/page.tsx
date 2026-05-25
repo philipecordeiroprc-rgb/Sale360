@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, X, Trash2, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, Plus, X, Trash2, Loader2, Save, Copy } from 'lucide-react';
 import api from '@/lib/api';
 
 function useToast() {
@@ -55,8 +55,7 @@ export default function TenantDetailPage() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
   const [userSaving, setUserSaving] = useState(false);
-  const [resetModal, setResetModal] = useState<{ userId: string; userName: string } | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
 
   // Modules
   const [features, setFeatures] = useState<Record<string, boolean>>({});
@@ -186,23 +185,21 @@ export default function TenantDetailPage() {
     }
   };
 
-  const openResetPassword = (userId: string, userName: string) => {
-    setResetModal({ userId, userName });
-    setNewPassword('');
+  const openResetPassword = async (userId: string, userName: string) => {
+    setResetModal({ userId, userName, loading: true, resetLink: '', emailSent: false });
+    try {
+      const result = await api.admin.tenants.users.sendResetLink(id, userId);
+      setResetModal({ userId, userName, loading: false, resetLink: result.resetLink, emailSent: result.emailSent });
+    } catch (err: any) {
+      show(err.message || 'Erro ao gerar link', 'error');
+      setResetModal(null);
+    }
   };
 
-  const handleResetPassword = async () => {
-    if (newPassword.length < 6) {
-      show('Senha deve ter no mínimo 6 caracteres', 'error');
-      return;
-    }
-    if (!resetModal) return;
-    try {
-      await api.admin.tenants.users.resetPassword(id, resetModal.userId, newPassword);
-      show('Senha redefinida!');
-      setResetModal(null);
-    } catch (err: any) {
-      show(err.message, 'error');
+  const copyResetLink = () => {
+    if (resetModal?.resetLink) {
+      navigator.clipboard.writeText(resetModal.resetLink);
+      show('Link copiado!');
     }
   };
 
@@ -628,26 +625,49 @@ export default function TenantDetailPage() {
               </button>
             </div>
 
-            <p className="text-slate-400 text-sm mb-4">
-              Nova senha para <strong className="text-white">{resetModal.userName}</strong>
-            </p>
+            {resetModal.loading ? (
+              <div className="text-center py-8">
+                <Loader2 size={32} className="animate-spin text-indigo-400 mx-auto mb-4" />
+                <p className="text-slate-400 text-sm">
+                  Gerando link para <strong className="text-white">{resetModal.userName}</strong>...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {resetModal.emailSent ? (
+                  <div className="bg-emerald-400/10 border border-emerald-400/30 rounded-xl px-4 py-3 text-emerald-400 text-sm">
+                    Email enviado com sucesso para o usuario.
+                  </div>
+                ) : (
+                  <div className="bg-amber-400/10 border border-amber-400/30 rounded-xl px-4 py-3 text-amber-400 text-sm">
+                    Nao foi possivel enviar o email. Envie o link manualmente.
+                  </div>
+                )}
 
-            <div className="space-y-4">
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nova senha (mín 6 caracteres)"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                minLength={6}
-              />
-              <button
-                onClick={handleResetPassword}
-                className="w-full bg-amber-500 hover:bg-amber-400 text-white py-3 rounded-xl font-semibold transition-colors"
-              >
-                Redefinir Senha
-              </button>
-            </div>
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Link de redefinicao</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={resetModal.resetLink}
+                      readOnly
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-xs focus:outline-none"
+                    />
+                    <button
+                      onClick={copyResetLink}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-white rounded-xl text-sm font-medium transition-colors flex-shrink-0"
+                    >
+                      <Copy size={14} />
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-slate-500 text-xs">
+                  O link expira em 1 hora. Envie este link para o usuario por WhatsApp, email ou outro canal.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}

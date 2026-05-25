@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan, Pencil } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan, Pencil, Upload } from 'lucide-react';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
 import dynamic from 'next/dynamic';
 import { type VariationData } from '@/components/products/VariationEditor';
@@ -104,6 +106,7 @@ export default function PurchasesPage() {
   const [productSearch, setProductSearch] = useState('');
   const [productResults, setProductResults] = useState<any[]>([]);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
@@ -485,10 +488,18 @@ export default function PurchasesPage() {
           <h1 className="text-2xl font-bold text-white">Compras</h1>
           <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
         </div>
-        <button onClick={openForm}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-          <Plus size={18} /> Nova Compra
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+          >
+            <Upload size={16} /> Importar
+          </button>
+          <button onClick={openForm}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
+            <Plus size={18} /> Nova Compra
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -1119,6 +1130,14 @@ export default function PurchasesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => loadPurchases()}
+        config={IMPORT_CONFIGS.purchases}
+      />
 
       {/* Toast */}
       {toast && (

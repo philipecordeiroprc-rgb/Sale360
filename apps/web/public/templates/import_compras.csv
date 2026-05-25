@@ -1,0 +1,10 @@
+﻿Nº Pedido*;Fornecedor*;Produto*;Variação;Quantidade*;Custo Unitário*;Preço de Venda;Data Recebimento*;Status;Observação
+1;Distribuidora Alimentos ABC;Arroz Branco 5kg;;50;18,50;25,90;24/05/2026;RECEIVED;Compra inicial de inauguração
+1;Distribuidora Alimentos ABC;Feijão Carioca 1kg;;30;5,80;8,90;24/05/2026;RECEIVED;Compra inicial de inauguração
+1;Distribuidora Alimentos ABC;Refrigerante Cola 2L;;120;7,00;12,90;24/05/2026;RECEIVED;Compra inicial de inauguração
+1;Distribuidora Alimentos ABC;Sabão em Pó 1kg;;40;6,50;9,90;24/05/2026;RECEIVED;Compra inicial de inauguração
+2;Bebidas Nacional Ltda;Refrigerante Cola 2L;;60;6,80;12,90;28/05/2026;RECEIVED;Reposição semanal
+2;Bebidas Nacional Ltda;Leite Integral 1L;;100;4,00;6,50;28/05/2026;RECEIVED;Reposição semanal
+3;Frios & Congelados Frost;Queijo Minas kg;;15;26,00;45,00;30/05/2026;CONFIRMED;Aguardando entrega
+4;Higiene Clean Dist;Detergente 500ml;;200;1,70;3,50;15/06/2026;DRAFT;Pedido quinzenal
+4;Higiene Clean Dist;Sabão em Pó 1kg;;80;6,20;9,90;15/06/2026;DRAFT;Pedido quinzenal

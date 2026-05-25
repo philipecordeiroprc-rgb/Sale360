@@ -105,11 +105,37 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   switchTenant: async (tenantId) => {
     const { availableTenants, token, user } = get();
+
+    // SUPER_ADMIN switching to platform admin mode (no tenant)
+    if (tenantId === '__admin__') {
+      const res = await fetch(`/api/auth/switch-tenant`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tenantId: '__admin__' }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Erro ao acessar painel admin');
+      }
+
+      const data = await res.json();
+      get().setAuth({
+        token: data.token,
+        user: { ...user!, role: 'SUPER_ADMIN' },
+        tenant: null,
+        tenants: availableTenants,
+      });
+      return;
+    }
+
     const selected = availableTenants.find((t) => t.id === tenantId);
     if (!selected) throw new Error('Empresa não encontrada');
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-    const res = await fetch(`${API_URL}/api/auth/switch-tenant`, {
+    const res = await fetch(`/api/auth/switch-tenant`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

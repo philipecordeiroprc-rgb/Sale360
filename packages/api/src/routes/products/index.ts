@@ -47,7 +47,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
         where,
         include: {
           category: { select: { id: true, name: true, variationTemplate: { include: { dimensions: true } } } },
-          variations: { orderBy: { name: "asc" } },
+          variations: true,
         },
         orderBy: { name: 'asc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
@@ -93,7 +93,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const { id } = request.params as { id: string };
     const product = await prisma.product.findFirst({
       where: { id, tenantId: request.tenantId },
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
     if (!product) return reply.status(404).send({ error: 'Produto não encontrado' });
     return product;
@@ -128,7 +128,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const product = await prisma.product.update({
       where: { id },
       data: parsed.data,
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
 
     return product;
@@ -153,7 +153,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     const { code } = request.params as { code: string };
     const product = await prisma.product.findFirst({
       where: { barcode: code, tenantId: request.tenantId, active: true },
-      include: { category: true, variations: { orderBy: { name: "asc" } } },
+      include: { category: true, variations: true },
     });
     if (!product) return reply.status(404).send({ error: 'Produto não encontrado para este código de barras' });
     return product;
@@ -313,5 +313,222 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
     );
 
     return reply.status(201).send({ count: products.length });
+  });
+
+  // CSV Import — Simple products
+  app.post('/import', async (request, reply) => {
+    const { rows, mode, dim1Label, dim2Label } = request.body as {
+      rows: Record<string, string>[];
+      mode?: 'simple' | 'variations';
+      dim1Label?: string;
+      dim2Label?: string;
+    };
+
+    if (!rows || !Array.isArray(rows) || rows.length === 0) {
+      return reply.status(400).send({ error: 'Nenhuma linha para importar' });
+    }
+
+    const errors: { row: number; message: string }[] = [];
+    const warnings: string[] = [];
+    let imported = 0;
+
+    // Pre-fetch categories for name matching
+    const categories = await prisma.category.findMany({
+      where: { tenantId: request.tenantId },
+      include: { variationTemplate: { include: { dimensions: true } } },
+    });
+
+    // Helper: parse Brazilian decimal
+    const parseDecimal = (v: string | undefined): number => {
+      if (!v || v.trim() === '') return 0;
+      const cleaned = v.trim().replace(/\./g, '').replace(',', '.');
+      const n = parseFloat(cleaned);
+      return isNaN(n) ? 0 : n;
+    };
+
+    // Helper: parse SIM/NAO
+    const parseSim = (v: string | undefined, defaultVal = true): boolean => {
+      if (!v || v.trim() === '') return defaultVal;
+      const upper = v.trim().toUpperCase();
+      return upper === 'SIM' || upper === 'S' || upper === 'YES';
+    };
+
+    // Helper: validate unit
+    const validUnits = ['UN', 'KG', 'G', 'L', 'ML', 'M', 'PC', 'CX', 'PAR', 'FD', 'PCT', 'M2'];
+    const parseUnit = (v: string | undefined): string => {
+      if (!v || v.trim() === '') return 'UN';
+      const upper = v.trim().toUpperCase();
+      return validUnits.includes(upper) ? upper : 'UN';
+    };
+
+    if (mode === 'variations') {
+      // ============================================================
+      // VARIATIONS MODE
+      // ============================================================
+      const dim1 = dim1Label || 'Tamanho';
+      const dim2 = dim2Label || undefined;
+
+      // Group rows by product name
+      const productGroups = new Map<string, { row: Record<string, string>; variations: Record<string, string>[] }[]>();
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const nomeProduto = (row['Nome do Produto'] || '').trim();
+        if (!nomeProduto) {
+          errors.push({ row: i, message: 'Nome do Produto é obrigatório' });
+          continue;
+        }
+
+        let group = productGroups.get(nomeProduto.toLowerCase());
+        if (!group) {
+          group = [];
+          productGroups.set(nomeProduto.toLowerCase(), group);
+        }
+        group.push({ row, variations: [] });
+      }
+
+      for (const [groupName, groupRows] of productGroups) {
+        try {
+          const firstRow = groupRows[0].row;
+          const nomeProduto = firstRow['Nome do Produto']?.trim();
+          const categoriaNome = (firstRow['Categoria'] || '').trim();
+          const precoBase = parseDecimal(firstRow['Preço Base']);
+
+          if (!precoBase) {
+            errors.push({ row: -1, message: `Produto "${nomeProduto}": Preço Base inválido` });
+            continue;
+          }
+
+          // Resolve category
+          let categoryId: string | undefined;
+          let variationTemplate: any;
+          if (categoriaNome) {
+            const cat = categories.find((c: any) => c.name.toLowerCase() === categoriaNome.toLowerCase());
+            if (cat) {
+              categoryId = cat.id;
+              variationTemplate = cat.variationTemplate;
+            } else {
+              warnings.push(`Categoria "${categoriaNome}" não encontrada para o produto "${nomeProduto}"`);
+            }
+          }
+
+          // Create product
+          const product = await prisma.product.create({
+            data: {
+              tenantId: request.tenantId,
+              name: nomeProduto,
+              price: precoBase,
+              categoryId,
+              hasVariations: true,
+              active: true,
+              stockQty: 0, // summed from variations below
+            },
+          });
+
+          // Create variations
+          let totalStock = 0;
+          for (let vi = 0; vi < groupRows.length; vi++) {
+            const r = groupRows[vi].row;
+            const dim1Val = (r[dim1] || '').trim();
+            const dim2Val = dim2 ? (r[dim2] || '').trim() : '';
+            const variationName = dim2Val ? `${dim1Val} ${dim2Val}` : dim1Val;
+            const qtd = parseDecimal(r['Qtd']);
+            const priceModifier = parseDecimal(r['Preço Extra']);
+            const sku = (r['SKU'] || '').trim() || undefined;
+            const barcode = (r['Código de Barras'] || '').trim() || undefined;
+            const lowStock = parseDecimal(r['Estoque Mínimo']) || undefined;
+
+            if (!variationName || qtd < 0) {
+              warnings.push(`Produto "${nomeProduto}", linha ${vi + 1}: variação inválida, pulada`);
+              continue;
+            }
+
+            await prisma.productVariation.create({
+              data: {
+                productId: product.id,
+                name: variationName,
+                priceModifier,
+                stockQty: qtd,
+                lowStockAt: lowStock,
+                sku,
+                barcode,
+              },
+            });
+            totalStock += qtd;
+          }
+
+          // Update product total stock
+          await prisma.product.update({
+            where: { id: product.id },
+            data: { stockQty: totalStock },
+          });
+
+          imported++;
+        } catch (err: any) {
+          errors.push({ row: -1, message: `Erro ao criar produto "${groupName}": ${err.message}` });
+        }
+      }
+    } else {
+      // ============================================================
+      // SIMPLE MODE
+      // ============================================================
+      const toCreate: any[] = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const name = (row['Nome'] || '').trim();
+        if (!name) {
+          errors.push({ row: i, message: 'Nome é obrigatório' });
+          continue;
+        }
+
+        const precoVenda = parseDecimal(row['Preço de Venda']);
+        if (!precoVenda && precoVenda !== 0) {
+          errors.push({ row: i, message: 'Preço de Venda é obrigatório' });
+          continue;
+        }
+
+        // Resolve category by name
+        let categoryId: string | undefined;
+        const categoriaNome = (row['Categoria'] || '').trim();
+        if (categoriaNome) {
+          const cat = categories.find((c: any) => c.name.toLowerCase() === categoriaNome.toLowerCase());
+          if (cat) {
+            categoryId = cat.id;
+          } else {
+            warnings.push(`Linha ${i + 1}: Categoria "${categoriaNome}" não encontrada`);
+          }
+        }
+
+        toCreate.push({
+          tenantId: request.tenantId,
+          name,
+          description: (row['Descrição'] || '').trim() || undefined,
+          sku: (row['SKU'] || '').trim() || undefined,
+          barcode: (row['Código de Barras'] || '').trim() || undefined,
+          categoryId,
+          price: precoVenda,
+          costPrice: parseDecimal(row['Custo Unitário']) || undefined,
+          operationalCost: parseDecimal(row['Custo Operacional']) || undefined,
+          taxRate: parseDecimal(row['Taxa (%)']) || undefined,
+          stockQty: parseDecimal(row['Estoque Inicial']) || 0,
+          lowStockAt: parseDecimal(row['Estoque Mínimo']) || undefined,
+          unit: parseUnit(row['Unidade']),
+          active: parseSim(row['Ativo'], true),
+          isFractional: parseSim(row['Fracionado'], false),
+        });
+      }
+
+      // Create in transaction
+      for (const item of toCreate) {
+        try {
+          await prisma.product.create({ data: item });
+          imported++;
+        } catch (err: any) {
+          errors.push({ row: -1, message: `Erro ao criar produto "${item.name}": ${err.message}` });
+        }
+      }
+    }
+
+    return reply.status(201).send({ imported, errors, warnings });
   });
 };

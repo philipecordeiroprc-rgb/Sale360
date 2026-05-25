@@ -20,7 +20,7 @@ const PLAN_LABELS: Record<string, string> = {
 
 export default function SelectStorePage() {
   const router = useRouter();
-  const { availableTenants, switchTenant, logout, user } = useAuth();
+  const { availableTenants, switchTenant, logout, user, isSuperAdmin } = useAuth();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -38,8 +38,8 @@ export default function SelectStorePage() {
     }
   };
 
-  // If no tenants available, redirect to login
-  if (availableTenants.length === 0) {
+  // If no tenants available and not SUPER_ADMIN, show empty state
+  if (availableTenants.length === 0 && !isSuperAdmin) {
     return (
       <div className="min-h-dvh bg-slate-950 flex items-center justify-center p-4">
         <div className="text-center">
@@ -78,8 +78,51 @@ export default function SelectStorePage() {
           </div>
         )}
 
-        {/* Tenant list */}
+        {/* Admin option + Tenant list */}
         <div className="space-y-3">
+          {isSuperAdmin && (
+            <button
+              onClick={async () => {
+                setLoading('__admin__');
+                setError('');
+                try {
+                  await switchTenant('__admin__');
+                  router.push('/admin');
+                  router.refresh();
+                } catch (err: any) {
+                  setError(err.message || 'Erro ao acessar painel admin');
+                } finally {
+                  setLoading(null);
+                }
+              }}
+              disabled={loading !== null}
+              className="w-full bg-purple-500/10 border border-purple-500/30 hover:border-purple-400 rounded-xl p-4 text-left transition-all group disabled:opacity-50"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                    <Shield size={20} className="text-purple-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-white font-semibold text-sm">
+                      Administrar Plataforma
+                    </p>
+                    <p className="text-[10px] text-purple-400/70 mt-0.5">
+                      Gerenciar lojas e administradores
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {loading === '__admin__' ? (
+                    <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <ArrowRight size={18} className="text-purple-500 group-hover:text-purple-300 transition-colors" />
+                  )}
+                </div>
+              </div>
+            </button>
+          )}
+
           {availableTenants.map((t) => (
             <button
               key={t.id}

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, Search, Edit2, ToggleLeft, ToggleRight, Trash2, Phone, Mail, Building2, X } from 'lucide-react';
+import { Plus, Search, Edit2, ToggleLeft, ToggleRight, Trash2, Phone, Mail, Building2, X, Upload } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import api from '@/lib/api';
 
 interface FormData {
@@ -52,6 +54,7 @@ export default function SuppliersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const { toast, show } = useToast();
 
   const loadSuppliers = useCallback(async () => {
@@ -149,12 +152,20 @@ export default function SuppliersPage() {
           <h1 className="text-2xl font-bold text-white">Fornecedores</h1>
           <p className="text-slate-400 text-sm mt-1">{total} fornecedores cadastrados</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors"
-        >
-          <Plus size={18} /> Novo Fornecedor
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+          >
+            <Upload size={16} /> Importar
+          </button>
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors"
+          >
+            <Plus size={18} /> Novo Fornecedor
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -339,6 +350,14 @@ export default function SuppliersPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => loadSuppliers()}
+        config={IMPORT_CONFIGS.suppliers}
+      />
 
       {/* Toast */}
       {toast && (

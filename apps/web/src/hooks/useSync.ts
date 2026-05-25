@@ -14,7 +14,7 @@ import {
   setLastSync,
 } from '@/lib/offline-db';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
 
 let syncing = false; // module-level guard against concurrent syncs
 

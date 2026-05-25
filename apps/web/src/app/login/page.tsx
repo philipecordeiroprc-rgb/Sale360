@@ -4,8 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -22,8 +20,8 @@ export default function LoginPage() {
 
     try {
       const endpoint = mode === 'pin'
-        ? `${API_URL}/api/auth/login-pin`
-        : `${API_URL}/api/auth/login`;
+        ? '/api/auth/login-pin'
+        : '/api/auth/login';
 
       const body = mode === 'pin'
         ? { email: email.trim(), pin }
@@ -50,8 +48,11 @@ export default function LoginPage() {
         tenants: data.tenants,
       });
 
-      // If user has multiple tenants, let them choose
-      if (data.tenants && data.tenants.length > 1 && data.user.role !== 'SUPER_ADMIN') {
+      // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
+      if (data.tenants && data.tenants.length > 1) {
+        router.push('/select-store');
+      } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
+        // SUPER_ADMIN with single store: also show selector so they can pick admin or store
         router.push('/select-store');
       } else {
         const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';

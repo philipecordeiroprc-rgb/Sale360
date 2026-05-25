@@ -7,6 +7,7 @@ const adjustSchema = z.object({
   variationId: z.string().optional(),
   quantity: z.number().refine((v) => v !== 0, 'Quantidade não pode ser zero'),
   unitCost: z.number().optional(),
+  reason: z.string().optional(),
   notes: z.string().optional(),
 });
 
@@ -126,7 +127,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { productId, variationId, quantity, unitCost, notes } = parsed.data;
+    const { productId, variationId, quantity, unitCost, reason, notes } = parsed.data;
 
     // Validate product exists and belongs to tenant
     if (productId) {
@@ -160,6 +161,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           quantity,
           unitCost: cost,
           totalCost: quantity * cost,
+          reason: reason || undefined,
           notes: notes || 'Ajuste manual de estoque',
         },
       });

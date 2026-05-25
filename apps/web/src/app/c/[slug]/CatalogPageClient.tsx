@@ -28,7 +28,7 @@ type Store = {
   aboutUs: string | null;
 };
 
-type Banner = { id: string; imagePath: string; linkUrl: string | null; positionX?: number; positionY?: number };
+type Banner = { id: string; imagePath: string; linkUrl: string | null };
 type Category = { id: string; name: string; color: string | null };
 type PaymentMethod = {
   value: string;
@@ -458,29 +458,22 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       {/* ========== BANNERS ========== */}
       {banners.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 mt-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 md:justify-center">
+          <div className="flex gap-3 overflow-x-auto pb-2">
             {banners.map((banner) => {
               const img = (
                 <img
                   key={banner.id}
                   src={getImageUrl(banner.imagePath) || ''}
                   alt=""
-                  className="w-full h-full object-cover rounded-2xl"
-                  style={{ objectPosition: `center ${banner.positionY ?? 50}%` }}
+                  className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full max-w-2xl"
                 />
               );
               return banner.linkUrl ? (
                 <a key={banner.id} href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-full">
-                  <div className="relative aspect-[3/1] md:aspect-[4/1] w-full max-w-5xl rounded-2xl overflow-hidden flex-shrink-0 mx-auto">
-                    {img}
-                  </div>
+                  {img}
                 </a>
               ) : (
-                <div key={banner.id} className="flex-shrink-0 w-full">
-                  <div className="relative aspect-[3/1] md:aspect-[4/1] w-full max-w-5xl rounded-2xl overflow-hidden flex-shrink-0 mx-auto">
-                    {img}
-                  </div>
-                </div>
+                <div key={banner.id} className="flex-shrink-0 w-full">{img}</div>
               );
             })}
           </div>
@@ -490,7 +483,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       {/* ========== CATEGORIES ========== */}
       {categories.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 mt-6">
-          <div className="flex gap-2 overflow-x-auto pb-2 md:justify-center md:flex-wrap">
+          <div className="flex gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setSelectedCategory(null)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
@@ -1121,13 +1114,6 @@ function VariationSelector({
   const selectedVar = selectedId ? byId.get(selectedId) : null;
   const selectedDims = selectedVar ? parseDims(selectedVar.name) : null;
 
-  // Helper: compute actual price from either price or priceModifier
-  const getVarPrice = (v: any): number => {
-    if (v.price != null) return Number(v.price);
-    const mod = v.priceModifier != null ? Number(v.priceModifier) : 0;
-    return basePrice + mod;
-  };
-
   return (
     <div className="mb-4 space-y-3">
       {/* Dimension 1 — horizontal chips */}
@@ -1186,7 +1172,6 @@ function VariationSelector({
             const v = relevant[0];
             const out = Number(v.stockQty) <= 0;
             const isSelected = selectedId === v.id;
-            const varPrice = getVarPrice(v);
 
             return (
               <button
@@ -1202,11 +1187,6 @@ function VariationSelector({
                 }`}
               >
                 {d2}
-                {varPrice !== basePrice && (
-                  <span className="ml-0.5 opacity-75 text-[10px]">
-                    {varPrice.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -1216,6 +1196,3 @@ function VariationSelector({
   );
 }
 
-function formatPriceLocal(value: number) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}

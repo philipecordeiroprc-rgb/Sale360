@@ -1,15 +1,24 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import dynamic from 'next/dynamic';
 import {
   Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
-  Tags, X, Layers, DollarSign,
+  Tags, X, Layers, DollarSign, Upload,
 } from 'lucide-react';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 import { getProducts, getCategories, cacheProducts, cacheCategories } from '@/lib/offline-db';
+
+// Dynamic import to avoid SSR issues with Quagga2/sharp
+const BarcodeScanner = dynamic(
+  () => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })),
+  { ssr: false }
+);
 
 interface FormData {
   name: string;
@@ -30,6 +39,35 @@ const emptyForm: FormData = {
   lowStockAt: '',
   price: '',
 };
+
+// Compress image on mobile before upload
+function compressImage(file: File, maxWidth: number, quality: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let w = img.width;
+      let h = img.height;
+      if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+      canvas.width = w;
+      canvas.height = h;
+      ctx?.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      // Fallback: read as dataURL without compression
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(new Error('Failed to read image'));
+      reader.readAsDataURL(file);
+    };
+    img.src = url;
+  });
+}
 
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -66,8 +104,33 @@ export default function ProductsPage() {
   const [costData, setCostData] = useState<any>(null);
   const [costLoading, setCostLoading] = useState(false);
 
+  // Import
+  const [importOpen, setImportOpen] = useState(false);
+  const [importType, setImportType] = useState<'products' | 'productsVariations'>('products');
+
   const { toast, show } = useToast();
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Barcode scanner for search
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<'search' | 'form'>('search');
+  const handleBarcodeForSearch = (product: any) => {
+    if (product?.barcode) setSearch(product.barcode);
+    setScannerOpen(false);
+  };
+  const handleBarcodeForForm = (product: any) => {
+    if (product?.barcode) setFormData(prev => ({ ...prev, barcode: product.barcode }));
+    setScannerOpen(false);
+  };
+  // Raw code handler (when product not found, but we still want the barcode number)
+  const handleCodeScanned = (code: string) => {
+    if (scannerMode === 'search') {
+      setSearch(code);
+    } else {
+      setFormData(prev => ({ ...prev, barcode: code }));
+    }
+    setScannerOpen(false);
+  };
 
   // Load products
   const loadProducts = useCallback(async () => {
@@ -308,6 +371,36 @@ export default function ProductsPage() {
             <Tags size={15} />
             Categorias
           </button>
+          <div className="relative group">
+            <button
+              onClick={() => { setImportType('products'); setImportOpen(true); }}
+              className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Upload size={15} />
+              Importar
+            </button>
+            {/* Dropdown for import type */}
+            <div className="absolute right-0 top-full mt-1 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-30 hidden group-hover:block">
+              <button
+                onClick={() => { setImportType('products'); setImportOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-t-xl text-sm text-white transition-colors"
+              >
+                Produtos Simples
+              </button>
+              <button
+                onClick={() => { setImportType('productsVariations'); setImportOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 text-sm text-white transition-colors"
+              >
+                Produtos com Variações
+              </button>
+              <button
+                onClick={() => { setCategoriesOpen(true); }}
+                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-b-xl text-sm text-slate-300 transition-colors border-t border-slate-800"
+              >
+                Importar Categorias...
+              </button>
+            </div>
+          </div>
           <button
             onClick={handleCreate}
             className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
@@ -320,15 +413,24 @@ export default function ProductsPage() {
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
-        <div className="flex-1 min-w-[200px] relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Buscar por nome, SKU ou código de barras..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-          />
+        <div className="flex-1 min-w-[200px] flex gap-2">
+          <div className="flex-1 relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Buscar por nome, SKU ou código de barras..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+          <button
+            onClick={() => { setScannerMode('search'); setScannerOpen(true); }}
+            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-3 rounded-xl text-sm font-medium transition-colors"
+            title="Escanear código de barras para buscar"
+          >
+            <Barcode size={18} />
+          </button>
         </div>
         <button
           onClick={() => setSelectedCategory('all')}
@@ -512,18 +614,28 @@ export default function ProductsPage() {
                                     const input = document.createElement('input');
                                     input.type = 'file';
                                     input.accept = 'image/*';
+                                    input.style.display = 'none';
+                                    document.body.appendChild(input);
                                     input.onchange = async (ev: any) => {
                                       const file = ev.target.files?.[0];
-                                      if (!file) return;
-                                      const reader = new FileReader();
-                                      reader.onload = async () => {
-                                        try {
-                                          await api.products.update(product.id, { imageUrl: reader.result as string });
-                                          show('Foto atualizada!');
-                                          await loadProducts();
-                                        } catch { show('Erro ao salvar foto', 'error'); }
-                                      };
-                                      reader.readAsDataURL(file);
+                                      if (!file) { document.body.removeChild(input); return; }
+                                      // Compress large images for mobile
+                                      let imageData: string;
+                                      if (file.size > 300 * 1024) {
+                                        imageData = await compressImage(file, 800, 0.7);
+                                      } else {
+                                        imageData = await new Promise((resolve) => {
+                                          const reader = new FileReader();
+                                          reader.onload = () => resolve(reader.result as string);
+                                          reader.readAsDataURL(file);
+                                        });
+                                      }
+                                      try {
+                                        await api.products.update(product.id, { imageUrl: imageData });
+                                        show('Foto atualizada!');
+                                        await loadProducts();
+                                      } catch { show('Erro ao salvar foto. A imagem pode estar muito grande.', 'error'); }
+                                      document.body.removeChild(input);
                                     };
                                     input.click();
                                   }}
@@ -559,18 +671,27 @@ export default function ProductsPage() {
                                 const input = document.createElement('input');
                                 input.type = 'file';
                                 input.accept = 'image/*';
+                                input.style.display = 'none';
+                                document.body.appendChild(input);
                                 input.onchange = async (ev: any) => {
                                   const file = ev.target.files?.[0];
-                                  if (!file) return;
-                                  const reader = new FileReader();
-                                  reader.onload = async () => {
-                                    try {
-                                      await api.products.update(product.id, { imageUrl: reader.result as string });
-                                      show('Foto atualizada!');
-                                      await loadProducts();
-                                    } catch { show('Erro ao salvar foto', 'error'); }
-                                  };
-                                  reader.readAsDataURL(file);
+                                  if (!file) { document.body.removeChild(input); return; }
+                                  let imageData: string;
+                                  if (file.size > 300 * 1024) {
+                                    imageData = await compressImage(file, 800, 0.7);
+                                  } else {
+                                    imageData = await new Promise((resolve) => {
+                                      const reader = new FileReader();
+                                      reader.onload = () => resolve(reader.result as string);
+                                      reader.readAsDataURL(file);
+                                    });
+                                  }
+                                  try {
+                                    await api.products.update(product.id, { imageUrl: imageData });
+                                    show('Foto atualizada!');
+                                    await loadProducts();
+                                  } catch { show('Erro ao salvar foto. A imagem pode estar muito grande.', 'error'); }
+                                  document.body.removeChild(input);
                                 };
                                 input.click();
                               }}
@@ -790,7 +911,7 @@ export default function ProductsPage() {
           </div>
 
           {/* SKU + Barcode */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-400 text-sm mb-1">SKU</label>
               <input type="text" value={formData.sku} onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
@@ -799,9 +920,19 @@ export default function ProductsPage() {
             </div>
             <div>
               <label className="block text-slate-400 text-sm mb-1">Código de Barras</label>
-              <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                placeholder="789..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+              <div className="flex gap-2">
+                <input type="text" value={formData.barcode} onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  placeholder="789..."
+                  className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors" />
+                <button
+                  type="button"
+                  onClick={() => { setScannerMode('form'); setScannerOpen(true); }}
+                  className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-3 rounded-xl text-sm font-medium transition-colors"
+                  title="Escanear código de barras"
+                >
+                  <Barcode size={18} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -816,7 +947,7 @@ export default function ProductsPage() {
           </div>
 
           {/* Price + Low Stock */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-slate-400 text-sm mb-1">Preço de Venda (R$)</label>
               <input type="number" step="0.01" min="0" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })}
@@ -963,6 +1094,29 @@ export default function ProductsPage() {
             </div>
           ) : null}
         </Modal>
+      )}
+
+      {/* Import Modal */}
+      <ImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => { loadProducts(); }}
+        config={IMPORT_CONFIGS[importType]}
+      />
+
+      {/* Barcode Scanner Overlay */}
+      {scannerOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <BarcodeScanner
+              isOpen={scannerOpen}
+              onClose={() => setScannerOpen(false)}
+              onDetected={scannerMode === 'search' ? handleBarcodeForSearch : handleBarcodeForForm}
+              onCodeScanned={handleCodeScanned}
+              onError={(msg) => show(msg, 'error')}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
