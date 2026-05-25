@@ -214,10 +214,11 @@ async function main() {
       method: 'POST', body: JSON.stringify({
         source: 'PDV', paymentMethod: 'Credito',
         items: [
-          { productId: created.products[1]?.id, productName: 'Arroz 5kg', quantity: 2, unitPrice: 25.90, total: 51.80 },
+          { productId: created.products[1]?.id, productName: 'Arroz 5kg', quantity: 1, unitPrice: 25.90, total: 25.90 },
           { productId: created.products[2]?.id, productName: 'Feijão 1kg', quantity: 2, unitPrice: 8.90, total: 17.80 },
+          { productId: created.products[3]?.id, productName: 'Boné Trucker', quantity: 1, unitPrice: 49.90, total: 49.90 },
         ],
-        subtotal: 69.60, discount: 5.00, total: 64.60,
+        subtotal: 93.60, discount: 5.00, total: 88.60,
       }),
     });
     if (o2.ok) { created.orders.push(o2.data); console.log('✅ Venda #2 (Crédito 3 itens -R$5):', o2.data.orderNumber, '| R$ 88.60'); }
