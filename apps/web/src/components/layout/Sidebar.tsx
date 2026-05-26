@@ -130,6 +130,49 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               </Link>
             );
           })}
+
+          {/* Cadastros (collapsible) */}
+          {visibleCadastroItems.length > 0 && (
+            <div className="pt-1">
+              <button
+                onClick={() => setCadastrosOpen(!cadastrosOpen)}
+                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-all duration-150
+                  ${isCadastroActive
+                    ? 'text-indigo-300'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+              >
+                <FolderOpen size={16} />
+                <span className="font-medium text-xs flex-1 text-left">Cadastros</span>
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${cadastrosOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {cadastrosOpen && (
+                <div className="ml-4 space-y-0.5 mt-0.5">
+                  {visibleCadastroItems.map((item) => {
+                    const isActive = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={handleNav}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150
+                          ${isActive
+                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                          }`}
+                      >
+                        <item.icon size={15} />
+                        <span className="font-medium text-xs">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* User */}
