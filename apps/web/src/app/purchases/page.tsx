@@ -689,6 +689,31 @@ export default function PurchasesPage() {
           )}
         </>
       )}
+        </>
+      )}
+
+      {/* Content — Tab: Novo Produto + Compra */}
+      {tab === 'new-product' && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
+            <Sparkles size={36} className="text-emerald-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Novo Produto + Compra</h2>
+          <p className="text-slate-400 max-w-md mb-8">
+            Cadastre um produto que ainda não existe no sistema e já dê entrada no estoque com a compra.
+            Tudo em um único fluxo: fornecedor, produto, custos e variações.
+          </p>
+          <button
+            onClick={() => setWizardOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-emerald-500/20"
+          >
+            <Sparkles size={18} /> Iniciar Cadastro
+          </button>
+          <p className="text-xs text-slate-600 mt-4">
+            Se o produto já existe no sistema, use a aba <strong className="text-indigo-400">Reposição de Estoque</strong>.
+          </p>
+        </div>
+      )}
 
       {/* ========== CREATE MODAL (simplified) ========== */}
       <Modal open={formOpen} onClose={() => { setFormOpen(false); setEditingId(null); }} title={editingId ? 'Editar Compra' : 'Nova Compra'} size="lg" closeOnOverlayClick={false}>
