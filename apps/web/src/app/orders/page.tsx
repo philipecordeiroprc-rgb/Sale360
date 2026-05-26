@@ -342,20 +342,68 @@ export default function OrdersPage() {
 
   const handleCreateSale = async () => {
     if (cart.length === 0) { show('Adicione produtos', 'error'); return; }
-    // Cliente é opcional para vendas diretas no PDV (vendedor está presente)
+
+    // Check for products that have batches with expiry dates
+    const productsWithStock = cart.filter(c => c.productId);
+    if (productsWithStock.length > 0 && isOnline) {
+      try {
+        const needsSelection: any[] = [];
+        const preselect: Record<string, string> = {};
+
+        for (let i = 0; i < cart.length; i++) {
+          const item = cart[i];
+          if (!item.productId) continue;
+
+          const batches = await api.inventory.batches({
+            productId: item.productId,
+            variationId: item.variationId || undefined,
+          });
+
+          // Filter to batches that have expiryDate
+          const withExpiry = batches.batches.filter((b: any) => b.expiryDate);
+          if (withExpiry.length > 1) {
+            // Sort by expiryDate ascending (nearest expiry first)
+            withExpiry.sort((a: any, b: any) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+            needsSelection.push({
+              cartIndex: i,
+              cartItem: item,
+              batches: withExpiry,
+            });
+            // Pre-select the nearest expiry batch
+            preselect[String(i)] = withExpiry[0].id;
+          }
+        }
+
+        if (needsSelection.length > 0) {
+          setBatchItems(needsSelection);
+          setBatchSelections(preselect);
+          setBatchModalOpen(true);
+          return; // wait for user to confirm in modal
+        }
+      } catch {
+        // If batch check fails (e.g., offline), proceed normally
+      }
+    }
+
+    // No batch selection needed, proceed directly
+    executeSale({});
+  };
+
+  const executeSale = async (itemBatchIds: Record<string, string>) => {
     setSaving(true);
 
     const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const orderData = {
       customerId: selectedCustomer?.id || undefined,
       customerName: useWalkIn && walkInName.trim() ? walkInName.trim() : undefined,
-      items: cart.map(item => ({
+      items: cart.map((item, idx) => ({
         productId: item.productId,
         variationId: item.variationId,
         productName: item.productName,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         total: item.total,
+        batchId: itemBatchIds[String(idx)] || undefined,
       })),
       subtotal,
       discount: (parseFloat(discount) || 0) + (couponDiscount),
@@ -373,6 +421,7 @@ export default function OrdersPage() {
 
       show('Venda realizada!');
       setSaleOpen(false);
+      setBatchModalOpen(false);
       loadOrders();
       loadTodayRevenue();
     } catch (err: any) {
@@ -395,6 +444,7 @@ export default function OrdersPage() {
           }
           show('Venda salva offline. Sera sincronizada quando houver conexao.', 'success');
           setSaleOpen(false);
+          setBatchModalOpen(false);
           loadOrders();
         } catch {
           show('Erro ao salvar venda offline', 'error');
