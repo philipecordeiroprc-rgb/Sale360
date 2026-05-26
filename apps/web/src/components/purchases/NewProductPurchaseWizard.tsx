@@ -320,7 +320,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       });
 
       // 5. Auto-receive the purchase so stock is updated immediately
-      const fullPurchase = await api.purchases.get(createdPurchase.id);
+      // Find the created purchase
+      const purchasesData = await api.purchases.list({ status: 'DRAFT' });
+      const createdPurchase = purchasesData.purchases?.[0];
+      const fullPurchase = createdPurchase ? await api.purchases.get(createdPurchase.id) : null;
       if (fullPurchase) {
         try {
           // Build itemExpiryDates: map variation name → purchase item ID
