@@ -470,6 +470,31 @@ export default function PurchasesPage() {
     }
   };
 
+  const handleOpenReceive = (purchase: any) => {
+    setReceivingPurchase(purchase);
+    setReceivingExpiryDates({});
+    setReceiveOpen(true);
+  };
+
+  const handleConfirmReceive = async () => {
+    if (!receivingPurchase) return;
+    const body: any = {};
+    const dates = Object.entries(receivingExpiryDates).filter(([, v]) => v);
+    if (dates.length > 0) {
+      body.itemExpiryDates = Object.fromEntries(dates);
+    }
+    try {
+      await api.purchases.receive(receivingPurchase.id, body);
+      show('Compra recebida! Lotes PEPS criados e estoque atualizado.');
+      setReceiveOpen(false);
+      setReceivingPurchase(null);
+      setReceivingExpiryDates({});
+      loadPurchases();
+    } catch (err: any) {
+      show(err.message || 'Erro ao receber', 'error');
+    }
+  };
+
   const handleCancel = async (id: string) => {
     if (!confirm('Cancelar esta compra?')) return;
     try { await api.purchases.cancel(id); show('Compra cancelada!'); loadPurchases(); }
