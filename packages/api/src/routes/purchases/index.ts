@@ -361,16 +361,21 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
             });
           }
         }
+      });
+
+      // Return updated purchase
+      const updated = await prisma.purchase.findFirst({
+        where: { id },
+        include: { items: true, supplier: true },
+      });
+
+      return reply.status(200).send(updated);
+    } catch (err: any) {
+      if (err.message === 'DUPLICATE_RECEIVE') {
+        return reply.status(409).send({ error: 'Compra já foi recebida em outra requisição simultânea' });
       }
-    });
-
-    // Return updated purchase
-    const updated = await prisma.purchase.findFirst({
-      where: { id },
-      include: { items: true, supplier: true },
-    });
-
-    return reply.status(200).send(updated);
+      throw err;
+    }
   });
 
   // Import purchases (bulk CSV)
