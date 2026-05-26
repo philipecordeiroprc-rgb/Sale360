@@ -1153,6 +1153,62 @@ export default function OrdersPage() {
         </div>
       </Modal>
 
+      {/* Batch Selection Modal (expiry dates) */}
+      <Modal
+        open={batchModalOpen}
+        onClose={() => setBatchModalOpen(false)}
+        title="Escolha do Lote"
+        size="md"
+        closeOnOverlayClick={false}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-slate-400">
+            Os produtos abaixo têm lotes com datas de validade diferentes. O lote com vencimento mais próximo já está selecionado.
+          </p>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {batchItems.map(({ cartIndex, cartItem, batches }) => (
+              <div key={cartIndex} className="bg-slate-800 rounded-lg p-3">
+                <p className="text-sm text-white font-medium mb-2">{cartItem.productName}</p>
+                <div className="flex flex-wrap gap-2">
+                  {batches.map((b: any) => {
+                    const isSelected = batchSelections[String(cartIndex)] === b.id;
+                    const expiryDate = new Date(b.expiryDate);
+                    const isExpired = expiryDate < new Date();
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => setBatchSelections(prev => ({ ...prev, [String(cartIndex)]: b.id }))}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          isSelected
+                            ? 'bg-indigo-500 text-white'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        <span className="font-mono text-[10px] mr-1.5">#{b.id.slice(0, 5)}</span>
+                        {isExpired ? 'Vencido ' : 'Vence '}
+                        {expiryDate.toLocaleDateString('pt-BR')}
+                        <span className="ml-1 text-[10px] opacity-60">({b.remainingQty} un.)</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
+            <button onClick={() => setBatchModalOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">
+              Cancelar
+            </button>
+            <button
+              onClick={() => executeSale(batchSelections)}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+            >
+              Confirmar Venda
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-3 py-2 rounded-xl text-sm font-medium ${
