@@ -392,6 +392,9 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
     setProductImage(null);
     setSelectedTemplate(null);
     setVariations([]);
+    setRowDims({});
+    setRowCustom({});
+    setRowQty(0);
     setCostPrice(0);
     setOperationalCost(0);
     setTaxRatePct(0);
