@@ -501,13 +501,18 @@ export default function OrdersPage() {
     setConfirmPaymentOpen(true);
   };
 
-  const handleConfirmOnlineExecute = async () => {
+  const handleConfirmOnlineExecute = async (itemBatchIds?: Record<string, string>) => {
     const id = confirmingOrderId;
     if (!id) return;
     try {
-      const result = await api.orders.confirm(id, { paymentMethod: selectedConfirmPayment.id });
+      const body: any = { paymentMethod: selectedConfirmPayment.id };
+      if (itemBatchIds && Object.keys(itemBatchIds).length > 0) {
+        body.itemBatchIds = itemBatchIds;
+      }
+      const result = await api.orders.confirm(id, body);
       show(result.message || 'Pedido confirmado!');
       setConfirmPaymentOpen(false);
+      setBatchModalOpen(false);
       setConfirmingOrderId(null);
       loadOrders();
       loadTodayRevenue();
@@ -515,6 +520,54 @@ export default function OrdersPage() {
     } catch (err: any) {
       show(err.message || 'Erro ao confirmar pedido', 'error');
     }
+  };
+
+  const handleCheckBatchesAndConfirm = async () => {
+    const id = confirmingOrderId;
+    if (!id) return;
+
+    // Fetch the order with items to check for batches
+    try {
+      const order = await api.orders.get(id);
+      const items = order.items || [];
+      const needsSelection: any[] = [];
+      const preselect: Record<string, string> = {};
+
+      for (const item of items) {
+        if (!item.productId) continue;
+
+        const batchesResp = await api.inventory.batches({
+          productId: item.productId,
+          variationId: item.variationId || undefined,
+        });
+
+        const withExpiry = batchesResp.batches.filter((b: any) => b.expiryDate);
+        if (withExpiry.length > 1) {
+          withExpiry.sort((a: any, b: any) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
+          needsSelection.push({
+            orderItemId: item.id,
+            productName: item.productName,
+            batches: withExpiry,
+          });
+          preselect[item.id] = withExpiry[0].id;
+        }
+      }
+
+      if (needsSelection.length > 0) {
+        setOnlineConfirmOrderItems(needsSelection);
+        setBatchItems(needsSelection);
+        setBatchSelections(preselect);
+        setBatchModalMode('online');
+        setConfirmPaymentOpen(false); // hide confirm modal, show batch modal
+        setBatchModalOpen(true);
+        return;
+      }
+    } catch {
+      // If check fails, proceed normally
+    }
+
+    // No batch selection needed
+    await handleConfirmOnlineExecute();
   };
 
   const openDetail = async (id: string) => {
