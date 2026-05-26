@@ -549,6 +549,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
   // Confirm an ONLINE pending order (consume stock, mark as paid)
   app.post('/:id/confirm', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { itemBatchIds } = (request.body || {}) as { itemBatchIds?: Record<string, string> };
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
@@ -569,9 +570,46 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     await prisma.$transaction(async (tx) => {
       for (const item of order.items) {
         if (item.productId) {
-          // FIFO: consume from oldest batches
           const qty = Number(item.quantity);
           let remaining = qty;
+          let totalCostAcc = 0;
+
+          // If admin chose a specific batch for this item, consume from it first
+          const chosenBatchId = itemBatchIds?.[item.id];
+          if (chosenBatchId) {
+            const chosenBatch = await tx.inventoryBatch.findFirst({
+              where: { id: chosenBatchId, tenantId: request.tenantId, remainingQty: { gt: 0 } },
+            });
+            if (chosenBatch) {
+              const consume = Math.min(Number(chosenBatch.remainingQty), remaining);
+              const batchCost = Number(chosenBatch.unitCost);
+              totalCostAcc += consume * batchCost;
+
+              await tx.inventoryBatch.update({
+                where: { id: chosenBatch.id },
+                data: { remainingQty: { decrement: consume } },
+              });
+
+              await tx.inventoryMovement.create({
+                data: {
+                  tenantId: request.tenantId,
+                  productId: item.productId,
+                  variationId: (item as any).variationId || null,
+                  type: 'SALE_OUT',
+                  quantity: -consume,
+                  unitCost: batchCost,
+                  totalCost: -(consume * batchCost),
+                  batchId: chosenBatch.id,
+                  orderId: order.id,
+                  notes: `Pedido online #${order.orderNumber} - ${item.productName} (lote escolhido)`,
+                },
+              });
+
+              remaining -= consume;
+            }
+          }
+
+          // Remaining: consume from oldest batches (FIFO)
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -582,7 +620,6 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             orderBy: { receivedAt: 'asc' },
           });
 
-          let totalCostAcc = 0;
           for (const batch of batches) {
             if (remaining <= 0) break;
             const consume = Math.min(Number(batch.remainingQty), remaining);
