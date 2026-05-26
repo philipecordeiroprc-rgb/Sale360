@@ -641,20 +641,155 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 </div>
               </div>
 
-              {/* Variation Editor (if category has template) */}
-              {selectedTemplate && (
+              {/* Variation row builder with dropdowns (if category has template) */}
+              {selectedTemplate && (() => {
+                const dims = selectedTemplate.dimensions.map((d: any) => ({
+                  ...d,
+                  options: Array.isArray(d.options) ? d.options : (typeof d.options === 'string' ? JSON.parse(d.options) : []),
+                }));
+                return (
                 <div className="bg-slate-900 rounded-lg p-3">
                   <p className="text-xs text-slate-400 mb-2">
                     Variações — Template: <span className="text-indigo-400 font-medium">{selectedTemplate.name}</span>
                   </p>
-                  <VariationEditor
-                    template={selectedTemplate}
-                    variations={variations}
-                    onChange={handleVariationsChange}
-                    purchaseMode
-                  />
+
+                  {/* Table of added variations */}
+                  {variations.length > 0 && (
+                    <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
+                      <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
+                        style={{ gridTemplateColumns: `repeat(${dims.length + 1}, 1fr) 40px` }}>
+                        {dims.map((d: any) => (
+                          <span key={d.id || d.label}>{d.label}</span>
+                        ))}
+                        <span className="text-center">Qtd</span>
+                        <span />
+                      </div>
+                      {variations.map((v, vi) => {
+                        const parts = v.name.split(' ');
+                        return (
+                          <div key={vi}
+                            className="grid gap-2 px-3 py-1.5 items-center text-sm"
+                            style={{ gridTemplateColumns: `repeat(${dims.length + 1}, 1fr) 40px` }}>
+                            {parts.map((part: string, pi: number) => (
+                              <span key={pi} className="text-white truncate">{part}</span>
+                            ))}
+                            <span className="text-white text-center font-medium">{v.stockQty || 0}</span>
+                            <button
+                              onClick={() => {
+                                const updated = variations.filter((_, i) => i !== vi);
+                                setVariations(updated);
+                              }}
+                              className="text-slate-500 hover:text-red-400 justify-self-center">
+                              <X size={14} />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Row builder to add new variation */}
+                  <div className="bg-slate-800 rounded-lg p-2">
+                    <div className="grid gap-2 items-end"
+                      style={{ gridTemplateColumns: `repeat(${dims.length}, 1fr) 100px 40px` }}>
+                      {dims.map((d: any) => {
+                        const isCustom = rowDims[d.label] === '__custom__';
+                        return (
+                          <div key={d.id || d.label}>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
+                            <select
+                              value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setRowDims({ ...rowDims, [d.label]: val });
+                                if (val !== '__custom__') {
+                                  const next = { ...rowCustom };
+                                  delete next[d.label];
+                                  setRowCustom(next);
+                                }
+                              }}
+                              className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
+                              <option value="">—</option>
+                              {d.options.map((opt: string) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                              <option value="__custom__">Outro...</option>
+                            </select>
+                            {isCustom && (
+                              <input
+                                type="text"
+                                value={rowCustom[d.label] || ''}
+                                onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
+                                placeholder="Digite..."
+                                className="mt-1 w-full px-2 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                      <div>
+                        <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
+                        <input type="number" value={rowQty || ''}
+                          onChange={(e) => setRowQty(Number(e.target.value))}
+                          min="0" step="1" placeholder="0"
+                          className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                      </div>
+                      <button
+                        onClick={() => {
+                          const allDims = dims.every((d: any) => {
+                            const val = rowDims[d.label];
+                            if (!val) return false;
+                            if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                            return true;
+                          });
+                          if (!allDims || rowQty <= 0) return;
+                          const name = dims.map((d: any) => {
+                            const val = rowDims[d.label];
+                            return val === '__custom__' ? rowCustom[d.label].trim() : val;
+                          }).join(' ');
+                          // Check if variation already exists
+                          const existingIdx = variations.findIndex(
+                            (v: any) => v.name.toLowerCase() === name.toLowerCase()
+                          );
+                          if (existingIdx >= 0) {
+                            const updated = [...variations];
+                            updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + rowQty };
+                            setVariations(updated);
+                          } else {
+                            setVariations([
+                              ...variations,
+                              { name, stockQty: rowQty, priceModifier: 0, lowStockAt: undefined },
+                            ]);
+                          }
+                          setRowDims({});
+                          setRowCustom({});
+                          setRowQty(0);
+                        }}
+                        disabled={!dims.every((d: any) => {
+                          const val = rowDims[d.label];
+                          if (!val) return false;
+                          if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                          return true;
+                        }) || rowQty <= 0}
+                        className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
+                        title="Adicionar variação">
+                        <Plus size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
+                    <span className="text-xs text-slate-400">
+                      Variações: <span className="text-white font-semibold">{variations.length}</span>
+                      <span className="mx-2">|</span>
+                      Qtd total: <span className="text-white font-semibold">
+                        {variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)}
+                      </span>
+                    </span>
+                  </div>
                 </div>
-              )}
+                );
+              })()}
 
               {scannerOpen && (
                 <div className="mb-3">
