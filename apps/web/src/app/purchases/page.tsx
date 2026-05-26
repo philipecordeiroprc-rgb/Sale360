@@ -575,31 +575,33 @@ export default function PurchasesPage() {
         </div>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-              <div className="h-5 bg-slate-800 rounded w-1/3 mb-3" />
-              <div className="h-4 bg-slate-800 rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-red-400 mb-3">{error}</p>
-          <button onClick={loadPurchases} className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm">Tentar novamente</button>
-        </div>
-      ) : purchases.length === 0 ? (
-        <div className="text-center py-12">
-          <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
-          <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
-          <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
-        </div>
-      ) : (
+      {/* Content — Tab: Reposição de Estoque */}
+      {tab === 'restock' && (
         <>
-          <div className="space-y-3">
-            {purchases.map((p: any) => (
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
+                  <div className="h-5 bg-slate-800 rounded w-1/3 mb-3" />
+                  <div className="h-4 bg-slate-800 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-3">{error}</p>
+              <button onClick={loadPurchases} className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm">Tentar novamente</button>
+            </div>
+          ) : purchases.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
+              <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
+              <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {purchases.map((p: any) => (
               <div key={p.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
                 <div className="p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-4 cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => toggleExpand(p.id)}>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'}`} />
