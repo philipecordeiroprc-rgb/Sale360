@@ -162,7 +162,7 @@ export default function CategoriesPage() {
 
       {/* Category list */}
       {loading ? (
-        <div className="text-slate-400 text-sm text-center py-12">Carregando...</div>
+        <div className="text-slate-400 text-sm text-center py-8">Carregando...</div>
       ) : categories.length === 0 ? (
         <div className="text-center py-12">
           <Package size={48} className="mx-auto text-slate-600 mb-3" />
