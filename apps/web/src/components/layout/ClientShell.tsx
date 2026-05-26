@@ -17,7 +17,7 @@ function isCatalogPath(pathname: string): boolean {
     'login', 'forgot-password', 'reset-password', 'select-store',
     'dashboard', 'admin', 'coupons', 'customers', 'finance',
     'guia-importacao', 'indicadores', 'inventory', 'orders',
-    'products', 'purchases', 'settings', 'suppliers',
+    'products', 'purchases', 'settings', 'suppliers', 'categories',
   ]);
   const first = pathname.split('/')[1];
   if (!first) return false;
