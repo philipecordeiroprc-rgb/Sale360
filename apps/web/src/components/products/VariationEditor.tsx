@@ -45,6 +45,8 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
   const [selected, setSelected] = useState<Record<number, Set<string>>>({});
   // Custom option input per dimension
   const [customInput, setCustomInput] = useState<Record<number, string>>({});
+  // Which dimension has the "Outro" field active
+  const [activeCustomDim, setActiveCustomDim] = useState<number | null>(null);
 
   const dimensions = template?.dimensions || [];
 
@@ -63,6 +65,7 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
     if (!val || !dimensions[dimIndex]) return;
     toggleOption(dimIndex, val);
     setCustomInput((prev) => ({ ...prev, [dimIndex]: '' }));
+    setActiveCustomDim(null);
   };
 
   const hasSelection = dimensions.some((_, i) => (selected[i]?.size || 0) > 0);
