@@ -113,6 +113,8 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Expiry dates per variation name (for auto-receive)
+  const [variationExpiryDates, setVariationExpiryDates] = useState<Record<string, string>>({});
 
   // Load data on open
   useEffect(() => {
