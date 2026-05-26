@@ -172,6 +172,8 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
 
           {dimensions.map((dim, dimIndex) => {
             const options = getOptions(dim);
+            const extraOptions = customOptions[dimIndex] || [];
+            const allOptions = [...options, ...extraOptions.filter((o) => !options.includes(o))];
             const typeLabel = TYPE_LABEL[dim.type] || dim.type;
             const sel = selected[dimIndex] || new Set<string>();
 
