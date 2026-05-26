@@ -102,10 +102,10 @@ export default function CategoriesPage() {
 
   return (
     <div className="animate-slide-up">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-2xl font-bold text-white">Categorias</h1>
-          <p className="text-slate-400 text-sm mt-1">{categories.length} categorias cadastradas</p>
+          <p className="text-slate-400 text-sm mt-0.5">{categories.length} categorias cadastradas</p>
         </div>
         <button
           onClick={() => setImportOpen(true)}
