@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Plus, Search, Scan, ChevronDown, Info, Upload, X, Check } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Modal } from '@/components/ui/Modal';
-import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
+import type { VariationData } from '@/components/products/VariationEditor';
 import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 
 const BarcodeScanner = dynamic(
