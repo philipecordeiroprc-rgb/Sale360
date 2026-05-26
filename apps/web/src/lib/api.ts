@@ -288,8 +288,8 @@ export const api = {
     update(id: string, data: any) {
       return request<any>(`/api/purchases/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     },
-    receive(id: string) {
-      return request<any>(`/api/purchases/${id}/receive`, { method: 'POST' });
+    receive(id: string, body?: any) {
+      return request<any>(`/api/purchases/${id}/receive`, { method: 'POST', body: body ? JSON.stringify(body) : undefined });
     },
     cancel(id: string) {
       return request<any>(`/api/purchases/${id}/cancel`, { method: 'POST' });
