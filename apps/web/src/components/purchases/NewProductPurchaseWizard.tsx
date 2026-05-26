@@ -395,6 +395,8 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
     setMarginPct(0);
     setSalePrice(0);
     setDiscount('0');
+    setSimpleQty(1);
+    setSimpleExpiryDate('');
     setVariationExpiryDates({});
     setError('');
   };
