@@ -47,6 +47,8 @@ interface BatchGroup {
   variationName: string | null;
   batches: any[];
   totalRemaining: number;
+  expiredCount: number;
+  expiringSoonCount: number;
 }
 
 function ExpiryBadge({ date }: { date: string | Date }) {
