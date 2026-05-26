@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Fragment, Search, Package, ArrowUpDown, Layers, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
-import React from 'react';
+import { Search, Package, ArrowUpDown, Layers, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
 
