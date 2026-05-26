@@ -230,6 +230,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
   // Receive purchase — PEPS core: creates InventoryBatches + Movements
   app.post('/:id/receive', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { itemExpiryDates } = (request.body || {}) as { itemExpiryDates?: Record<string, string | null> };
 
     const purchase = await prisma.purchase.findFirst({
       where: { id, tenantId: request.tenantId },
