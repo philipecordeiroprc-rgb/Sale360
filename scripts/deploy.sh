@@ -50,6 +50,7 @@ SYNC_FILES=(
   "apps/web/tailwind.config.ts"
   "packages/api/package.json"
   "packages/api/tsconfig.json"
+  "packages/api/scripts/merge-duplicate-variations.ts"
   "packages/db/package.json"
   "packages/core/package.json"
   "pnpm-lock.yaml"
