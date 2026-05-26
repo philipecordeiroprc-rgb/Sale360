@@ -396,7 +396,7 @@ export default function InventoryPage() {
                     const productLabel = [
                       group.productName,
                       group.sku ? group.sku : null,
-                      group.unit ? group.unit : null,
+                      group.unit && group.unit !== 'UN' ? group.unit : null,
                     ].filter(Boolean).join(' · ');
                     const hasExpired = group.expiredCount > 0;
                     const hasExpiringSoon = group.expiringSoonCount > 0;
