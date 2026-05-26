@@ -220,7 +220,7 @@ fi
 # ---- 11. Upload OCI Object Storage ----
 log "☁️  Enviando para OCI Object Storage..."
 OCI_UPLOAD_OK=""
-if oci os object put \
+if $OCI_CLI os object put \
     --profile SALE360-BACKUP \
     --bucket-name "$OCI_BUCKET" \
     --region "$OCI_REGION" \
@@ -252,7 +252,7 @@ ok "Limpeza local concluída (mantidos ${RETENTION_DAYS} backups)"
 
 # OCI: remover objetos antigos
 if [ "$OCI_UPLOAD_OK" = "1" ]; then
-    OCI_OBJECTS=$(oci os object list \
+    OCI_OBJECTS=$($OCI_CLI os object list \
         --profile SALE360-BACKUP \
         --bucket-name "$OCI_BUCKET" \
         --region "$OCI_REGION" \
@@ -274,7 +274,7 @@ except: pass
         echo "$OCI_OBJECTS" | while read -r obj; do
             if [ -n "$obj" ]; then
                 log "Removendo OCI: $obj"
-                oci os object delete \
+                $OCI_CLI os object delete \
                     --profile SALE360-BACKUP \
                     --bucket-name "$OCI_BUCKET" \
                     --region "$OCI_REGION" \
