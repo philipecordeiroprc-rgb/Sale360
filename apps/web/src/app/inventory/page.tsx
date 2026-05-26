@@ -404,9 +404,9 @@ export default function InventoryPage() {
                     const hasMinStock = group.lowStockAt > 0 && group.stockQty === group.lowStockAt;
 
                     return (
-                      <>
+                      <React.Fragment key={group.key}>
                         {/* Summary row */}
-                        <tr key={group.key}
+                        <tr
                           onClick={() => toggleGroup(group.key)}
                           className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer">
                           <td className="px-3 py-3">
