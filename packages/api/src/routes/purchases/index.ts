@@ -361,6 +361,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
             });
           }
         }
+      }
       });
 
       // Return updated purchase
