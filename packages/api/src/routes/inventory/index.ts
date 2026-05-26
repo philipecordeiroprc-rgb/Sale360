@@ -256,11 +256,18 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
   // TEMPORARY: merge duplicate variations (run once then remove)
   app.post('/merge-duplicate-variations', async (request, reply) => {
     const allVariations = await prisma.productVariation.findMany({
-      include: { product: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { id: 'asc' },
     });
 
-    const groups = new Map<string, typeof allVariations>();
+    // Fetch product names separately
+    const productIds = [...new Set(allVariations.map(v => v.productId))];
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { id: true, name: true },
+    });
+    const productNames = new Map(products.map(p => [p.id, p.name]));
+
+    const groups = new Map<string, any[]>();
     for (const v of allVariations) {
       const key = `${v.productId}__${v.name.trim().toLowerCase()}`;
       if (!groups.has(key)) groups.set(key, []);
@@ -278,22 +285,23 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
     for (const group of duplicates) {
       const canonical = group[0];
       const toMerge = group.slice(1);
+      const prodName = productNames.get(canonical.productId) || '?';
 
       for (const dup of toMerge) {
         await prisma.$transaction(async (tx) => {
-          const b = await tx.inventoryBatch.updateMany({
+          await tx.inventoryBatch.updateMany({
             where: { variationId: dup.id },
             data: { variationId: canonical.id },
           });
-          const m = await tx.inventoryMovement.updateMany({
+          await tx.inventoryMovement.updateMany({
             where: { variationId: dup.id },
             data: { variationId: canonical.id },
           });
-          const pi = await tx.purchaseItem.updateMany({
+          await tx.purchaseItem.updateMany({
             where: { variationId: dup.id },
             data: { variationId: canonical.id },
           });
-          const oi = await tx.orderItem.updateMany({
+          await tx.orderItem.updateMany({
             where: { variationId: dup.id },
             data: { variationId: canonical.id },
           });
@@ -307,7 +315,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
         });
 
         report.push(
-          `${canonical.product?.name || '?'} | "${canonical.name}" | ${dup.id} → ${canonical.id}`
+          `${prodName} | "${canonical.name}" | ${dup.id} → ${canonical.id}`
         );
         totalMerged++;
       }
