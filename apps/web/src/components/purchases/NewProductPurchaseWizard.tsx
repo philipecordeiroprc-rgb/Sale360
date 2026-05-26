@@ -309,10 +309,6 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
           taxRatePct: taxRatePct || undefined,
           marginPct: marginPct || undefined,
         });
-        // Map simple product expiry date
-        if (simpleExpiryDate) {
-          setVariationExpiryDates(prev => ({ ...prev, [productName.trim()]: simpleExpiryDate }));
-        }
       }
 
       if (purchaseItems.length === 0) {
