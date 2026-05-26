@@ -219,9 +219,48 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           });
           taxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
 
-          // FIFO: consume from oldest batches
+          // FIFO: consume from oldest batches, optionally starting from a specific batch
           let remaining = item.quantity;
           let totalCostAcc = 0;
+
+          // If seller chose a specific batch, try to consume from it first
+          if ((item as any).batchId) {
+            const chosenBatch = await tx.inventoryBatch.findFirst({
+              where: {
+                id: (item as any).batchId,
+                tenantId: request.tenantId,
+                remainingQty: { gt: 0 },
+              },
+            });
+            if (chosenBatch) {
+              const consume = Math.min(Number(chosenBatch.remainingQty), remaining);
+              const batchCost = Number(chosenBatch.unitCost);
+
+              await tx.inventoryBatch.update({
+                where: { id: chosenBatch.id },
+                data: { remainingQty: { decrement: consume } },
+              });
+
+              await tx.inventoryMovement.create({
+                data: {
+                  tenantId: request.tenantId,
+                  productId: item.productId,
+                  variationId: item.variationId || null,
+                  type: 'SALE_OUT',
+                  quantity: -consume,
+                  unitCost: batchCost,
+                  totalCost: -(consume * batchCost),
+                  batchId: chosenBatch.id,
+                  notes: `Venda #${orderNumber} - ${item.productName} (lote escolhido)`,
+                },
+              });
+
+              totalCostAcc += consume * batchCost;
+              remaining -= consume;
+            }
+          }
+
+          // Remaining: consume from oldest batches (FIFO)
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
