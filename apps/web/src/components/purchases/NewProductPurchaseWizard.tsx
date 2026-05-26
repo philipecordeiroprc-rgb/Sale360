@@ -100,6 +100,9 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
   const [categories, setCategories] = useState<CategoryWithCount[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<VariationTemplate | null>(null);
   const [variations, setVariations] = useState<VariationData[]>([]);
+  const [rowDims, setRowDims] = useState<Record<string, string>>({});
+  const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
+  const [rowQty, setRowQty] = useState<number>(0);
   const [scannerOpen, setScannerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
