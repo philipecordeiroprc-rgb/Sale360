@@ -19,12 +19,16 @@ const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/orders', label: 'Vendas', icon: ShoppingCart, roles: ['OWNER', 'CASHIER'] },
   { href: '/inventory', label: 'Estoque', icon: Layers, roles: ['OWNER'] },
   { href: '/products', label: 'Produtos', icon: Package, roles: ['OWNER', 'CASHIER'] },
-  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
   { href: '/purchases', label: 'Compras', icon: ShoppingBag, roles: ['OWNER'] },
-  { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
   { href: '/indicadores', label: 'Indicadores', icon: BarChart3, roles: ['OWNER'] },
   { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },
+];
+
+const cadastroItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
+  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
+  { href: '/categories', label: 'Categorias', icon: FolderOpen, roles: ['OWNER'] },
+  { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
 ];
 
 function getInitials(name: string): string {
