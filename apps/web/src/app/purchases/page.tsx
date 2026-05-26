@@ -527,11 +527,38 @@ export default function PurchasesPage() {
           >
             <Upload size={16} /> Importar
           </button>
-          <button onClick={openForm}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-            <Plus size={18} /> Nova Compra
-          </button>
+          {tab === 'restock' ? (
+            <button onClick={openForm}
+              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
+              <Plus size={18} /> Nova Compra
+            </button>
+          ) : (
+            <button onClick={() => setWizardOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-sm transition-colors">
+              <Sparkles size={18} /> Novo Produto + Compra
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setTab('restock')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+            ${tab === 'restock'
+              ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+          <RefreshCw size={16} /> Reposição de Estoque
+        </button>
+        <button
+          onClick={() => setTab('new-product')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+            ${tab === 'new-product'
+              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+          <Sparkles size={16} /> Novo Produto + Compra
+        </button>
       </div>
 
       {/* Filters */}
