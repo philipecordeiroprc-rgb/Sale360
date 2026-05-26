@@ -271,7 +271,11 @@ export default function InventoryPage() {
         else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
       }
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => {
+      const nameCmp = a.productName.localeCompare(b.productName, 'pt-BR');
+      if (nameCmp !== 0) return nameCmp;
+      return (a.variationName || '').localeCompare(b.variationName || '', 'pt-BR');
+    });
   };
 
   // Short batch ID for display
