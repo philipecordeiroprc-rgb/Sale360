@@ -6,8 +6,9 @@
 # ============================================================
 set -euo pipefail
 
-# PATH for cron (OCI CLI lives here)
-export PATH="$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+# PATH for cron (OCI CLI lives in opc home, even under sudo)
+export PATH="/home/opc/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+OCI_CLI=$(which oci 2>/dev/null || echo "/home/opc/.local/bin/oci")
 
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP_DIR="/home/opc/backups"
