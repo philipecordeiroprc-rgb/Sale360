@@ -49,6 +49,26 @@ interface BatchGroup {
   totalRemaining: number;
 }
 
+function ExpiryBadge({ date }: { date: string | Date }) {
+  const d = new Date(date);
+  const now = new Date();
+  const daysUntilExpiry = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = daysUntilExpiry < 0;
+  const isSoon = !isExpired && daysUntilExpiry <= 7;
+
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+      isExpired
+        ? 'bg-red-500/20 text-red-400'
+        : isSoon
+          ? 'bg-amber-500/20 text-amber-400'
+          : 'bg-slate-700 text-slate-400'
+    }`}>
+      {isExpired ? `Vencido ${d.toLocaleDateString('pt-BR')}` : isSoon ? `Vence ${d.toLocaleDateString('pt-BR')}` : `Val. ${d.toLocaleDateString('pt-BR')}`}
+    </span>
+  );
+}
+
 export default function InventoryPage() {
   const [tab, setTab] = useState<'batches' | 'movements'>('batches');
   const [batches, setBatches] = useState<any[]>([]);
