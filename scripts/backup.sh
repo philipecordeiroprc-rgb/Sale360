@@ -22,8 +22,9 @@ OCI_BUCKET="sale360-backups"
 OCI_NAMESPACE="grqxj1nvh4zj"
 COMPARTMENT_ID=$(curl -s -m 2 http://169.254.169.254/opc/v1/instance/ 2>/dev/null | python3 -c 'import sys,json; print(json.load(sys.stdin)["compartmentId"])' 2>/dev/null || echo "")
 
-# Neon DB connection (extraído do systemd)
-DB_URL="${DATABASE_URL:-postgresql://sale360:sale360_oci_1e53ebfc387adbc1f5a27c9efd80ca1c@127.0.0.1:5432/sale360?sslmode=disable}"
+# OCI PostgreSQL — lê a URL do .env da API (mantido pelo deploy)
+DB_URL=$(grep -oP 'DATABASE_URL=\K.*' /home/opc/sale360/packages/api/.env | tr -d '"')
+DB_URL="${DB_URL:-postgresql://sale360:sale360_oci_1e53ebfc387adbc1f5a27c9efd80ca1c@127.0.0.1:5432/sale360?sslmode=disable}"
 # Extrai partes da URL para pg_dump
 DB_HOST=$(echo "$DB_URL" | sed -n 's|.*@\([^:/]*\).*|\1|p')
 DB_PORT=$(echo "$DB_URL" | sed -n 's|.*:\([0-9]*\)/.*|\1|p')
@@ -32,8 +33,8 @@ DB_USER=$(echo "$DB_URL" | sed -n 's|.*://\([^:]*\):.*|\1|p')
 DB_PASS=$(echo "$DB_URL" | sed -n 's|.*://[^:]*:\([^@]*\)@.*|\1|p')
 
 export PGPASSWORD="$DB_PASS"
-PG_DUMP="/usr/pgsql-17/bin/pg_dump"
-PG_DUMPALL="/usr/pgsql-17/bin/pg_dumpall"
+PG_DUMP="/usr/bin/pg_dump"
+PG_DUMPALL="/usr/bin/pg_dumpall"
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 ok()  { log "✅ $*"; }
