@@ -186,7 +186,7 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
                   </span>
                 </div>
                 <div className="flex gap-1 flex-wrap items-center">
-                  {options.map((opt) => (
+                  {allOptions.map((opt) => (
                     <button
                       key={opt}
                       type="button"
