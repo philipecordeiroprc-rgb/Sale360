@@ -1039,13 +1039,6 @@ export default function ProductsPage() {
         </form>
       </Modal>
 
-      {/* Categories Modal */}
-      <CategoriesModal
-        open={categoriesOpen}
-        onClose={() => setCategoriesOpen(false)}
-        onChanged={() => { loadCategories(); loadProducts(); }}
-      />
-
       {/* Stock Detail Modal */}
       {stockProduct && (
         <StockDetailModal
