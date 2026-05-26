@@ -18,6 +18,7 @@ function normalizePaymentMethod(method: string): string {
 const orderItemSchema = z.object({
   productId: z.string().optional(),
   variationId: z.string().optional(),
+  batchId: z.string().optional(), // lote específico (vendedor escolheu na venda)
   productName: z.string(),
   quantity: z.number().positive(),
   unitPrice: z.number(),
