@@ -252,4 +252,67 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
 
     return reply.status(201).send({ success: true, type: movementType, quantity: effectiveQty });
   });
+
+  // TEMPORARY: merge duplicate variations (run once then remove)
+  app.post('/merge-duplicate-variations', async (request, reply) => {
+    const allVariations = await prisma.productVariation.findMany({
+      include: { product: { select: { id: true, name: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const groups = new Map<string, typeof allVariations>();
+    for (const v of allVariations) {
+      const key = `${v.productId}__${v.name.trim().toLowerCase()}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(v);
+    }
+
+    const duplicates = Array.from(groups.values()).filter(g => g.length > 1);
+    const report: string[] = [];
+
+    if (duplicates.length === 0) {
+      return { merged: 0, message: 'No duplicate variations found.' };
+    }
+
+    let totalMerged = 0;
+    for (const group of duplicates) {
+      const canonical = group[0];
+      const toMerge = group.slice(1);
+
+      for (const dup of toMerge) {
+        await prisma.$transaction(async (tx) => {
+          const b = await tx.inventoryBatch.updateMany({
+            where: { variationId: dup.id },
+            data: { variationId: canonical.id },
+          });
+          const m = await tx.inventoryMovement.updateMany({
+            where: { variationId: dup.id },
+            data: { variationId: canonical.id },
+          });
+          const pi = await tx.purchaseItem.updateMany({
+            where: { variationId: dup.id },
+            data: { variationId: canonical.id },
+          });
+          const oi = await tx.orderItem.updateMany({
+            where: { variationId: dup.id },
+            data: { variationId: canonical.id },
+          });
+          if (Number(dup.stockQty) > 0) {
+            await tx.productVariation.update({
+              where: { id: canonical.id },
+              data: { stockQty: { increment: Number(dup.stockQty) } },
+            });
+          }
+          await tx.productVariation.delete({ where: { id: dup.id } });
+        });
+
+        report.push(
+          `${canonical.product?.name || '?'} | "${canonical.name}" | ${dup.id} → ${canonical.id}`
+        );
+        totalMerged++;
+      }
+    }
+
+    return reply.status(201).send({ merged: totalMerged, report });
+  });
 };
