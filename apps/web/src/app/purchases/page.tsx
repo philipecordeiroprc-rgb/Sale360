@@ -107,6 +107,10 @@ export default function PurchasesPage() {
   const [productResults, setProductResults] = useState<any[]>([]);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // Receive modal with expiry dates
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [receivingPurchase, setReceivingPurchase] = useState<any>(null);
+  const [receivingExpiryDates, setReceivingExpiryDates] = useState<Record<string, string>>({});
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
