@@ -279,6 +279,20 @@ export default function ProductsPage() {
       lowStockAt: product.lowStockAt != null ? String(product.lowStockAt) : '',
       price: product.price != null ? String(product.price) : '',
     });
+    // Load existing variations
+    const existingVariations: VariationData[] = (product.variations || []).map((v: any) => ({
+      id: v.id,
+      name: v.name,
+      priceModifier: Number(v.priceModifier || 0),
+      stockQty: Number(v.stockQty || 0),
+      lowStockAt: v.lowStockAt != null ? Number(v.lowStockAt) : undefined,
+      sku: v.sku || undefined,
+      barcode: v.barcode || undefined,
+    }));
+    setFormVariations(existingVariations);
+    // Find template from selected category
+    const cat = categories.find((c) => c.id === product.categoryId);
+    setSelectedTemplate(cat?.variationTemplate || null);
     setFormError('');
     setFormOpen(true);
   };
