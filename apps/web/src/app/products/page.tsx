@@ -98,8 +98,6 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Categories modal
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [costProduct, setCostProduct] = useState<Product | null>(null);
