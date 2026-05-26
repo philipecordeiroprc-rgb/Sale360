@@ -379,6 +379,7 @@ export default function OrdersPage() {
         if (needsSelection.length > 0) {
           setBatchItems(needsSelection);
           setBatchSelections(preselect);
+          setBatchModalMode('pdv');
           setBatchModalOpen(true);
           return; // wait for user to confirm in modal
         }
