@@ -580,6 +580,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                   isOpen={scannerOpen}
                   onClose={() => setScannerOpen(false)}
                   onDetected={handleBarcodeDetected}
+                  onCodeScanned={(code: string) => {
+                    setProductBarcode(code);
+                    setScannerOpen(false);
+                  }}
                   onError={(msg) => show(msg, 'error')}
                 />
               )}
