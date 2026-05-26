@@ -316,12 +316,55 @@ export default function ProductsPage() {
       if (formData.price) payload.price = parseFloat(formData.price);
       if (formData.lowStockAt) payload.lowStockAt = parseFloat(formData.lowStockAt);
 
+      let productId: string;
+
       if (editingProduct) {
         await api.products.update(editingProduct.id, payload);
+        productId = editingProduct.id;
         show('Produto atualizado!');
       } else {
-        await api.products.create(payload);
+        const created = await api.products.create(payload);
+        productId = created.id;
         show('Produto criado!');
+      }
+
+      // Handle variations
+      if (formVariations.length > 0) {
+        const existingVariations = editingProduct?.variations || [];
+        const existingNames = new Set(existingVariations.map((v: any) => v.name));
+        const formNames = new Set(formVariations.map((v) => v.name));
+
+        // Delete removed variations
+        for (const ev of existingVariations) {
+          if (!formNames.has(ev.name) && ev.id) {
+            try { await api.products.deleteVariation(productId, ev.id); } catch { /* ignore */ }
+          }
+        }
+
+        // Create new or update existing variations
+        for (const v of formVariations) {
+          const existing = existingVariations.find((ev: any) => ev.name === v.name);
+          if (existing?.id) {
+            // Update only if changed
+            await api.products.updateVariation(productId, existing.id, {
+              stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
+              priceModifier: v.priceModifier,
+              sku: v.sku,
+              barcode: v.barcode,
+            });
+          } else {
+            // Create new variation
+            await api.products.addVariation(productId, {
+              name: v.name,
+              stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
+              priceModifier: v.priceModifier,
+              sku: v.sku,
+              barcode: v.barcode,
+            });
+          }
+        }
       }
 
       setFormOpen(false);
