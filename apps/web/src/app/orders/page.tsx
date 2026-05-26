@@ -156,6 +156,11 @@ export default function OrdersPage() {
   const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Batch selection modal (products with expiry-dated batches)
+  const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchItems, setBatchItems] = useState<any[]>([]); // cart items that need batch selection
+  const [batchSelections, setBatchSelections] = useState<Record<string, string>>({}); // cartIdx → batchId
+
   // Detail modal
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailOrder, setDetailOrder] = useState<any>(null);
