@@ -781,8 +781,17 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
               {/* Variation quantities (if category has template) */}
               {selectedTemplate && variations.length > 0 && (
                 <div className="bg-slate-900 rounded-lg p-3">
-                  <p className="text-xs text-slate-400 mb-2">Quantidades por Variação</p>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  <p className="text-xs text-slate-400 mb-2">
+                    Quantidades por Variação
+                    <span className="text-slate-500 ml-2">(opcional: informe a data de validade para rastreamento FEFO)</span>
+                  </p>
+                  <div className="space-y-1.5 max-h-52 overflow-y-auto">
+                    {/* Header row */}
+                    <div className="flex items-center gap-2 px-3 py-1 text-[10px] text-slate-500">
+                      <span className="flex-1">Variação</span>
+                      <span className="w-16 text-center">Qtd</span>
+                      <span className="w-28 text-center">Validade</span>
+                    </div>
                     {variations.map((v, vi) => (
                       <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
                         <span className="text-sm text-white flex-1 truncate">{v.name}</span>
@@ -795,9 +804,14 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                             setVariations(updated);
                           }}
                           min="0" step="1" placeholder="0"
-                          className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none"
+                          className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none"
                         />
-                        <span className="text-xs text-slate-500">un.</span>
+                        <input
+                          type="date"
+                          value={variationExpiryDates[v.name] || ''}
+                          onChange={(e) => setVariationExpiryDates(prev => ({ ...prev, [v.name]: e.target.value }))}
+                          className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                        />
                       </div>
                     ))}
                   </div>
