@@ -575,6 +575,15 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 </div>
               </div>
 
+              {scannerOpen && (
+                <BarcodeScanner
+                  isOpen={scannerOpen}
+                  onClose={() => setScannerOpen(false)}
+                  onDetected={handleBarcodeDetected}
+                  onError={(msg) => show(msg, 'error')}
+                />
+              )}
+
               {/* Price + LowStock */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
