@@ -328,9 +328,12 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       const createdPurchase = purchasesData.purchases?.[0];
       if (createdPurchase) {
         try {
-          // Build itemExpiryDates: map variation name → purchase item ID
+          // Build itemExpiryDates from both variation dates and simple product date
           const expiryPayload: any = {};
           const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
+          if (simpleExpiryDate) {
+            dates.push([productName.trim(), simpleExpiryDate]);
+          }
           if (dates.length > 0) {
             const fullPurchase = await api.purchases.get(createdPurchase.id);
             if (fullPurchase?.items) {
