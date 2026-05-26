@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
   Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
-  Tags, X, Layers, DollarSign, Upload,
+  X, Layers, DollarSign, Upload,
 } from 'lucide-react';
 import { ImportModal } from '@/components/ui/ImportModal';
 import { IMPORT_CONFIGS } from '@/lib/import-configs';
