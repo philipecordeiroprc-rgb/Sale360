@@ -320,27 +320,28 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       });
 
       // 5. Auto-receive the purchase so stock is updated immediately
-      // Find the created purchase
       const purchasesData = await api.purchases.list({ status: 'DRAFT' });
       const createdPurchase = purchasesData.purchases?.[0];
-      const fullPurchase = createdPurchase ? await api.purchases.get(createdPurchase.id) : null;
-      if (fullPurchase) {
+      if (createdPurchase) {
         try {
           // Build itemExpiryDates: map variation name → purchase item ID
           const expiryPayload: any = {};
           const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
-          if (dates.length > 0 && fullPurchase.items) {
-            const itemExpiryDates: Record<string, string> = {};
-            for (const [varName, dateStr] of dates) {
-              const matchingItem = fullPurchase.items.find((item: any) =>
-                item.productName?.endsWith(` - ${varName}`) || item.productName === varName
-              );
-              if (matchingItem) {
-                itemExpiryDates[matchingItem.id] = dateStr;
+          if (dates.length > 0) {
+            const fullPurchase = await api.purchases.get(createdPurchase.id);
+            if (fullPurchase?.items) {
+              const itemExpiryDates: Record<string, string> = {};
+              for (const [varName, dateStr] of dates) {
+                const matchingItem = fullPurchase.items.find((item: any) =>
+                  item.productName?.endsWith(` - ${varName}`) || item.productName === varName
+                );
+                if (matchingItem) {
+                  itemExpiryDates[matchingItem.id] = dateStr;
+                }
               }
-            }
-            if (Object.keys(itemExpiryDates).length > 0) {
-              expiryPayload.itemExpiryDates = itemExpiryDates;
+              if (Object.keys(itemExpiryDates).length > 0) {
+                expiryPayload.itemExpiryDates = itemExpiryDates;
+              }
             }
           }
           await api.purchases.receive(createdPurchase.id, expiryPayload);
