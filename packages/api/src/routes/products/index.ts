@@ -182,8 +182,46 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const variation = await prisma.productVariation.create({
-      data: { ...parsed.data, productId: id },
+    const variation = await prisma.$transaction(async (tx) => {
+      const v = await tx.productVariation.create({
+        data: { ...parsed.data, productId: id },
+      });
+
+      // If variation has initial stock, create batch + movement so inventory/orders work
+      const initialStock = parsed.data.stockQty || 0;
+      if (initialStock > 0) {
+        const batch = await tx.inventoryBatch.create({
+          data: {
+            tenantId: request.tenantId,
+            productId: id,
+            variationId: v.id,
+            quantity: initialStock,
+            remainingQty: initialStock,
+            unitCost: product.costPrice ? Number(product.costPrice) : 0,
+            receivedAt: new Date(),
+          },
+        });
+
+        await tx.inventoryMovement.create({
+          data: {
+            tenantId: request.tenantId,
+            productId: id,
+            variationId: v.id,
+            type: 'INITIAL_STOCK',
+            quantity: initialStock,
+            batchId: batch.id,
+            notes: `Estoque inicial — variação "${v.name}"`,
+          },
+        });
+
+        // Increment product stock
+        await tx.product.update({
+          where: { id },
+          data: { stockQty: { increment: initialStock } },
+        });
+      }
+
+      return v;
     });
 
     // Auto-set hasVariations flag

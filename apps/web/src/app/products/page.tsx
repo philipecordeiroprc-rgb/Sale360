@@ -11,6 +11,7 @@ import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
+import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 import { getProducts, getCategories, cacheProducts, cacheCategories } from '@/lib/offline-db';
 
@@ -93,6 +94,8 @@ export default function ProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyForm });
+  const [formVariations, setFormVariations] = useState<VariationData[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<VariationTemplate | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
@@ -258,6 +261,8 @@ export default function ProductsPage() {
   const handleCreate = () => {
     setEditingProduct(null);
     setFormData({ ...emptyForm });
+    setFormVariations([]);
+    setSelectedTemplate(null);
     setFormError('');
     setFormOpen(true);
   };
@@ -274,6 +279,20 @@ export default function ProductsPage() {
       lowStockAt: product.lowStockAt != null ? String(product.lowStockAt) : '',
       price: product.price != null ? String(product.price) : '',
     });
+    // Load existing variations
+    const existingVariations: VariationData[] = (product.variations || []).map((v: any) => ({
+      id: v.id,
+      name: v.name,
+      priceModifier: Number(v.priceModifier || 0),
+      stockQty: Number(v.stockQty || 0),
+      lowStockAt: v.lowStockAt != null ? Number(v.lowStockAt) : undefined,
+      sku: v.sku || undefined,
+      barcode: v.barcode || undefined,
+    }));
+    setFormVariations(existingVariations);
+    // Find template from selected category
+    const cat = categories.find((c) => c.id === product.categoryId);
+    setSelectedTemplate(cat?.variationTemplate || null);
     setFormError('');
     setFormOpen(true);
   };
@@ -297,12 +316,55 @@ export default function ProductsPage() {
       if (formData.price) payload.price = parseFloat(formData.price);
       if (formData.lowStockAt) payload.lowStockAt = parseFloat(formData.lowStockAt);
 
+      let productId: string;
+
       if (editingProduct) {
         await api.products.update(editingProduct.id, payload);
+        productId = editingProduct.id;
         show('Produto atualizado!');
       } else {
-        await api.products.create(payload);
+        const created = await api.products.create(payload);
+        productId = created.id;
         show('Produto criado!');
+      }
+
+      // Handle variations
+      if (formVariations.length > 0) {
+        const existingVariations = editingProduct?.variations || [];
+        const existingNames = new Set(existingVariations.map((v: any) => v.name));
+        const formNames = new Set(formVariations.map((v) => v.name));
+
+        // Delete removed variations
+        for (const ev of existingVariations) {
+          if (!formNames.has(ev.name) && ev.id) {
+            try { await api.products.deleteVariation(productId, ev.id); } catch { /* ignore */ }
+          }
+        }
+
+        // Create new or update existing variations
+        for (const v of formVariations) {
+          const existing = existingVariations.find((ev: any) => ev.name === v.name);
+          if (existing?.id) {
+            // Update only if changed
+            await api.products.updateVariation(productId, existing.id, {
+              stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
+              priceModifier: v.priceModifier,
+              sku: v.sku,
+              barcode: v.barcode,
+            });
+          } else {
+            // Create new variation
+            await api.products.addVariation(productId, {
+              name: v.name,
+              stockQty: v.stockQty,
+              lowStockAt: v.lowStockAt,
+              priceModifier: v.priceModifier,
+              sku: v.sku,
+              barcode: v.barcode,
+            });
+          }
+        }
       }
 
       setFormOpen(false);
@@ -939,12 +1001,28 @@ export default function ProductsPage() {
           {/* Category */}
           <div>
             <label className="block text-slate-400 text-sm mb-1">Categoria</label>
-            <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+            <select
+              value={formData.categoryId}
+              onChange={(e) => {
+                const catId = e.target.value;
+                setFormData({ ...formData, categoryId: catId });
+                const cat = categories.find((c) => c.id === catId);
+                setSelectedTemplate(cat?.variationTemplate || null);
+                // Clear variations if template changed
+                setFormVariations([]);
+              }}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
               <option value="">Sem categoria</option>
               {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
+
+          {/* Variations (if category has template) */}
+          <VariationEditor
+            template={selectedTemplate}
+            variations={formVariations}
+            onChange={setFormVariations}
+          />
 
           {/* Price + Low Stock */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

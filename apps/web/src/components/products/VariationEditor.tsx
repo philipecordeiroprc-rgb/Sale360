@@ -45,6 +45,10 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
   const [selected, setSelected] = useState<Record<number, Set<string>>>({});
   // Custom option input per dimension
   const [customInput, setCustomInput] = useState<Record<number, string>>({});
+  // Which dimension has the "Outro" field active
+  const [activeCustomDim, setActiveCustomDim] = useState<number | null>(null);
+  // Track custom-added options per dimension so they appear as chips
+  const [customOptions, setCustomOptions] = useState<Record<number, string[]>>({});
 
   const dimensions = template?.dimensions || [];
 
@@ -61,8 +65,14 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
   const addCustomOption = (dimIndex: number) => {
     const val = (customInput[dimIndex] || '').trim();
     if (!val || !dimensions[dimIndex]) return;
+    // Store custom option
+    setCustomOptions((prev) => ({
+      ...prev,
+      [dimIndex]: [...(prev[dimIndex] || []), val],
+    }));
     toggleOption(dimIndex, val);
     setCustomInput((prev) => ({ ...prev, [dimIndex]: '' }));
+    setActiveCustomDim(null);
   };
 
   const hasSelection = dimensions.some((_, i) => (selected[i]?.size || 0) > 0);
@@ -162,6 +172,8 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
 
           {dimensions.map((dim, dimIndex) => {
             const options = getOptions(dim);
+            const extraOptions = customOptions[dimIndex] || [];
+            const allOptions = [...options, ...extraOptions.filter((o) => !options.includes(o))];
             const typeLabel = TYPE_LABEL[dim.type] || dim.type;
             const sel = selected[dimIndex] || new Set<string>();
 
@@ -173,8 +185,8 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
                     {typeLabel}
                   </span>
                 </div>
-                <div className="flex gap-1 flex-wrap">
-                  {options.map((opt) => (
+                <div className="flex gap-1 flex-wrap items-center">
+                  {allOptions.map((opt) => (
                     <button
                       key={opt}
                       type="button"
@@ -188,25 +200,43 @@ export function VariationEditor({ template, variations, onChange, purchaseMode }
                       {opt}
                     </button>
                   ))}
-                  {/* Custom option input */}
-                  <div className="flex gap-1 items-center">
-                    <input
-                      type="text"
-                      value={customInput[dimIndex] || ''}
-                      onChange={(e) => setCustomInput({ ...customInput, [dimIndex]: e.target.value })}
-                      onKeyDown={(e) => { if (e.key === 'Enter') addCustomOption(dimIndex); }}
-                      placeholder="+"
-                      className="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                    />
+                  {/* "Outro..." chip or custom input */}
+                  {activeCustomDim === dimIndex ? (
+                    <div className="flex gap-1 items-center">
+                      <input
+                        type="text"
+                        value={customInput[dimIndex] || ''}
+                        onChange={(e) => setCustomInput({ ...customInput, [dimIndex]: e.target.value })}
+                        onKeyDown={(e) => { if (e.key === 'Enter') addCustomOption(dimIndex); }}
+                        placeholder="Digite o valor..."
+                        autoFocus
+                        className="w-32 bg-slate-900 border border-indigo-500 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-slate-500 focus:outline-none transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addCustomOption(dimIndex)}
+                        disabled={!customInput[dimIndex]?.trim()}
+                        className="p-1.5 bg-indigo-500 hover:bg-indigo-400 disabled:opacity-30 rounded-md text-white transition-colors"
+                      >
+                        <Plus size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setActiveCustomDim(null); setCustomInput((prev) => ({ ...prev, [dimIndex]: '' })); }}
+                        className="p-1.5 hover:bg-slate-700 rounded-md text-slate-400 hover:text-white transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      onClick={() => addCustomOption(dimIndex)}
-                      disabled={!customInput[dimIndex]?.trim()}
-                      className="p-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-30 rounded-md text-slate-400 hover:text-white transition-colors"
+                      onClick={() => setActiveCustomDim(dimIndex)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-500 hover:bg-slate-700 hover:text-white border border-dashed border-slate-600 transition-colors"
                     >
-                      <Plus size={12} />
+                      Outro...
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
             );

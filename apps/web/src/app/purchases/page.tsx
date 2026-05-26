@@ -107,6 +107,10 @@ export default function PurchasesPage() {
   const [productResults, setProductResults] = useState<any[]>([]);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  // Receive modal with expiry dates
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [receivingPurchase, setReceivingPurchase] = useState<any>(null);
+  const [receivingExpiryDates, setReceivingExpiryDates] = useState<Record<string, string>>({});
   // Template-based variation row builder
   const [templateDims, setTemplateDims] = useState<any[]>([]); // dimensions from category template
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
@@ -466,6 +470,31 @@ export default function PurchasesPage() {
     }
   };
 
+  const handleOpenReceive = (purchase: any) => {
+    setReceivingPurchase(purchase);
+    setReceivingExpiryDates({});
+    setReceiveOpen(true);
+  };
+
+  const handleConfirmReceive = async () => {
+    if (!receivingPurchase) return;
+    const body: any = {};
+    const dates = Object.entries(receivingExpiryDates).filter(([, v]) => v);
+    if (dates.length > 0) {
+      body.itemExpiryDates = Object.fromEntries(dates);
+    }
+    try {
+      await api.purchases.receive(receivingPurchase.id, body);
+      show('Compra recebida! Lotes PEPS criados e estoque atualizado.');
+      setReceiveOpen(false);
+      setReceivingPurchase(null);
+      setReceivingExpiryDates({});
+      loadPurchases();
+    } catch (err: any) {
+      show(err.message || 'Erro ao receber', 'error');
+    }
+  };
+
   const handleCancel = async (id: string) => {
     if (!confirm('Cancelar esta compra?')) return;
     try { await api.purchases.cancel(id); show('Compra cancelada!'); loadPurchases(); }
@@ -542,43 +571,43 @@ export default function PurchasesPage() {
           <div className="space-y-3">
             {purchases.map((p: any) => (
               <div key={p.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-                <div className="p-4 flex items-center gap-4 cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => toggleExpand(p.id)}>
-                  <div className={`w-2 h-2 rounded-full ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'}`} />
+                <div className="p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-4 cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => toggleExpand(p.id)}>
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'}`} />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="text-white font-semibold">#{p.orderNumber}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'} text-white`}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-white font-semibold text-sm">#{p.orderNumber}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'} text-white`}>
                         {PURCHASE_STATUS[p.status]?.label}
                       </span>
                     </div>
                     <p className="text-sm text-slate-400">{p.supplier?.name || '—'}</p>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-white font-semibold">R$ {Number(p.total).toFixed(2)}</p>
+                  <div className="text-right">
+                    <p className="text-white font-semibold text-sm">R$ {Number(p.total).toFixed(2)}</p>
                     <p className="text-xs text-slate-500">{new Date(p.createdAt).toLocaleDateString('pt-BR')}</p>
                   </div>
-                  <div className="flex items-center gap-1 ml-2">
+                  <div className="flex items-center gap-0.5 sm:gap-1">
                     {p.status === 'DRAFT' && (
                       <>
                         <button onClick={(e) => { e.stopPropagation(); openEdit(p); }}
-                          className="p-1.5 text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors" title="Editar">
-                          <Pencil size={16} />
+                          className="p-1 sm:p-1.5 text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors" title="Editar">
+                          <Pencil size={15} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleReceive(p.id); }}
-                          className="p-1.5 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors" title="Receber">
-                          <Check size={18} />
+                        <button onClick={(e) => { e.stopPropagation(); handleOpenReceive(p); }}
+                          className="p-1 sm:p-1.5 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors" title="Receber">
+                          <Check size={16} />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleCancel(p.id); }}
-                          className="p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors" title="Cancelar">
-                          <X size={18} />
+                          className="p-1 sm:p-1.5 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors" title="Cancelar">
+                          <X size={16} />
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); handleDelete(p.id); }}
-                          className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors" title="Excluir">
-                          <X size={16} />
+                          className="p-1 sm:p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-colors" title="Excluir">
+                          <X size={15} />
                         </button>
                       </>
                     )}
-                    {expanded === p.id ? <ChevronUp size={18} className="text-slate-500" /> : <ChevronDown size={18} className="text-slate-500" />}
+                    {expanded === p.id ? <ChevronUp size={18} className="text-slate-500 flex-shrink-0" /> : <ChevronDown size={18} className="text-slate-500 flex-shrink-0" />}
                   </div>
                 </div>
 
@@ -1126,6 +1155,38 @@ export default function PurchasesPage() {
               disabled={saving || (!selectedSupplier && !(useOutroSupplier && outroSupplierName.trim())) || purchaseItems.length === 0}
               className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Salvando...' : (editingId ? `Salvar Alterações (R$ ${itemsTotal.toFixed(2)})` : `Criar Compra (R$ ${itemsTotal.toFixed(2)})`)}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Receive Modal (with expiry dates) */}
+      <Modal open={receiveOpen} onClose={() => { setReceiveOpen(false); setReceivingPurchase(null); }} title="Confirmar Recebimento" size="md">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-400">
+            Confirme o recebimento da compra <strong className="text-white">#{receivingPurchase?.orderNumber}</strong>.
+          </p>
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500 font-medium">Data de validade (opcional — preencha para produtos perecíveis)</p>
+            {receivingPurchase?.items?.map((item: any) => (
+              <div key={item.id} className="flex items-center gap-3 bg-slate-800 rounded-lg p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{item.productName}</p>
+                  <p className="text-xs text-slate-500">Qtd: {item.quantity} | Custo: R$ {Number(item.unitCost).toFixed(2)}</p>
+                </div>
+                <input
+                  type="date"
+                  value={receivingExpiryDates[item.id] || ''}
+                  onChange={(e) => setReceivingExpiryDates(prev => ({ ...prev, [item.id]: e.target.value }))}
+                  className="px-2.5 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:border-indigo-500 outline-none w-36 flex-shrink-0"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
+            <button onClick={() => { setReceiveOpen(false); setReceivingPurchase(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
+            <button onClick={handleConfirmReceive} className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Confirmar Recebimento
             </button>
           </div>
         </div>

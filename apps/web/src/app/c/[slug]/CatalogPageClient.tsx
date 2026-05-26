@@ -87,7 +87,7 @@ function buildOrderMessage(data: {
   const lines: string[] = [];
   lines.push(`*PEDIDO #${data.orderNumber}*`);
   lines.push('');
-  lines.push(`*Link para novos pedidos:* https://sale360.jvp.app/c/${data.slug}`);
+  lines.push(`*Link para novos pedidos:* https://sale360.jvp.app/${data.slug}`);
   lines.push('');
   lines.push('-------------------------------');
   lines.push('👉 *DETALHES DO PEDIDO*');
@@ -298,6 +298,10 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       show('Informe seu nome', 'error');
       return;
     }
+    if (!cart.customerPhone.trim()) {
+      show('Informe seu telefone', 'error');
+      return;
+    }
     setSubmitting(true);
     try {
       const result = await api.public.createOrder({
@@ -458,22 +462,22 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
       {/* ========== BANNERS ========== */}
       {banners.length > 0 && (
         <div className="max-w-5xl mx-auto px-4 mt-4">
-          <div className="flex gap-3 overflow-x-auto pb-2">
+          <div className="flex gap-3 overflow-x-auto pb-2 md:justify-center">
             {banners.map((banner) => {
               const img = (
                 <img
                   key={banner.id}
                   src={getImageUrl(banner.imagePath) || ''}
                   alt=""
-                  className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full max-w-2xl"
+                  className="h-36 md:h-48 rounded-2xl object-cover flex-shrink-0 w-full md:max-w-2xl"
                 />
               );
               return banner.linkUrl ? (
-                <a key={banner.id} href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-full">
+                <a key={banner.id} href={banner.linkUrl} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 w-full md:flex md:justify-center">
                   {img}
                 </a>
               ) : (
-                <div key={banner.id} className="flex-shrink-0 w-full">{img}</div>
+                <div key={banner.id} className="flex-shrink-0 w-full md:flex md:justify-center">{img}</div>
               );
             })}
           </div>

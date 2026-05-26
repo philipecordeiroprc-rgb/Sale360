@@ -230,6 +230,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
   // Receive purchase — PEPS core: creates InventoryBatches + Movements
   app.post('/:id/receive', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { itemExpiryDates } = (request.body || {}) as { itemExpiryDates?: Record<string, string | null> };
 
     const purchase = await prisma.purchase.findFirst({
       where: { id, tenantId: request.tenantId },
@@ -287,7 +288,8 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           });
         }
 
-        // Create batch with correct variationId
+        // Create batch with correct variationId and optional expiry date
+        const batchExpiry = itemExpiryDates?.[item.id] ? new Date(itemExpiryDates[item.id]!) : undefined;
         await tx.inventoryBatch.create({
           data: {
             tenantId: request.tenantId,
@@ -298,6 +300,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
             remainingQty: item.quantity,
             unitCost: item.unitCost,
             receivedAt,
+            expiryDate: batchExpiry || undefined,
           },
         });
 

@@ -5,7 +5,7 @@ import { z } from 'zod';
 const publicOrderSchema = z.object({
   tenantSlug: z.string().min(1),
   customerName: z.string().min(1, 'Nome é obrigatório'),
-  customerPhone: z.string().optional(),
+  customerPhone: z.string().min(1, 'Telefone é obrigatório'),
   customerEmail: z.string().email().optional().or(z.literal('')),
   items: z.array(z.object({
     productId: z.string().min(1),

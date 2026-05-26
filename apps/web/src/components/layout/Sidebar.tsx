@@ -13,13 +13,13 @@ type Role = 'SUPER_ADMIN' | 'OWNER' | 'CASHIER';
 
 const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['OWNER', 'CASHIER'] },
+  { href: '/customers', label: 'Clientes', icon: Users, roles: ['OWNER', 'CASHIER'] },
   { href: '/orders', label: 'Vendas', icon: ShoppingCart, roles: ['OWNER', 'CASHIER'] },
-  { href: '/products', label: 'Produtos', icon: Package, roles: ['OWNER', 'CASHIER'] },
   { href: '/inventory', label: 'Estoque', icon: Layers, roles: ['OWNER'] },
+  { href: '/products', label: 'Produtos', icon: Package, roles: ['OWNER', 'CASHIER'] },
+  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
   { href: '/purchases', label: 'Compras', icon: ShoppingBag, roles: ['OWNER'] },
   { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
-  { href: '/customers', label: 'Clientes', icon: Users, roles: ['OWNER', 'CASHIER'] },
-  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
   { href: '/indicadores', label: 'Indicadores', icon: BarChart3, roles: ['OWNER'] },
   { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },

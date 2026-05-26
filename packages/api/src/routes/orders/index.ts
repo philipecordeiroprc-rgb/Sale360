@@ -18,6 +18,7 @@ function normalizePaymentMethod(method: string): string {
 const orderItemSchema = z.object({
   productId: z.string().optional(),
   variationId: z.string().optional(),
+  batchId: z.string().optional(), // lote específico (vendedor escolheu na venda)
   productName: z.string(),
   quantity: z.number().positive(),
   unitPrice: z.number(),
@@ -218,9 +219,48 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           });
           taxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
 
-          // FIFO: consume from oldest batches
+          // FIFO: consume from oldest batches, optionally starting from a specific batch
           let remaining = item.quantity;
           let totalCostAcc = 0;
+
+          // If seller chose a specific batch, try to consume from it first
+          if ((item as any).batchId) {
+            const chosenBatch = await tx.inventoryBatch.findFirst({
+              where: {
+                id: (item as any).batchId,
+                tenantId: request.tenantId,
+                remainingQty: { gt: 0 },
+              },
+            });
+            if (chosenBatch) {
+              const consume = Math.min(Number(chosenBatch.remainingQty), remaining);
+              const batchCost = Number(chosenBatch.unitCost);
+
+              await tx.inventoryBatch.update({
+                where: { id: chosenBatch.id },
+                data: { remainingQty: { decrement: consume } },
+              });
+
+              await tx.inventoryMovement.create({
+                data: {
+                  tenantId: request.tenantId,
+                  productId: item.productId,
+                  variationId: item.variationId || null,
+                  type: 'SALE_OUT',
+                  quantity: -consume,
+                  unitCost: batchCost,
+                  totalCost: -(consume * batchCost),
+                  batchId: chosenBatch.id,
+                  notes: `Venda #${orderNumber} - ${item.productName} (lote escolhido)`,
+                },
+              });
+
+              totalCostAcc += consume * batchCost;
+              remaining -= consume;
+            }
+          }
+
+          // Remaining: consume from oldest batches (FIFO)
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -509,6 +549,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
   // Confirm an ONLINE pending order (consume stock, mark as paid)
   app.post('/:id/confirm', async (request, reply) => {
     const { id } = request.params as { id: string };
+    const { itemBatchIds } = (request.body || {}) as { itemBatchIds?: Record<string, string> };
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
@@ -529,9 +570,46 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     await prisma.$transaction(async (tx) => {
       for (const item of order.items) {
         if (item.productId) {
-          // FIFO: consume from oldest batches
           const qty = Number(item.quantity);
           let remaining = qty;
+          let totalCostAcc = 0;
+
+          // If admin chose a specific batch for this item, consume from it first
+          const chosenBatchId = itemBatchIds?.[item.id];
+          if (chosenBatchId) {
+            const chosenBatch = await tx.inventoryBatch.findFirst({
+              where: { id: chosenBatchId, tenantId: request.tenantId, remainingQty: { gt: 0 } },
+            });
+            if (chosenBatch) {
+              const consume = Math.min(Number(chosenBatch.remainingQty), remaining);
+              const batchCost = Number(chosenBatch.unitCost);
+              totalCostAcc += consume * batchCost;
+
+              await tx.inventoryBatch.update({
+                where: { id: chosenBatch.id },
+                data: { remainingQty: { decrement: consume } },
+              });
+
+              await tx.inventoryMovement.create({
+                data: {
+                  tenantId: request.tenantId,
+                  productId: item.productId,
+                  variationId: (item as any).variationId || null,
+                  type: 'SALE_OUT',
+                  quantity: -consume,
+                  unitCost: batchCost,
+                  totalCost: -(consume * batchCost),
+                  batchId: chosenBatch.id,
+                  orderId: order.id,
+                  notes: `Pedido online #${order.orderNumber} - ${item.productName} (lote escolhido)`,
+                },
+              });
+
+              remaining -= consume;
+            }
+          }
+
+          // Remaining: consume from oldest batches (FIFO)
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -542,7 +620,6 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             orderBy: { receivedAt: 'asc' },
           });
 
-          let totalCostAcc = 0;
           for (const batch of batches) {
             if (remaining <= 0) break;
             const consume = Math.min(Number(batch.remainingQty), remaining);
@@ -605,6 +682,25 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
         },
       });
+
+      // If payment method changed at confirmation, update item tax rates
+      if (paymentMethod) {
+        const normalizedMethod = normalizePaymentMethod(paymentMethod as string);
+        const paymentConfig = await tx.paymentMethodConfig.findUnique({
+          where: {
+            tenantId_paymentMethod: {
+              tenantId: request.tenantId,
+              paymentMethod: normalizedMethod,
+            },
+          },
+          select: { taxRate: true },
+        });
+        const newTaxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { taxRate: newTaxRate },
+        });
+      }
 
       // Register in cash flow
       await tx.cashFlow.create({
@@ -671,6 +767,25 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
         },
       });
+
+      // If payment method changed, update item tax rates for card fee reporting
+      if (paymentMethod) {
+        const normalizedMethod = normalizePaymentMethod(paymentMethod);
+        const paymentConfig = await tx.paymentMethodConfig.findUnique({
+          where: {
+            tenantId_paymentMethod: {
+              tenantId: request.tenantId,
+              paymentMethod: normalizedMethod,
+            },
+          },
+          select: { taxRate: true },
+        });
+        const newTaxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { taxRate: newTaxRate },
+        });
+      }
 
       // Update cash flow
       await tx.cashFlow.updateMany({

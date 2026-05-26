@@ -3,7 +3,7 @@
 # Sale360 API — startup
 # ============================================================
 
-export DATABASE_URL='postgresql://neondb_owner:npg_Xk2TdJrqNx5p@ep-holy-rain-actxoqs3-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
+export DATABASE_URL='postgresql://sale360:sale360_oci_1e53ebfc387adbc1f5a27c9efd80ca1c@127.0.0.1:5432/sale360?sslmode=disable'
 export FRONTEND_URL='https://sale360.jvp.app'
 
 # SMTP (Gmail)

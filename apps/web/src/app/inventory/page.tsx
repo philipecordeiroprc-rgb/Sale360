@@ -47,6 +47,28 @@ interface BatchGroup {
   variationName: string | null;
   batches: any[];
   totalRemaining: number;
+  expiredCount: number;
+  expiringSoonCount: number;
+}
+
+function ExpiryBadge({ date }: { date: string | Date }) {
+  const d = new Date(date);
+  const now = new Date();
+  const daysUntilExpiry = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const isExpired = daysUntilExpiry < 0;
+  const isSoon = !isExpired && daysUntilExpiry <= 7;
+
+  return (
+    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+      isExpired
+        ? 'bg-red-500/20 text-red-400'
+        : isSoon
+          ? 'bg-amber-500/20 text-amber-400'
+          : 'bg-slate-700 text-slate-400'
+    }`}>
+      {isExpired ? `Vencido ${d.toLocaleDateString('pt-BR')}` : isSoon ? `Vence ${d.toLocaleDateString('pt-BR')}` : `Val. ${d.toLocaleDateString('pt-BR')}`}
+    </span>
+  );
 }
 
 export default function InventoryPage() {
@@ -198,11 +220,6 @@ export default function InventoryPage() {
     return 'text-amber-400'; // stock == min
   };
 
-  const stockBg = (stock: number, min: number | null): string => {
-    if (!min || min <= 0 || stock > min) return '';
-    if (stock < min) return 'bg-red-500/10';
-    return 'bg-amber-500/10'; // stock == min
-  };
 
   const stockBadge = (stock: number, min: number | null) => {
     if (!min || min <= 0 || stock > min) return null;
@@ -215,6 +232,7 @@ export default function InventoryPage() {
   // Group batches by product+variation
   const groupBatches = (): BatchGroup[] => {
     const map = new Map<string, BatchGroup>();
+    const now = new Date();
     for (const b of batches) {
       const key = `${b.productId}__${b.variationId || 'none'}`;
       if (!map.has(key)) {
@@ -238,12 +256,19 @@ export default function InventoryPage() {
           variationName: b.variation?.name || null,
           batches: [],
           totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
         });
       }
       const group = map.get(key)!;
       group.batches.push(b);
       group.totalRemaining += Number(b.remainingQty || 0);
-      // Use the product's actual stockQty (more accurate than sum of batches)
+      // Compute expiry status for summary row
+      if (b.expiryDate) {
+        const daysUntilExpiry = Math.ceil((new Date(b.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntilExpiry < 0) group.expiredCount++;
+        else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
+      }
     }
     return Array.from(map.values());
   };
@@ -367,42 +392,67 @@ export default function InventoryPage() {
                   {groupBatches().map((group) => {
                     const expanded = expandedGroups.has(group.key);
                     const stockColorClass = stockColor(group.stockQty, group.lowStockAt);
-                    const stockBgClass = stockBg(group.stockQty, group.lowStockAt);
                     const badge = stockBadge(group.stockQty, group.lowStockAt);
                     const productLabel = [
                       group.productName,
                       group.sku ? group.sku : null,
                       group.unit ? group.unit : null,
                     ].filter(Boolean).join(' · ');
+                    const hasExpired = group.expiredCount > 0;
+                    const hasExpiringSoon = group.expiringSoonCount > 0;
+                    const hasLowStock = group.lowStockAt > 0 && group.stockQty < group.lowStockAt;
+                    const hasMinStock = group.lowStockAt > 0 && group.stockQty === group.lowStockAt;
 
                     return (
                       <>
                         {/* Summary row */}
                         <tr key={group.key}
                           onClick={() => toggleGroup(group.key)}
-                          className={`border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer ${stockBgClass}`}>
+                          className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer">
                           <td className="px-3 py-3">
                             {expanded
                               ? <ChevronDown size={16} className="text-slate-400" />
                               : <ChevronRight size={16} className="text-slate-500" />}
                           </td>
                           <td className="px-3 py-3">
-                            <span className={`font-medium text-sm ${stockColorClass}`}>
-                              {productLabel}
-                            </span>
-                            {badge}
+                            <div className="flex items-center gap-1.5">
+                              {/* Expiry warning dot */}
+                              {hasExpired && (
+                                <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0" title={`${group.expiredCount} lote(s) vencido(s)`} />
+                              )}
+                              {!hasExpired && hasExpiringSoon && (
+                                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" title={`${group.expiringSoonCount} lote(s) vence(m) em até 7 dias`} />
+                              )}
+                              <span className="font-medium text-sm text-white">
+                                {productLabel}
+                              </span>
+                              {badge}
+                            </div>
                           </td>
                           <td className="px-3 py-3 text-slate-400 text-sm">
                             {group.variationName || '—'}
                           </td>
-                          <td className={`px-3 py-3 text-right font-mono font-semibold text-sm ${stockColorClass}`}>
-                            {group.stockQty}
+                          <td className="px-3 py-3 text-right font-mono font-semibold text-sm">
+                            {/* Stock level dot */}
+                            {hasLowStock && (
+                              <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5 align-middle" title="Estoque abaixo do mínimo" />
+                            )}
+                            {hasMinStock && (
+                              <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1.5 align-middle" title="Estoque no mínimo" />
+                            )}
+                            <span className={stockColorClass}>{group.stockQty}</span>
                           </td>
                           <td className="px-3 py-3 text-right text-slate-500 text-sm hidden sm:table-cell">
                             {group.lowStockAt > 0 ? group.lowStockAt : '—'}
                           </td>
-                          <td className="px-3 py-3 text-right text-slate-500 text-sm hidden sm:table-cell">
-                            {group.batches.length}
+                          <td className="px-3 py-3 text-right text-slate-400 text-sm hidden sm:table-cell">
+                            <span>{group.batches.length}</span>
+                            {hasExpired && (
+                              <span className="text-red-400 ml-1">({group.expiredCount} venc.)</span>
+                            )}
+                            {!hasExpired && hasExpiringSoon && (
+                              <span className="text-amber-400 ml-1">({group.expiringSoonCount} vence)</span>
+                            )}
                           </td>
                         </tr>
 
@@ -411,13 +461,16 @@ export default function InventoryPage() {
                           <tr key={b.id} className="border-b border-slate-800/30 bg-slate-950/50 hover:bg-slate-800/20 transition-colors">
                             <td className="px-3 py-2"></td>
                             <td className="px-3 py-2" colSpan={2}>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
                                   {shortId(b.id)}
                                 </span>
                                 <span className="text-xs text-slate-500">
                                   Recebido {new Date(b.receivedAt).toLocaleDateString('pt-BR')}
                                 </span>
+                                {b.expiryDate && (
+                                  <ExpiryBadge date={b.expiryDate} />
+                                )}
                               </div>
                             </td>
                             <td className="px-3 py-2 text-right">
