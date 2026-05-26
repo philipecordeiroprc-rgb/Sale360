@@ -11,6 +11,7 @@ import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
 import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
+import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
 import { getProducts, getCategories, cacheProducts, cacheCategories } from '@/lib/offline-db';
 
