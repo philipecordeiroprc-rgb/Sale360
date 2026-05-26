@@ -220,11 +220,6 @@ export default function InventoryPage() {
     return 'text-amber-400'; // stock == min
   };
 
-  const stockBg = (stock: number, min: number | null): string => {
-    if (!min || min <= 0 || stock > min) return '';
-    if (stock < min) return 'bg-red-500/10';
-    return 'bg-amber-500/10'; // stock == min
-  };
 
   const stockBadge = (stock: number, min: number | null) => {
     if (!min || min <= 0 || stock > min) return null;
