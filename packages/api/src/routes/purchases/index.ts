@@ -257,27 +257,37 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       for (const item of purchase.items) {
         let variationId = item.variationId || undefined;
 
-        // If no variationId but product name has " - " (template-generated variation), create it
+        // If no variationId but product name has " - ", find or create variation
         if (!variationId && item.productId && item.productName.includes(' - ')) {
-          const varName = item.productName.split(' - ')[1];
-          const newVar = await tx.productVariation.create({
-            data: {
-              productId: item.productId,
-              name: varName,
-              stockQty: 0,
-            },
+          const varName = item.productName.split(' - ').slice(1).join(' - ');
+          // Try existing variation first to avoid duplicates
+          const existingVar = await tx.productVariation.findFirst({
+            where: { productId: item.productId, name: varName },
           });
-          variationId = newVar.id;
-          // Link the purchase item
-          await tx.purchaseItem.update({
-            where: { id: item.id },
-            data: { variationId: newVar.id },
-          });
-          // Mark product as having variations
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { hasVariations: true },
-          });
+          if (existingVar) {
+            variationId = existingVar.id;
+            await tx.purchaseItem.update({
+              where: { id: item.id },
+              data: { variationId: existingVar.id },
+            });
+          } else {
+            const newVar = await tx.productVariation.create({
+              data: {
+                productId: item.productId,
+                name: varName,
+                stockQty: 0,
+              },
+            });
+            variationId = newVar.id;
+            await tx.purchaseItem.update({
+              where: { id: item.id },
+              data: { variationId: newVar.id },
+            });
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { hasVariations: true },
+            });
+          }
         }
 
         // Update variation stock
