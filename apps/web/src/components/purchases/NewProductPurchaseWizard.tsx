@@ -296,8 +296,8 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
           });
         }
       } else {
-        // Simple product — use quantity from last step or default to 1
-        const qty = variations.length === 1 ? (variations[0].stockQty || 1) : 1;
+        // Simple product — use quantity from Step 3
+        const qty = simpleQty || 1;
         purchaseItems.push({
           productId,
           productName: productName.trim(),
@@ -309,6 +309,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
           taxRatePct: taxRatePct || undefined,
           marginPct: marginPct || undefined,
         });
+        // Map simple product expiry date
+        if (simpleExpiryDate) {
+          setVariationExpiryDates(prev => ({ ...prev, [productName.trim()]: simpleExpiryDate }));
+        }
       }
 
       if (purchaseItems.length === 0) {
