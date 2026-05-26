@@ -411,13 +411,16 @@ export default function InventoryPage() {
                           <tr key={b.id} className="border-b border-slate-800/30 bg-slate-950/50 hover:bg-slate-800/20 transition-colors">
                             <td className="px-3 py-2"></td>
                             <td className="px-3 py-2" colSpan={2}>
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-[10px] font-mono text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">
                                   {shortId(b.id)}
                                 </span>
                                 <span className="text-xs text-slate-500">
                                   Recebido {new Date(b.receivedAt).toLocaleDateString('pt-BR')}
                                 </span>
+                                {b.expiryDate && (
+                                  <ExpiryBadge date={b.expiryDate} />
+                                )}
                               </div>
                             </td>
                             <td className="px-3 py-2 text-right">
