@@ -423,13 +423,6 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2 self-start">
-          <button
-            onClick={() => setCategoriesOpen(true)}
-            className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Tags size={15} />
-            Categorias
-          </button>
           <div className="relative group">
             <button
               onClick={() => { setImportType('products'); setImportOpen(true); }}
