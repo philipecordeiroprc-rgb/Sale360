@@ -207,11 +207,6 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
     setScannerOpen(false);
   };
 
-  // ─── Variation quantity change ───
-  const handleVariationsChange = (newVariations: VariationData[]) => {
-    setVariations(newVariations);
-  };
-
   // ─── FINALIZE: Create product + purchase ───
   const handleFinalize = async () => {
     if (!productName.trim()) { show('Nome do produto é obrigatório', 'error'); return; }
