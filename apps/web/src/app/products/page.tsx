@@ -1001,12 +1001,28 @@ export default function ProductsPage() {
           {/* Category */}
           <div>
             <label className="block text-slate-400 text-sm mb-1">Categoria</label>
-            <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+            <select
+              value={formData.categoryId}
+              onChange={(e) => {
+                const catId = e.target.value;
+                setFormData({ ...formData, categoryId: catId });
+                const cat = categories.find((c) => c.id === catId);
+                setSelectedTemplate(cat?.variationTemplate || null);
+                // Clear variations if template changed
+                setFormVariations([]);
+              }}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500 transition-colors">
               <option value="">Sem categoria</option>
               {categories.map((cat) => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
             </select>
           </div>
+
+          {/* Variations (if category has template) */}
+          <VariationEditor
+            template={selectedTemplate}
+            variations={formVariations}
+            onChange={setFormVariations}
+          />
 
           {/* Price + Low Stock */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
