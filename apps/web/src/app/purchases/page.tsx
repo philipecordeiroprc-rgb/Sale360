@@ -1088,13 +1088,24 @@ export default function PurchasesPage() {
                         onClick={() => {
                           const name = newVarName.trim();
                           if (!name || newVarQty <= 0) return;
-                          setCurrentItem({
-                            ...currentItem,
-                            variations: [
-                              ...currentItem.variations,
-                              { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
-                            ],
-                          });
+                          // Check if variation already exists (avoid duplicate)
+                          const existingIdx = currentItem.variations.findIndex(
+                            (v: any) => v.name.toLowerCase() === name.toLowerCase()
+                          );
+                          if (existingIdx >= 0) {
+                            // Update quantity of existing variation
+                            const updated = [...currentItem.variations];
+                            updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
+                            setCurrentItem({ ...currentItem, variations: updated });
+                          } else {
+                            setCurrentItem({
+                              ...currentItem,
+                              variations: [
+                                ...currentItem.variations,
+                                { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
+                              ],
+                            });
+                          }
                           setNewVarName('');
                           setNewVarQty(0);
                         }}
