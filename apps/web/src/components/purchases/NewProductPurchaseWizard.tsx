@@ -315,38 +315,33 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         return;
       }
 
-      await api.purchases.create({
+      const createdPurchase = await api.purchases.create({
         supplierId,
         discount: Number(discount) || 0,
         items: purchaseItems,
       });
 
       // 5. Auto-receive the purchase so stock is updated immediately
-      const purchasesData = await api.purchases.list({ status: 'DRAFT' });
-      const createdPurchase = purchasesData.purchases?.[0];
-      if (createdPurchase) {
+      if (createdPurchase?.id) {
         try {
-          // Build itemExpiryDates from both variation dates and simple product date
+          // Build itemExpiryDates from variation dates and simple product date
           const expiryPayload: any = {};
           const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
           if (simpleExpiryDate) {
             dates.push([productName.trim(), simpleExpiryDate]);
           }
-          if (dates.length > 0) {
-            const fullPurchase = await api.purchases.get(createdPurchase.id);
-            if (fullPurchase?.items) {
-              const itemExpiryDates: Record<string, string> = {};
-              for (const [varName, dateStr] of dates) {
-                const matchingItem = fullPurchase.items.find((item: any) =>
-                  item.productName?.endsWith(` - ${varName}`) || item.productName === varName
-                );
-                if (matchingItem) {
-                  itemExpiryDates[matchingItem.id] = dateStr;
-                }
+          if (dates.length > 0 && createdPurchase.items) {
+            const itemExpiryDates: Record<string, string> = {};
+            for (const [varName, dateStr] of dates) {
+              const matchingItem = createdPurchase.items.find((item: any) =>
+                item.productName?.endsWith(` - ${varName}`) || item.productName === varName
+              );
+              if (matchingItem) {
+                itemExpiryDates[matchingItem.id] = dateStr;
               }
-              if (Object.keys(itemExpiryDates).length > 0) {
-                expiryPayload.itemExpiryDates = itemExpiryDates;
-              }
+            }
+            if (Object.keys(itemExpiryDates).length > 0) {
+              expiryPayload.itemExpiryDates = itemExpiryDates;
             }
           }
           await api.purchases.receive(createdPurchase.id, expiryPayload);
