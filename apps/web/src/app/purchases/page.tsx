@@ -774,6 +774,11 @@ export default function PurchasesPage() {
                     setScannerOpen(false);
                     selectProduct(product);
                   }}
+                  onCodeScanned={(code: string) => {
+                    setScannerOpen(false);
+                    setProductSearch(code);
+                    show(`Código ${code} não cadastrado. Use "Novo Produto + Compra" para cadastrar.`, 'error');
+                  }}
                   onError={(msg) => show(msg, 'error')}
                 />
               </div>
