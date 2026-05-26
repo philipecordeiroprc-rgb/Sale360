@@ -785,17 +785,6 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 );
               })()}
 
-              {scannerOpen && (
-                <div className="mb-3">
-                  <BarcodeScanner
-                    isOpen={scannerOpen}
-                    onClose={() => setScannerOpen(false)}
-                    onDetected={handleBarcodeDetected}
-                    onError={(msg) => show(msg, 'error')}
-                  />
-                </div>
-              )}
-
               <button
                 onClick={advanceToCosts}
                 disabled={!productName.trim()}
