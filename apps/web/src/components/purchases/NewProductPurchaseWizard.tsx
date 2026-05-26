@@ -835,6 +835,44 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 </div>
               )}
 
+              {/* Simple product quantity + expiry (no template) */}
+              {!selectedTemplate && (
+                <div className="bg-slate-900 rounded-lg p-3">
+                  <p className="text-xs text-slate-400 mb-3">
+                    Quantidade e Validade
+                    <span className="text-slate-500 ml-2">(validade é opcional — usada no rastreamento FEFO)</span>
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
+                      <input
+                        type="number"
+                        value={simpleQty || ''}
+                        onChange={(e) => setSimpleQty(Number(e.target.value))}
+                        min="1" step="1" placeholder="1"
+                        className="w-24 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1">Data de Validade</label>
+                      <input
+                        type="date"
+                        value={simpleExpiryDate}
+                        onChange={(e) => setSimpleExpiryDate(e.target.value)}
+                        className="w-40 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
+                      />
+                    </div>
+                    {simpleQty > 0 && costPrice > 0 && (
+                      <div className="self-end pb-1">
+                        <span className="text-xs text-slate-400">
+                          Custo total: <span className="text-white font-medium">R$ {(costPrice * simpleQty).toFixed(2)}</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Desconto geral */}
               <div>
                 <label className="block text-xs text-slate-400 mb-1">Desconto na Compra (R$)</label>
