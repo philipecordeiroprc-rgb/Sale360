@@ -729,17 +729,18 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                       </div>
                       <button
                         onClick={() => {
-                          const allDims = dims.every((d: any) => {
+                          const hasAtLeastOne = dims.some((d: any) => {
                             const val = rowDims[d.label];
                             if (!val) return false;
                             if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
                             return true;
                           });
-                          if (!allDims || rowQty <= 0) return;
+                          if (!hasAtLeastOne || rowQty <= 0) return;
                           const name = dims.map((d: any) => {
                             const val = rowDims[d.label];
+                            if (!val) return '';
                             return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                          }).join(' ');
+                          }).filter(Boolean).join(' ');
                           // Check if variation already exists
                           const existingIdx = variations.findIndex(
                             (v: any) => v.name.toLowerCase() === name.toLowerCase()
