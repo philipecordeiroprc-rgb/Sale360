@@ -88,6 +88,8 @@ export default function PurchasesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tab, setTab] = useState<'restock' | 'new-product'>('restock');
+  const [wizardOpen, setWizardOpen] = useState(false);
   const { toast, show } = useToast();
 
   // Create form
