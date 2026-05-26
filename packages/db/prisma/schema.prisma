@@ -304,7 +304,7 @@ model InventoryBatch {
   remainingQty   Decimal  @db.Decimal(10, 3) // qtd restante a vender
   unitCost       Decimal  @db.Decimal(10, 2) // custo unitário deste lote
   receivedAt     DateTime  // data de entrada no estoque (ordenação PEPS)
-  expiryDate     DateTime? // data de validade (opcional, produtos perecíveis)
+  expiryDate     DateTime? @map("expiry_date") // data de validade (opcional, produtos perecíveis)
   createdAt      DateTime  @default(now())
 
   tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
