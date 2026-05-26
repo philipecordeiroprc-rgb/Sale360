@@ -371,24 +371,6 @@ export default function InventoryPage() {
         </div>
       ) : tab === 'batches' ? (
         <>
-          {/* DEBUG: remove after diagnosing batch grouping */}
-          {batches.length > 0 && (
-            <div className="bg-amber-900/30 border border-amber-500/50 rounded-lg p-3 mb-4 text-xs font-mono">
-              <p className="text-amber-400 font-bold mb-2">DEBUG — Lotes ({batches.length}) → Grupos ({groupBatches().length})</p>
-              {batches.map((b, i) => {
-                const key = `${b.productId}__${b.variationId || 'none'}`;
-                return (
-                  <div key={i} className="text-slate-300 mb-1">
-                    Lote {i}: productId={b.productId?.slice(0,8)} variationId={b.variationId?.slice(0,8) || 'none'} key={key}
-                    {b.variation && <span className="text-indigo-400"> (var: {b.variation.name})</span>}
-                    {b.product && <span className="text-emerald-400"> (prod: {b.product.name})</span>}
-                  </div>
-                );
-              })}
-              <div className="text-amber-300 mt-2">Grupos: {groupBatches().map(g => g.key).join(' | ')}</div>
-            </div>
-          )}
-
           {batches.length === 0 ? (
             <div className="text-center py-12">
               <Package size={48} className="mx-auto text-slate-600 mb-3" />
