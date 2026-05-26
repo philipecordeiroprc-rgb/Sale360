@@ -1160,6 +1160,38 @@ export default function PurchasesPage() {
         </div>
       </Modal>
 
+      {/* Receive Modal (with expiry dates) */}
+      <Modal open={receiveOpen} onClose={() => { setReceiveOpen(false); setReceivingPurchase(null); }} title="Confirmar Recebimento" size="md">
+        <div className="space-y-4">
+          <p className="text-sm text-slate-400">
+            Confirme o recebimento da compra <strong className="text-white">#{receivingPurchase?.orderNumber}</strong>.
+          </p>
+          <div className="space-y-3">
+            <p className="text-xs text-slate-500 font-medium">Data de validade (opcional — preencha para produtos perecíveis)</p>
+            {receivingPurchase?.items?.map((item: any) => (
+              <div key={item.id} className="flex items-center gap-3 bg-slate-800 rounded-lg p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white truncate">{item.productName}</p>
+                  <p className="text-xs text-slate-500">Qtd: {item.quantity} | Custo: R$ {Number(item.unitCost).toFixed(2)}</p>
+                </div>
+                <input
+                  type="date"
+                  value={receivingExpiryDates[item.id] || ''}
+                  onChange={(e) => setReceivingExpiryDates(prev => ({ ...prev, [item.id]: e.target.value }))}
+                  className="px-2.5 py-1.5 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:border-indigo-500 outline-none w-36 flex-shrink-0"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
+            <button onClick={() => { setReceiveOpen(false); setReceivingPurchase(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
+            <button onClick={handleConfirmReceive} className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors">
+              Confirmar Recebimento
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Import Modal */}
       <ImportModal
         open={importOpen}
