@@ -94,6 +94,8 @@ export default function ProductsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState<FormData>({ ...emptyForm });
+  const [formVariations, setFormVariations] = useState<VariationData[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<VariationTemplate | null>(null);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
