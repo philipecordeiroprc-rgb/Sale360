@@ -999,17 +999,18 @@ export default function PurchasesPage() {
                         </div>
                         <button
                           onClick={() => {
-                            const allDims = templateDims.every((d: any) => {
+                            const hasAtLeastOne = templateDims.some((d: any) => {
                               const val = rowDims[d.label];
                               if (!val) return false;
                               if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
                               return true;
                             });
-                            if (!allDims || rowQty <= 0) return;
+                            if (!hasAtLeastOne || rowQty <= 0) return;
                             const name = templateDims.map((d: any) => {
                               const val = rowDims[d.label];
+                              if (!val) return '';
                               return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).join(' ');
+                            }).filter(Boolean).join(' ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
@@ -1021,7 +1022,7 @@ export default function PurchasesPage() {
                             setRowCustom({});
                             setRowQty(0);
                           }}
-                          disabled={!templateDims.every((d: any) => {
+                          disabled={!templateDims.some((d: any) => {
                             const val = rowDims[d.label];
                             if (!val) return false;
                             if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
