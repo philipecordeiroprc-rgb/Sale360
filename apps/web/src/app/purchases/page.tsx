@@ -593,7 +593,7 @@ export default function PurchasesPage() {
                           className="p-1.5 text-indigo-400 hover:bg-indigo-400/10 rounded-lg transition-colors" title="Editar">
                           <Pencil size={16} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleReceive(p.id); }}
+                        <button onClick={(e) => { e.stopPropagation(); handleOpenReceive(p); }}
                           className="p-1.5 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors" title="Receber">
                           <Check size={18} />
                         </button>
