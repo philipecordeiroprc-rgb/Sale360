@@ -261,6 +261,8 @@ export default function ProductsPage() {
   const handleCreate = () => {
     setEditingProduct(null);
     setFormData({ ...emptyForm });
+    setFormVariations([]);
+    setSelectedTemplate(null);
     setFormError('');
     setFormOpen(true);
   };
