@@ -61,10 +61,13 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const storeRole = user?.storeRole || user?.role || '';
   // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
   const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
 
   if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
   const visibleItems = navItems.filter(item => item.roles.includes(userRole as Role));
+  const visibleCadastroItems = cadastroItems.filter(item => item.roles.includes(userRole as Role));
+  const isCadastroActive = visibleCadastroItems.some(item => pathname.startsWith(item.href));
 
   function handleNav() {
     onClose?.();
