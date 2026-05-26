@@ -445,12 +445,6 @@ export default function ProductsPage() {
               >
                 Produtos com Variações
               </button>
-              <button
-                onClick={() => { setCategoriesOpen(true); }}
-                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-b-xl text-sm text-slate-300 transition-colors border-t border-slate-800"
-              >
-                Importar Categorias...
-              </button>
             </div>
           </div>
           <button
