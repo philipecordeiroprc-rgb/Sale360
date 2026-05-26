@@ -232,6 +232,7 @@ export default function InventoryPage() {
   // Group batches by product+variation
   const groupBatches = (): BatchGroup[] => {
     const map = new Map<string, BatchGroup>();
+    const now = new Date();
     for (const b of batches) {
       const key = `${b.productId}__${b.variationId || 'none'}`;
       if (!map.has(key)) {
@@ -255,12 +256,19 @@ export default function InventoryPage() {
           variationName: b.variation?.name || null,
           batches: [],
           totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
         });
       }
       const group = map.get(key)!;
       group.batches.push(b);
       group.totalRemaining += Number(b.remainingQty || 0);
-      // Use the product's actual stockQty (more accurate than sum of batches)
+      // Compute expiry status for summary row
+      if (b.expiryDate) {
+        const daysUntilExpiry = Math.ceil((new Date(b.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntilExpiry < 0) group.expiredCount++;
+        else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
+      }
     }
     return Array.from(map.values());
   };
