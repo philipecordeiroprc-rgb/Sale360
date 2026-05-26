@@ -898,7 +898,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
               >
                 {saving ? 'Criando produto e compra...' : `Finalizar Compra (R$ ${((costPrice * (selectedTemplate
                   ? variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)
-                  : 1)) - (Number(discount) || 0)).toFixed(2)})`}
+                  : (simpleQty || 1))) - (Number(discount) || 0)).toFixed(2)})`}
               </button>
             </div>
           )}
