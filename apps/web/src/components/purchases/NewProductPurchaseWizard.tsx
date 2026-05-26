@@ -113,6 +113,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  // Quantity for simple product (no variations)
+  const [simpleQty, setSimpleQty] = useState<number>(1);
+  // Expiry date for simple product (no variations)
+  const [simpleExpiryDate, setSimpleExpiryDate] = useState('');
   // Expiry dates per variation name (for auto-receive)
   const [variationExpiryDates, setVariationExpiryDates] = useState<Record<string, string>>({});
 
