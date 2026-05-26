@@ -488,7 +488,7 @@ export default function InventoryPage() {
                             <td className="px-3 py-2"></td>
                           </tr>
                         ))}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
