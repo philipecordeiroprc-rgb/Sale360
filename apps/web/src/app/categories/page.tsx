@@ -123,7 +123,7 @@ export default function CategoriesPage() {
       )}
 
       {/* Add new category */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-3">
         <div className="flex gap-2 items-end flex-wrap">
           <div className="flex-1 min-w-[200px]">
             <label className="block text-slate-400 text-xs mb-1">Nova Categoria</label>
