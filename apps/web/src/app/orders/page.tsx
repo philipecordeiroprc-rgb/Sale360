@@ -158,8 +158,10 @@ export default function OrdersPage() {
 
   // Batch selection modal (products with expiry-dated batches)
   const [batchModalOpen, setBatchModalOpen] = useState(false);
+  const [batchModalMode, setBatchModalMode] = useState<'pdv' | 'online'>('pdv');
   const [batchItems, setBatchItems] = useState<any[]>([]); // cart items that need batch selection
   const [batchSelections, setBatchSelections] = useState<Record<string, string>>({}); // cartIdx → batchId
+  const [onlineConfirmOrderItems, setOnlineConfirmOrderItems] = useState<any[]>([]); // order items for online confirm
 
   // Detail modal
   const [detailOpen, setDetailOpen] = useState(false);
