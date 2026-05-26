@@ -759,7 +759,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                           setRowCustom({});
                           setRowQty(0);
                         }}
-                        disabled={!dims.every((d: any) => {
+                        disabled={!dims.some((d: any) => {
                           const val = rowDims[d.label];
                           if (!val) return false;
                           if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
