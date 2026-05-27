@@ -769,20 +769,25 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         },
       });
 
-      // Create OrderPayment records for the confirm
-      if (confirmPayments.length > 0) {
-        // Resolve amounts: use provided amounts, or fall back to order total for first payment
-        const totalAmount = confirmPayments.reduce((s, p) => s + p.amount, 0);
-        const effectiveConfirmPayments = totalAmount > 0
-          ? confirmPayments
-          : confirmPayments.map((p, i) => ({
+      // Create OrderPayment records if not already present (idempotent)
+      const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
+      if (existingPayments === 0) {
+        let effectiveConfirmPayments = confirmPayments;
+        // If no explicit payments provided, derive from legacy method and order total
+        if (effectiveConfirmPayments.length === 0) {
+          const method = legacyPaymentMethod || order.paymentMethod || 'cash';
+          effectiveConfirmPayments = [{ paymentMethod: normalizePaymentMethod(method), amount: Number(order.total) }];
+        } else {
+          // Resolve amounts: use provided amounts, or fall back to order total for first payment
+          const totalAmount = effectiveConfirmPayments.reduce((s, p) => s + p.amount, 0);
+          if (totalAmount === 0) {
+            effectiveConfirmPayments = effectiveConfirmPayments.map((p, i) => ({
               ...p,
               amount: i === 0 ? Number(order.total) : 0,
             })).filter(p => p.amount > 0);
-
-        // Validate totals if amounts were explicitly provided
-        if (totalAmount > 0 && !validatePaymentTotal(confirmPayments, Number(order.total))) {
-          throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+          } else if (!validatePaymentTotal(effectiveConfirmPayments, Number(order.total))) {
+            throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+          }
         }
 
         for (const payment of effectiveConfirmPayments) {
