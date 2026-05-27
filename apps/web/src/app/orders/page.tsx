@@ -24,6 +24,7 @@ import {
   isFiado,
   type PaymentLine,
 } from '@/lib/payment-constants';
+const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 
 function getWhatsAppMessage(order: any): string {
   const customerName = order.customer?.name || order.customerName || 'Cliente';
