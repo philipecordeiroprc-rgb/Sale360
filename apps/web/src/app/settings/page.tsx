@@ -747,7 +747,7 @@ function MinhaSenhaTab() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       show('Nova senha deve ter no minimo 8 caracteres', 'error');
       return;
     }
