@@ -14,7 +14,6 @@ export function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'password' | 'pin'>('password');
 
   const handleLogin = async () => {
     if (!email.trim()) {
@@ -24,16 +23,12 @@ export function LoginScreen() {
 
     setLoading(true);
     try {
-      const endpoint = mode === 'pin'
-        ? `${API_URL}/api/auth/login-pin`
-        : `${API_URL}/api/auth/login`;
-
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
-          [mode === 'pin' ? 'pin' : 'password']: password,
+          password,
           deviceId,
         }),
       });
