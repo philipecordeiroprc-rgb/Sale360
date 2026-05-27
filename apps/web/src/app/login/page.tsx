@@ -18,6 +18,14 @@ export default function LoginPage() {
   const [twoFactorToken, setTwoFactorToken] = useState('');
   const [totpCode, setTotpCode] = useState('');
 
+  // Forced 2FA setup step (admin required 2FA but user hasn't set it up)
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [setupToken, setSetupToken] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [setupCode, setSetupCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
