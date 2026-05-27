@@ -241,7 +241,7 @@ export const api = {
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
-    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string }) {
+    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string; payments?: Array<{ paymentMethod: string; amount: number }> }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
     confirm(id: string, data?: { paymentMethod?: string; payments?: Array<{ paymentMethod: string; amount: number }>; itemBatchIds?: Record<string, string> }) {
