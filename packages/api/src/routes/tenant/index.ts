@@ -296,10 +296,10 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
 
     const tenantUser = await prisma.tenantUser.findUnique({
       where: { tenantId_userId: { tenantId: request.tenantId, userId: request.userId } },
-      select: { role: true, pin: true },
+      select: { role: true },
     });
 
-    return { ...user, storeRole: tenantUser?.role, pin: tenantUser?.pin };
+    return { ...user, storeRole: tenantUser?.role };
   });
 
   // Change own password
