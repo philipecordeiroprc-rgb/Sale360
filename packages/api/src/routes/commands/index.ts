@@ -163,7 +163,7 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
 
     await prisma.$transaction(async (tx) => {
       // Create order
-      await tx.order.create({
+      const order = await tx.order.create({
         data: {
           tenantId: request.tenantId,
           userId: request.userId,
@@ -173,7 +173,7 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
           discount: parsed.data.discount,
           total,
           paidAmount: parsed.data.paymentReceived || total,
-          paymentMethod: parsed.data.paymentMethod,
+          paymentMethod: cmdPrimaryMethod,
           paymentStatus: parsed.data.paymentReceived && parsed.data.paymentReceived < total ? 'PARTIAL' : 'PAID',
           notes: `Comanda mesa ${command.tableNumber}`,
           items: {
@@ -187,6 +187,17 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
           },
         },
       });
+
+      // Create OrderPayment records
+      for (const payment of cmdEffectivePayments) {
+        await tx.orderPayment.create({
+          data: {
+            orderId: order.id,
+            paymentMethod: payment.paymentMethod,
+            amount: payment.amount,
+          },
+        });
+      }
 
       // Close command
       await tx.tableCommand.update({
