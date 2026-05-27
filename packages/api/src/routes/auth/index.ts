@@ -224,6 +224,170 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     };
   });
 
+  // Login step 2: verify TOTP code and return full auth
+  app.post('/login-2fa', async (request, reply) => {
+    const schema = z.object({
+      twoFactorToken: z.string().min(1),
+      code: z.string().length(6),
+      deviceId: z.string().optional(),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const { twoFactorToken, code, deviceId } = parsed.data;
+
+    // Verify the twoFactorToken
+    const tfPayload = verifyTwoFactorToken(twoFactorToken);
+    if (!tfPayload) {
+      return reply.status(401).send({ error: 'Sessão expirada. Faça login novamente.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: tfPayload.userId } });
+    if (!user || !user.totpEnabled || !user.totpSecret) {
+      return reply.status(401).send({ error: 'Usuário não encontrado ou 2FA não configurado.' });
+    }
+
+    // Check account lockout (2FA failures count too)
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const minutesLeft = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      return reply.status(423).send({
+        error: `Conta bloqueada temporariamente. Tente novamente em ${minutesLeft} minuto(s).`,
+        lockedUntil: user.lockedUntil,
+      });
+    }
+
+    // Verify TOTP code
+    try {
+      const isValid = authenticator.check(code, user.totpSecret);
+      if (!isValid) {
+        // Check backup codes
+        const backupCodes = (user.totpBackupCodes as string[]) || [];
+        const bcrypt = await import('bcrypt');
+        let backupMatch = false;
+        for (let i = 0; i < backupCodes.length; i++) {
+          if (await bcrypt.default.compare(code, backupCodes[i])) {
+            backupMatch = true;
+            // Remove used backup code
+            backupCodes.splice(i, 1);
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { totpBackupCodes: backupCodes },
+            });
+            break;
+          }
+        }
+        if (!backupMatch) {
+          // Increment login attempts for 2FA failures
+          const attempts = (user.loginAttempts || 0) + 1;
+          if (attempts >= 5) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: attempts,
+                lockedUntil: new Date(Date.now() + 15 * 60 * 1000),
+              },
+            });
+          } else {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { loginAttempts: attempts },
+            });
+          }
+          return reply.status(401).send({ error: 'Código inválido.' });
+        }
+      }
+    } catch {
+      return reply.status(401).send({ error: 'Código inválido.' });
+    }
+
+    const mustChangePassword = user.forcePasswordChange === true;
+
+    // SUPER_ADMIN login
+    if (user.role === 'SUPER_ADMIN') {
+      const token = generateToken({ userId: user.id, role: 'SUPER_ADMIN' });
+      const refreshToken = generateRefreshToken(user.id);
+
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id,
+        slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName,
+        plan: tu.tenant.plan,
+        status: tu.tenant.status,
+        role: tu.role,
+      }));
+
+      return {
+        token,
+        refreshToken,
+        user: { id: user.id, name: user.name, email: user.email, role: 'SUPER_ADMIN' },
+        tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
+      };
+    }
+
+    // Regular user login
+    const tenantUsers = await prisma.tenantUser.findMany({
+      where: { userId: user.id },
+      include: { tenant: true },
+      orderBy: { tenant: { companyName: 'asc' } },
+    });
+
+    if (tenantUsers.length === 0) {
+      return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
+    }
+
+    const tenants = tenantUsers.map((tu) => ({
+      id: tu.tenant.id,
+      slug: tu.tenant.slug,
+      companyName: tu.tenant.companyName,
+      plan: tu.tenant.plan,
+      status: tu.tenant.status,
+      role: tu.role,
+    }));
+
+    const selectedTu = tenantUsers[0];
+
+    if (deviceId) {
+      await prisma.device.upsert({
+        where: { tenantId_name: { tenantId: selectedTu.tenantId, name: deviceId } },
+        update: { lastSyncAt: new Date() },
+        create: { tenantId: selectedTu.tenantId, name: deviceId, type: 'mobile' },
+      });
+    }
+
+    const token = generateToken({
+      userId: user.id,
+      tenantId: selectedTu.tenantId,
+      deviceId,
+      role: selectedTu.role,
+    });
+    const refreshToken = generateRefreshToken(user.id);
+
+    return {
+      token,
+      refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: selectedTu.role },
+      tenant: {
+        id: selectedTu.tenant.id,
+        slug: selectedTu.tenant.slug,
+        companyName: selectedTu.tenant.companyName,
+        plan: selectedTu.tenant.plan,
+        status: selectedTu.tenant.status,
+      },
+      tenants,
+      mustChangePassword,
+    };
+  });
+
   // Forgot password
   app.post('/forgot-password', async (request, reply) => {
     const schema = z.object({ email: z.string().email() });
