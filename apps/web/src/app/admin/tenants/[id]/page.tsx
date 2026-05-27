@@ -471,6 +471,13 @@ export default function TenantDetailPage() {
                           >
                             Reset Senha
                           </button>
+                          <button
+                            onClick={() => handleToggleForce2FA(tu.userId, tu.forceTwoFactor, tu.user.name)}
+                            className={`text-sm transition-colors ${tu.forceTwoFactor ? 'text-emerald-400 hover:text-emerald-300' : 'text-slate-600 hover:text-slate-400'}`}
+                            title={tu.forceTwoFactor ? '2FA obrigatorio - clique para remover' : 'Exigir 2FA para este usuario'}
+                          >
+                            <Shield size={16} />
+                          </button>
                           {tu.user?.totpEnabled && (
                             <button
                               onClick={() => handleDisable2FA(tu.user.id, tu.user.name)}
