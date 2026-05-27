@@ -179,6 +179,36 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      {/* Templates reference panel (collapsible) */}
+      {templates.length > 0 && (
+        <div className="mb-3">
+          <button
+            onClick={() => setShowTemplatesRef(!showTemplatesRef)}
+            className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            <ChevronDown size={12} className={`transition-transform duration-200 ${showTemplatesRef ? 'rotate-0' : '-rotate-90'}`} />
+            Templates de Variação disponíveis ({templates.length})
+          </button>
+          {showTemplatesRef && (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {templates.map((tpl) => (
+                <div key={tpl.id} className="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2">
+                  <p className="text-[11px] font-semibold text-indigo-400 mb-1.5">{tpl.name}</p>
+                  <div className="space-y-0.5">
+                    {tpl.dimensions?.map((dim, i) => (
+                      <p key={i} className="text-[10px] text-slate-400 leading-relaxed">
+                        <span className="text-slate-300 font-medium">{dim.label}:</span>{' '}
+                        <span className="text-slate-500">{dim.options.join(', ')}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Category list */}
       {loading ? (
         <div className="text-slate-400 text-sm text-center py-8">Carregando...</div>
