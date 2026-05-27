@@ -104,6 +104,21 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       data: { loginAttempts: 0, lockedUntil: null },
     });
 
+    // Check if 2FA is forced by any tenant and user hasn't enabled it yet
+    if (!user.totpEnabled) {
+      const forcedTenant = await prisma.tenantUser.findFirst({
+        where: { userId: user.id, forceTwoFactor: true },
+      });
+      if (forcedTenant) {
+        const setupToken = generateSetupToken({ userId: user.id, email: user.email });
+        return reply.status(200).send({
+          mustSetupTwoFactor: true,
+          setupToken,
+          mustChangePassword,
+        });
+      }
+    }
+
     // Check if 2FA is required
     if (user.totpEnabled && user.totpSecret) {
       if (mustChangePassword) {
