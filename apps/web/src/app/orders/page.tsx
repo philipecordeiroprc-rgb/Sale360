@@ -1115,7 +1115,15 @@ export default function OrdersPage() {
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
                 <p className="text-white text-sm flex items-center gap-1.5">
-                  {detailOrder.paidWithMethod ? (
+                  {detailOrder.payments && detailOrder.payments.length > 0 ? (
+                    detailOrder.payments.map((p: any, idx: number) => (
+                      <span key={idx} className="flex items-center gap-0.5">
+                        {idx > 0 && <span className="text-slate-500 text-xs">+</span>}
+                        <span className="text-xs bg-slate-800 rounded-md px-2 py-1">{paymentLabel(p.paymentMethod)}</span>
+                        <span className="text-xs text-slate-400">R$ {Number(p.amount).toFixed(2)}</span>
+                      </span>
+                    ))
+                  ) : detailOrder.paidWithMethod ? (
                     <>
                       {paymentLabel(detailOrder.paidWithMethod)}
                       <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
