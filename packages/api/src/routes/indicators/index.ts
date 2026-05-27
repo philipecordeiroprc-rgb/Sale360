@@ -46,6 +46,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
           items: { include: { product: { select: { operationalCost: true } } } },
           user: { select: { id: true, name: true } },
           customer: { select: { id: true, name: true } },
+          payments: { select: { paymentMethod: true, amount: true } },
         },
         orderBy: { createdAt: 'desc' },
       }),
