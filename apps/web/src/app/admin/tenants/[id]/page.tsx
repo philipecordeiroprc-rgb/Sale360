@@ -193,6 +193,17 @@ export default function TenantDetailPage() {
     }
   };
 
+  const handleDisable2FA = async (userId: string, userName: string) => {
+    if (!confirm(`Desativar autenticacao em 2 etapas para ${userName}?`)) return;
+    try {
+      await api.admin.users.disable2FA(userId);
+      show('2FA desativado com sucesso!');
+      loadUsers();
+    } catch (err: any) {
+      show(err.message, 'error');
+    }
+  };
+
   const copyResetLink = () => {
     if (resetModal?.resetLink) {
       navigator.clipboard.writeText(resetModal.resetLink);
