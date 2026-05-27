@@ -120,3 +120,18 @@ export function generateToken(payload: JwtPayload): string {
 export function generateRefreshToken(userId: string): string {
   return jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' } as any);
 }
+
+// Short-lived token for 2FA step (5 min expiry)
+export function generateTwoFactorToken(payload: { userId: string; email: string }): string {
+  return jwt.sign({ ...payload, type: '2fa' }, JWT_SECRET, { expiresIn: '5m' } as any);
+}
+
+export function verifyTwoFactorToken(token: string): { userId: string; email: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (payload.type !== '2fa') return null;
+    return { userId: payload.userId, email: payload.email };
+  } catch {
+    return null;
+  }
+}
