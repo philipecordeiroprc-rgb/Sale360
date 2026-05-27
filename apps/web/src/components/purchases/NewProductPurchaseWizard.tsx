@@ -253,14 +253,12 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       const created = await api.products.create(productPayload);
       const productId = created.id;
 
-      // 3. Create variations if any
+      // 3. Create variations if any (stockQty=0 — stock comes from purchase receive, not here)
       if (variations.length > 0) {
         for (const v of variations) {
-          const varQty = v.stockQty || 0;
-          if (varQty <= 0 && !selectedTemplate) continue;
           await api.products.addVariation(productId, {
             name: v.name,
-            stockQty: varQty,
+            stockQty: 0, // IMPORTANT: stock is created by purchase receive below, not here
             lowStockAt: v.lowStockAt,
             priceModifier: v.priceModifier,
             sku: v.sku,
