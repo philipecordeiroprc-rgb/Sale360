@@ -112,10 +112,3 @@ export async function login(email: string, password: string, deviceId?: string) 
   });
 }
 
-export async function loginWithPin(email: string, pin: string, deviceId?: string) {
-  return request('/api/auth/login-pin', {
-    method: 'POST',
-    body: { email, pin, deviceId },
-    auth: false,
-  });
-}
