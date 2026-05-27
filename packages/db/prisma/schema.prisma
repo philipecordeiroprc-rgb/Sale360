@@ -45,11 +45,12 @@ model Tenant {
 }
 
 model TenantUser {
-  id       String   @id @default(cuid())
-  tenantId String
-  userId   String
-  role     UserRole @default(CASHIER)
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  role           UserRole @default(CASHIER)
+  forceTwoFactor Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
