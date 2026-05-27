@@ -123,12 +123,27 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
   app.post('/:id/close', async (request, reply) => {
     const { id } = request.params as { id: string };
     const schema = z.object({
-      paymentMethod: z.string(),
+      paymentMethod: z.string().optional(),
+      payments: z.array(z.object({
+        paymentMethod: z.string().min(1),
+        amount: z.number().positive(),
+      })).optional(),
       discount: z.number().default(0),
       paymentReceived: z.number().optional(),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: 'Dados inválidos' });
+
+    // Build effective payments
+    let cmdEffectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (parsed.success && parsed.data.payments && parsed.data.payments.length > 0) {
+      cmdEffectivePayments = parsed.data.payments;
+    } else if (parsed.success && parsed.data.paymentMethod) {
+      cmdEffectivePayments = [{ paymentMethod: parsed.data.paymentMethod, amount: total }];
+    } else if (parsed.success) {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
+    }
+    const cmdPrimaryMethod = cmdEffectivePayments.length > 0 ? cmdEffectivePayments[0].paymentMethod : parsed.data?.paymentMethod;
 
     const command = await prisma.tableCommand.findFirst({
       where: { id, tenantId: request.tenantId, status: 'OPEN' },
