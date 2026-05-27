@@ -72,6 +72,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         },
         tenant: null,
         tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
       };
     }
 
