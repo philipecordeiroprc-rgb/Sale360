@@ -210,12 +210,11 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
-    // Update TenantUser role/pin
+    // Update TenantUser role
     const updated = await prisma.tenantUser.update({
       where: { id: tenantUser.id },
       data: {
         ...(parsed.data.role !== undefined ? { role: parsed.data.role as any } : {}),
-        ...(parsed.data.pin !== undefined ? { pin: parsed.data.pin } : {}),
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
