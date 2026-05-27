@@ -903,12 +903,47 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         data: {
           paymentStatus: newPaymentStatus,
           paidAmount: { increment: paidAmount },
-          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
+          ...(primaryPayMethod ? { paidWithMethod: primaryPayMethod } : {}),
         },
       });
 
-      // If payment method changed, update item tax rates for card fee reporting
-      if (paymentMethod) {
+      // Create OrderPayment records for the pay action if not already present
+      if (effectivePayPayments.length > 0) {
+        const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
+        if (existingPayments === 0) {
+          for (const payment of effectivePayPayments) {
+            await tx.orderPayment.create({
+              data: {
+                orderId: order.id,
+                paymentMethod: payment.paymentMethod,
+                amount: payment.amount,
+              },
+            });
+          }
+        }
+
+        // Weighted average tax rate across pay methods
+        let weightedTax = 0;
+        for (const payment of effectivePayPayments) {
+          const config = await tx.paymentMethodConfig.findUnique({
+            where: {
+              tenantId_paymentMethod: {
+                tenantId: request.tenantId,
+                paymentMethod: payment.paymentMethod,
+              },
+            },
+            select: { taxRate: true },
+          });
+          const rate = config?.taxRate ? Number(config.taxRate) : 0;
+          weightedTax += (rate * payment.amount) / paidAmount;
+        }
+        const taxRate = Math.round(weightedTax * 100) / 100;
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { taxRate },
+        });
+      } else if (paymentMethod) {
+        // Legacy fallback: single payment method
         const normalizedMethod = normalizePaymentMethod(paymentMethod);
         const paymentConfig = await tx.paymentMethodConfig.findUnique({
           where: {
