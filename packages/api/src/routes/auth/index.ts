@@ -319,7 +319,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         user: {
           id: payload.userId,
           role: tenantUser.role,
-          pin: tenantUser.pin,
         },
         tenant: {
           id: tenantUser.tenant.id,
