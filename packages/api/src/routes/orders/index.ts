@@ -757,32 +757,64 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       }
 
       // Update order status (and optionally payment method)
-      const { paymentMethod } = (request.body as Record<string, unknown>) || {};
+      const primaryConfirmMethod = confirmPayments.length > 0
+        ? confirmPayments[0].paymentMethod
+        : undefined;
       await tx.order.update({
         where: { id: order.id },
         data: {
           paymentStatus: 'PAID',
           status: 'COMPLETED',
-          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
+          ...(primaryConfirmMethod ? { paymentMethod: primaryConfirmMethod, paidWithMethod: primaryConfirmMethod } : {}),
         },
       });
 
-      // If payment method changed at confirmation, update item tax rates
-      if (paymentMethod) {
-        const normalizedMethod = normalizePaymentMethod(paymentMethod as string);
-        const paymentConfig = await tx.paymentMethodConfig.findUnique({
-          where: {
-            tenantId_paymentMethod: {
-              tenantId: request.tenantId,
-              paymentMethod: normalizedMethod,
+      // Create OrderPayment records for the confirm
+      if (confirmPayments.length > 0) {
+        // Resolve amounts: use provided amounts, or fall back to order total for first payment
+        const totalAmount = confirmPayments.reduce((s, p) => s + p.amount, 0);
+        const effectiveConfirmPayments = totalAmount > 0
+          ? confirmPayments
+          : confirmPayments.map((p, i) => ({
+              ...p,
+              amount: i === 0 ? Number(order.total) : 0,
+            })).filter(p => p.amount > 0);
+
+        // Validate totals if amounts were explicitly provided
+        if (totalAmount > 0 && !validatePaymentTotal(confirmPayments, Number(order.total))) {
+          throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+        }
+
+        for (const payment of effectiveConfirmPayments) {
+          await tx.orderPayment.create({
+            data: {
+              orderId: order.id,
+              paymentMethod: payment.paymentMethod,
+              amount: payment.amount,
             },
-          },
-          select: { taxRate: true },
-        });
-        const newTaxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+          });
+        }
+
+        // Weighted average tax rate across payment methods
+        const total = Number(order.total);
+        let weightedTax = 0;
+        for (const payment of effectiveConfirmPayments) {
+          const config = await tx.paymentMethodConfig.findUnique({
+            where: {
+              tenantId_paymentMethod: {
+                tenantId: request.tenantId,
+                paymentMethod: payment.paymentMethod,
+              },
+            },
+            select: { taxRate: true },
+          });
+          const rate = config?.taxRate ? Number(config.taxRate) : 0;
+          weightedTax += (rate * payment.amount) / total;
+        }
+        const taxRate = Math.round(weightedTax * 100) / 100;
         await tx.orderItem.updateMany({
           where: { orderId: order.id },
-          data: { taxRate: newTaxRate },
+          data: { taxRate },
         });
       }
 
