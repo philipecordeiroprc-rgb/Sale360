@@ -19,6 +19,7 @@ export default function CategoriesPage() {
   const [editTemplateId, setEditTemplateId] = useState('');
   const [saving, setSaving] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [showTemplatesRef, setShowTemplatesRef] = useState(false);
 
   const loadCategories = async () => {
     try {
