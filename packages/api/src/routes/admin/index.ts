@@ -422,10 +422,12 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return updated;
   });
 
-  // List all users (across all tenants)
+  // List all users (across all tenants) — only users linked to at least one store
   app.get('/users', async (request) => {
     const { search, page = '1', limit = '50' } = request.query as Record<string, string>;
-    const where: any = {};
+    const where: any = {
+      tenants: { some: {} }, // only users with at least one linked tenant
+    };
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
