@@ -181,7 +181,7 @@ function UsuariosTab() {
 
   const openCreate = () => {
     setEditingId(null);
-    setForm({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
+    setForm({ email: '', name: '', password: '', role: 'CASHIER' });
     setShowModal(true);
   };
 
