@@ -133,7 +133,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     const schema = z.object({
       email: z.string().email(),
       name: z.string().min(1, 'Nome é obrigatório'),
-      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'Senha deve ter no mínimo 6 caracteres'),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
     });
 
@@ -232,7 +232,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   // Reset user password (ADMIN only)
   app.post('/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
-    const schema = z.object({ password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'Senha deve ter no mínimo 6 caracteres') });
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
@@ -309,7 +309,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   app.post('/me/change-password', async (request, reply) => {
     const schema = z.object({
       currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
-      newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+      newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 6 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
