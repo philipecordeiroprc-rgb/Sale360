@@ -297,7 +297,6 @@ function UsuariosTab() {
                       {tu.role === 'OWNER' ? 'Admin' : 'Vendedor'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-400 text-sm">{tu.pin || '—'}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
