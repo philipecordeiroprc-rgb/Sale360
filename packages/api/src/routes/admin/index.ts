@@ -138,10 +138,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { createdAt: 'asc' },
     });
 
-    return users.map((tu) => ({
-      ...tu,
-      forceTwoFactor: tu.forceTwoFactor,
-    }));
+    return users;
   });
 
   // Add user to tenant
