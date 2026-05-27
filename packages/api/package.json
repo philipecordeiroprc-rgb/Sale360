@@ -14,8 +14,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@fastify/cors": "^10.0.0",
-    "@fastify/rate-limit": "^10.2.0",
+    "@fastify/cors": "^10.1.0",
+    "@fastify/multipart": "^10.0.0",
+    "@fastify/rate-limit": "^10.3.0",
     "@fastify/swagger": "^9.0.0",
     "@prisma/client": "^6.2.0",
     "@sale360/core": "workspace:*",
@@ -24,14 +25,17 @@
     "bcrypt": "^5.1.0",
     "fastify": "^5.2.0",
     "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^8.0.7",
+    "otplib": "^12.0.0",
+    "pino": "^9.5.0",
     "resend": "^4.0.0",
-    "zod": "^3.24.0",
-    "pino": "^9.5.0"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.0",
     "@types/node": "^22.0.0",
+    "@types/nodemailer": "^8.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
