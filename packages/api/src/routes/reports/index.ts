@@ -149,7 +149,12 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     // ── Contas a Receber ──
     const pendingAmount = pendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = pendingOrders.length;
-    const fiadoPendingOrders = pendingOrders.filter(o => o.paymentMethod === 'credit_store');
+    const fiadoPendingOrders = pendingOrders.filter(o => {
+      if (o.payments && o.payments.length > 0) {
+        return o.payments.some(p => p.paymentMethod === 'credit_store');
+      }
+      return o.paymentMethod === 'credit_store';
+    });
     const fiadoCount = fiadoPendingOrders.length;
     const fiadoAmount = fiadoPendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
