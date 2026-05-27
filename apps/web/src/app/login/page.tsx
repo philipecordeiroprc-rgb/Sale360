@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { Shield, ArrowLeft } from 'lucide-react';
+import { Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import QRCodeLib from 'qrcode';
 
 export default function LoginPage() {
   const router = useRouter();
