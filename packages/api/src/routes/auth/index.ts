@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { prisma } from '@sale360/db';
-import { generateToken, generateRefreshToken, generateTwoFactorToken, verifyTwoFactorToken, getJwtSecret } from '../../middleware/auth.js';
+import { generateToken, generateRefreshToken, generateTwoFactorToken, verifyTwoFactorToken, generateSetupToken, verifySetupToken, getJwtSecret } from '../../middleware/auth.js';
 import { sendResetEmail } from '../../services/email.js';
 import { authenticator } from 'otplib';
 import { z } from 'zod';
