@@ -1,19 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
-
-/** Maps Portuguese payment method labels (web PDV) to English keys (DB enum) */
-const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
-  Dinheiro: 'cash',
-  Pix: 'pix',
-  Debito: 'debit',
-  Credito: 'credit',
-  Fiado: 'credit_store',
-};
-
-function normalizePaymentMethod(method: string): string {
-  return PAYMENT_METHOD_NORMALIZE[method] || method;
-}
+import {
+  normalizePaymentMethod,
+  validatePaymentTotal,
+  hasFiadoPayment,
+  getWeightedTaxRate,
+  paymentEntrySchema,
+} from '../../lib/payment-utils.js';
 
 const orderItemSchema = z.object({
   productId: z.string().optional(),
