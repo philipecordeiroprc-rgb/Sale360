@@ -190,7 +190,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(tenantUser);
   });
 
-  // Update user role/pin in tenant
+  // Update user role in tenant
   app.put('/tenants/:id/users/:userId', async (request, reply) => {
     const { id: tenantId, userId } = request.params as { id: string; userId: string };
 
