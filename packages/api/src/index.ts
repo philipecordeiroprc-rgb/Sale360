@@ -70,8 +70,21 @@ async function buildApp() {
   });
 
   // Plugins
-  await app.register(cors, { origin: true, credentials: true });
-  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  const ALLOWED_ORIGINS = process.env.CORS_ORIGINS?.split(',') || [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:8081',
+  ];
+  await app.register(cors, {
+    origin: process.env.NODE_ENV === 'production'
+      ? ALLOWED_ORIGINS
+      : true,
+    credentials: true,
+  });
+  await app.register(rateLimit, {
+    max: process.env.NODE_ENV === 'production' ? 60 : 200,
+    timeWindow: '1 minute',
+  });
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
   // Health check (no auth — for uptime monitoring)
