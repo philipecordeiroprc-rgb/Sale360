@@ -150,7 +150,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     const data = await res.json();
     get().setAuth({
       token: data.token,
-      user: { ...user!, role: data.user.role, pin: data.user.pin },
+      user: { ...user!, role: data.user.role },
       tenant: data.tenant,
       tenants: availableTenants,
     });
