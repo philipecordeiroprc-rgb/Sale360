@@ -91,18 +91,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       plan: tu.tenant.plan,
       status: tu.tenant.status,
       role: tu.role,
-      pin: tu.pin,
     }));
 
-    // Pick first tenant as default (or match by PIN if provided)
-    let selectedTu = tenantUsers[0];
-    if (pin) {
-      const matched = tenantUsers.find((tu) => tu.pin === pin);
-      if (!matched) {
-        return reply.status(401).send({ error: 'PIN incorreto' });
-      }
-      selectedTu = matched;
-    }
+    // Pick first tenant as default
+    const selectedTu = tenantUsers[0];
 
     // If deviceId, register device
     if (deviceId) {
