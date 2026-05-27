@@ -429,6 +429,18 @@ export const api = {
       changePassword(currentPassword: string, newPassword: string) {
         return request<any>('/api/tenant/me/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
       },
+      twoFactorStatus() {
+        return request<{ enabled: boolean }>('/api/tenant/me/2fa/status');
+      },
+      twoFactorSetup() {
+        return request<{ secret: string; qrCodeUri: string }>('/api/tenant/me/2fa/setup', { method: 'POST' });
+      },
+      twoFactorConfirm(code: string) {
+        return request<{ backupCodes: string[]; message: string }>('/api/tenant/me/2fa/confirm', { method: 'POST', body: JSON.stringify({ code }) });
+      },
+      twoFactorDisable() {
+        return request<{ message: string }>('/api/tenant/me/2fa/disable', { method: 'POST' });
+      },
     },
     features() {
       return request<any>('/api/tenant/features');
