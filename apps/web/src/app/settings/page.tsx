@@ -476,7 +476,7 @@ function MinhaSenhaTab() {
     e.preventDefault();
 
     if (newPassword.length < 6) {
-      show('Nova senha deve ter no minimo 6 caracteres', 'error');
+      show('Nova senha deve ter no minimo 8 caracteres', 'error');
       return;
     }
     if (newPassword !== confirmPassword) {
