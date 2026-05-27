@@ -457,6 +457,15 @@ export default function TenantDetailPage() {
                           >
                             Reset Senha
                           </button>
+                          {tu.user?.totpEnabled && (
+                            <button
+                              onClick={() => handleDisable2FA(tu.user.id, tu.user.name)}
+                              className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+                              title="Desativar 2FA"
+                            >
+                              <Shield size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleRemoveUser(tu.userId)}
                             className="text-sm text-red-400 hover:text-red-300 transition-colors"
