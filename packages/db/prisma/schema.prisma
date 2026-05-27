@@ -49,7 +49,6 @@ model TenantUser {
   tenantId String
   userId   String
   role     UserRole @default(CASHIER)
-  pin      String   // PIN rápido para login no PDV (4 dígitos)
   createdAt DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
