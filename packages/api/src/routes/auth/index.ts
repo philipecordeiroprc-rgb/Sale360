@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(8),
   deviceId: z.string().optional(),
 });
 
@@ -219,7 +219,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post('/reset-password', async (request, reply) => {
     const schema = z.object({
       token: z.string().min(1),
-      password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'A senha deve ter no mínimo 6 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
@@ -373,7 +373,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   // Force password change (when admin reset password)
   app.post('/force-change-password', async (request, reply) => {
     const schema = z.object({
-      newPassword: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      newPassword: z.string().min(8, 'Senha deve ter no mínimo 6 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
