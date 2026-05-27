@@ -18,7 +18,11 @@ const publicOrderSchema = z.object({
   subtotal: z.number(),
   discount: z.number().default(0),
   total: z.number(),
-  paymentMethod: z.string(),
+  paymentMethod: z.string().optional(),
+  payments: z.array(z.object({
+    paymentMethod: z.string().min(1),
+    amount: z.number().positive(),
+  })).optional(),
   couponCode: z.string().optional(),
   couponDiscount: z.number().optional(),
   notes: z.string().optional(),
