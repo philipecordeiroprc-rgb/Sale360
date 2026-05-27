@@ -193,6 +193,20 @@ export default function TenantDetailPage() {
     }
   };
 
+  const handleToggleForce2FA = async (userId: string, currentValue: boolean, userName: string) => {
+    if (!confirm(currentValue
+      ? `Deixar de exigir 2FA para ${userName}?`
+      : `Exigir 2FA para ${userName}? O usuario sera obrigado a configurar no proximo login.`
+    )) return;
+    try {
+      await api.admin.tenants.users.update(id, userId, { forceTwoFactor: !currentValue });
+      show(currentValue ? 'Exigencia de 2FA removida.' : '2FA agora e obrigatorio para este usuario.');
+      loadUsers();
+    } catch (err: any) {
+      show(err.message, 'error');
+    }
+  };
+
   const handleDisable2FA = async (userId: string, userName: string) => {
     if (!confirm(`Desativar autenticacao em 2 etapas para ${userName}?`)) return;
     try {
