@@ -348,20 +348,34 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: request.userId } });
-    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
-
-    if (!user.forcePasswordChange) {
-      return reply.status(400).send({ error: 'Troca de senha não é necessária.' });
+    // Manual JWT verification (auth routes are public, no middleware)
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return reply.status(401).send({ error: 'Token não encontrado' });
     }
 
-    const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashedPassword, forcePasswordChange: false },
-    });
+    try {
+      const jwt = await import('jsonwebtoken');
+      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
 
-    return { message: 'Senha alterada com sucesso.' };
+      const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+      if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+      if (!user.forcePasswordChange) {
+        return reply.status(400).send({ error: 'Troca de senha não é necessária.' });
+      }
+
+      const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword, forcePasswordChange: false },
+      });
+
+      return { message: 'Senha alterada com sucesso.' };
+    } catch {
+      return reply.status(401).send({ error: 'Token inválido ou expirado' });
+    }
   });
 
   // Refresh token
