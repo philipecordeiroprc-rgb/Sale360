@@ -220,7 +220,8 @@ export const api = {
       subtotal: number;
       discount?: number;
       total: number;
-      paymentMethod: string;
+      paymentMethod?: string;
+      payments?: Array<{ paymentMethod: string; amount: number }>;
       paymentStatus?: string;
       dueDate?: string;
       notes?: string;
