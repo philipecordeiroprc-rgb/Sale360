@@ -206,7 +206,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: resetToken.userId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, forcePasswordChange: false },
       }),
       prisma.passwordResetToken.update({
         where: { id: resetToken.id },
