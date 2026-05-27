@@ -60,10 +60,21 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     // ── Payment Methods (apenas vendas PAGAS) ──
     const paymentMap: Record<string, { count: number; total: number }> = {};
     for (const o of paidOrders) {
-      const method = o.paymentMethod || 'Outro';
-      if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
-      paymentMap[method].count++;
-      paymentMap[method].total += Number(o.total);
+      if (o.payments && o.payments.length > 0) {
+        for (const p of o.payments) {
+          const method = p.paymentMethod || 'Outro';
+          if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+          paymentMap[method].total += Number(p.amount);
+        }
+        const firstMethod = o.payments[0].paymentMethod || 'Outro';
+        if (!paymentMap[firstMethod]) paymentMap[firstMethod] = { count: 0, total: 0 };
+        paymentMap[firstMethod].count++;
+      } else {
+        const method = o.paymentMethod || 'Outro';
+        if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+        paymentMap[method].count++;
+        paymentMap[method].total += Number(o.total);
+      }
     }
     const paymentMethods = Object.entries(paymentMap)
       .map(([method, data]) => ({ method, ...data }))
