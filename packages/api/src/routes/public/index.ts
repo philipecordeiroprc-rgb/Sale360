@@ -257,7 +257,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         customerName: !customerId ? data.customerName : undefined,
         source: 'ONLINE',
         status: 'PENDING',
-        paymentMethod: data.paymentMethod,
+        paymentMethod: primaryMethod,
         paymentStatus: 'PENDING',
         subtotal: data.subtotal,
         discount: data.discount,
