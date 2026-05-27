@@ -325,7 +325,10 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
-    await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, forcePasswordChange: false },
+    });
 
     return { message: 'Senha alterada com sucesso.' };
   });
