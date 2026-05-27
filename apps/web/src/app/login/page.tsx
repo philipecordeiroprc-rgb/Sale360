@@ -8,8 +8,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'password' | 'pin'>('password');
-  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -19,18 +17,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const endpoint = mode === 'pin'
-        ? '/api/auth/login-pin'
-        : '/api/auth/login';
-
-      const body = mode === 'pin'
-        ? { email: email.trim(), pin }
-        : { email: email.trim(), password };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
