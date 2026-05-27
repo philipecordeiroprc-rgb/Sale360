@@ -132,7 +132,7 @@ export default function OrdersPage() {
   const [couponData, setCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(PAYMENT_METHODS[0]);
+  const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
 
