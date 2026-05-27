@@ -101,6 +101,12 @@ export const api = {
         body: JSON.stringify({ tenantId }),
       });
     },
+    login2FA(twoFactorToken: string, code: string, deviceId?: string) {
+      return request<any>('/api/auth/login-2fa', {
+        method: 'POST',
+        body: JSON.stringify({ twoFactorToken, code, deviceId }),
+      });
+    },
   },
 
   // Products
