@@ -40,6 +40,15 @@ export function LoginScreen() {
         return;
       }
 
+      if (data.mustChangePassword) {
+        Alert.alert(
+          'Senha redefinida',
+          'Sua senha foi redefinida por um administrador. Use o painel web para definir uma nova senha.',
+          [{ text: 'OK' }],
+        );
+        return;
+      }
+
       setAuth({
         token: data.token,
         user: data.user,
