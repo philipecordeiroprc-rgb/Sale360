@@ -20,7 +20,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { email, password, pin, deviceId } = parsed.data;
+    const { email, password, deviceId } = parsed.data;
 
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
