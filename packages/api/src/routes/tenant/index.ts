@@ -191,12 +191,11 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(tenantUser);
   });
 
-  // Update user role/pin in tenant
+  // Update user role in tenant
   app.put('/users/:userId', async (request, reply) => {
     const { userId } = request.params as { userId: string };
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
-      pin: z.string().length(4).optional(),
     });
 
     const parsed = schema.safeParse(request.body);
