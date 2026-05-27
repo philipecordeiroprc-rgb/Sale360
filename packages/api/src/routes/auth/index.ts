@@ -477,6 +477,165 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     return { message: 'Senha redefinida com sucesso.' };
   });
 
+  // ============================================================
+  // Forced 2FA Setup (when admin requires 2FA and user hasn't set it up)
+  // ============================================================
+
+  app.post('/setup-2fa', async (request, reply) => {
+    const schema = z.object({
+      setupToken: z.string().min(1),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Token inválido.' });
+    }
+
+    const payload = verifySetupToken(parsed.data.setupToken);
+    if (!payload) {
+      return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, email: true, totpEnabled: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(user.email, 'Sale360', secret);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { totpSecret: secret },
+    });
+
+    return { secret, qrCodeUri: otpauth };
+  });
+
+  app.post('/confirm-2fa', async (request, reply) => {
+    const schema = z.object({
+      setupToken: z.string().min(1),
+      code: z.string().length(6),
+      deviceId: z.string().optional(),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos.' });
+    }
+
+    const payload = verifySetupToken(parsed.data.setupToken);
+    if (!payload) {
+      return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user?.totpSecret) {
+      return reply.status(400).send({ error: 'Setup não iniciado.' });
+    }
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const isValid = authenticator.check(parsed.data.code, user.totpSecret);
+    if (!isValid) {
+      return reply.status(400).send({ error: 'Código inválido. Tente novamente.' });
+    }
+
+    // Generate backup codes
+    const backupCodes: string[] = [];
+    const backupHashes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      backupCodes.push(code);
+      backupHashes.push(await bcrypt.hash(code, 10));
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        totpEnabled: true,
+        totpBackupCodes: backupHashes,
+      },
+    });
+
+    const mustChangePassword = user.forcePasswordChange === true;
+
+    // Return full auth — same logic as login
+    if (user.role === 'SUPER_ADMIN') {
+      const token = generateToken({ userId: user.id, role: 'SUPER_ADMIN' });
+      const refreshToken = generateRefreshToken(user.id);
+
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id, slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName, plan: tu.tenant.plan,
+        status: tu.tenant.status, role: tu.role,
+      }));
+
+      return {
+        token, refreshToken,
+        user: { id: user.id, name: user.name, email: user.email, role: 'SUPER_ADMIN' },
+        tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
+        backupCodes,
+      };
+    }
+
+    const tenantUsers = await prisma.tenantUser.findMany({
+      where: { userId: user.id },
+      include: { tenant: true },
+      orderBy: { tenant: { companyName: 'asc' } },
+    });
+
+    if (tenantUsers.length === 0) {
+      return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
+    }
+
+    const tenants = tenantUsers.map((tu) => ({
+      id: tu.tenant.id, slug: tu.tenant.slug,
+      companyName: tu.tenant.companyName, plan: tu.tenant.plan,
+      status: tu.tenant.status, role: tu.role,
+    }));
+
+    const selectedTu = tenantUsers[0];
+
+    if (parsed.data.deviceId) {
+      await prisma.device.upsert({
+        where: { tenantId_name: { tenantId: selectedTu.tenantId, name: parsed.data.deviceId } },
+        update: { lastSyncAt: new Date() },
+        create: { tenantId: selectedTu.tenantId, name: parsed.data.deviceId, type: 'mobile' },
+      });
+    }
+
+    const token = generateToken({
+      userId: user.id, tenantId: selectedTu.tenantId,
+      deviceId: parsed.data.deviceId, role: selectedTu.role,
+    });
+    const refreshToken = generateRefreshToken(user.id);
+
+    return {
+      token, refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: selectedTu.role },
+      tenant: {
+        id: selectedTu.tenant.id, slug: selectedTu.tenant.slug,
+        companyName: selectedTu.tenant.companyName,
+        plan: selectedTu.tenant.plan, status: selectedTu.tenant.status,
+      },
+      tenants,
+      mustChangePassword,
+      backupCodes,
+    };
+  });
+
   // Switch tenant (for users with multiple stores, or SUPER_ADMIN switching store/admin mode)
   app.post('/switch-tenant', async (request, reply) => {
     const schema = z.object({
