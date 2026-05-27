@@ -139,6 +139,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         status: selectedTu.tenant.status,
       },
       tenants,
+      mustChangePassword,
     };
   });
 
