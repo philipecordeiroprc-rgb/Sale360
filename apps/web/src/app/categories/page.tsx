@@ -148,6 +148,24 @@ export default function CategoriesPage() {
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
+            {/* Template legend */}
+            {newTemplateId && (() => {
+              const tpl = templates.find(t => t.id === newTemplateId);
+              if (!tpl) return null;
+              return (
+                <div className="mt-2 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2">
+                  <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wide mb-1.5">{tpl.name}</p>
+                  <div className="space-y-1">
+                    {tpl.dimensions?.map((dim, i) => (
+                      <p key={i} className="text-[10px] text-slate-400 leading-relaxed">
+                        <span className="text-slate-300 font-medium">{dim.label}:</span>{' '}
+                        <span className="text-slate-500">{dim.options.join(', ')}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <button
             onClick={handleAdd}
