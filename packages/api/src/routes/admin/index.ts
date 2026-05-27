@@ -196,6 +196,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
+      forceTwoFactor: z.boolean().optional(),
       name: z.string().min(1).optional(),
       email: z.string().email().optional(),
     });
@@ -210,12 +211,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
-    // Update TenantUser role
+    // Update TenantUser role + forceTwoFactor
+    const updateData: any = {};
+    if (parsed.data.role !== undefined) updateData.role = parsed.data.role;
+    if (parsed.data.forceTwoFactor !== undefined) updateData.forceTwoFactor = parsed.data.forceTwoFactor;
+
     const updated = await prisma.tenantUser.update({
       where: { id: tenantUser.id },
-      data: {
-        ...(parsed.data.role !== undefined ? { role: parsed.data.role as any } : {}),
-      },
+      data: updateData,
       include: { user: { select: { id: true, name: true, email: true } } },
     });
 
