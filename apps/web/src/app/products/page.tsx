@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
+  Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
   X, Layers, DollarSign, Upload,
 } from 'lucide-react';
 import { ImportModal } from '@/components/ui/ImportModal';
