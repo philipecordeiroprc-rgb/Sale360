@@ -575,7 +575,12 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         createdAt: { gte: today },
         status: 'COMPLETED',
       },
-      select: { total: true, paymentMethod: true, paymentStatus: true },
+      select: {
+        total: true,
+        paymentMethod: true,
+        paymentStatus: true,
+        payments: { select: { paymentMethod: true, amount: true } },
+      },
     });
 
     const paidOrders = orders.filter(o => o.paymentStatus === 'PAID');
@@ -586,10 +591,23 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     const count = paidOrders.length;
     const pendingCount = pendingOrders.length;
     const byMethod = orders.reduce((acc: Record<string, { count: number; total: number }>, o) => {
-      const method = o.paymentMethod || 'outro';
-      if (!acc[method]) acc[method] = { count: 0, total: 0 };
-      acc[method].count++;
-      acc[method].total += Number(o.total);
+      if (o.payments && o.payments.length > 0) {
+        for (const p of o.payments) {
+          const method = p.paymentMethod || 'outro';
+          if (!acc[method]) acc[method] = { count: 0, total: 0 };
+          acc[method].total += Number(p.amount);
+        }
+        // Count the order once under its first payment method
+        const firstMethod = o.payments[0].paymentMethod || 'outro';
+        if (!acc[firstMethod]) acc[firstMethod] = { count: 0, total: 0 };
+        acc[firstMethod].count++;
+      } else {
+        // Fallback for old orders without OrderPayment records
+        const method = o.paymentMethod || 'outro';
+        if (!acc[method]) acc[method] = { count: 0, total: 0 };
+        acc[method].count++;
+        acc[method].total += Number(o.total);
+      }
       return acc;
     }, {});
 
