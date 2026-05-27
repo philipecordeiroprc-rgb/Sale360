@@ -438,13 +438,6 @@ export default function ProductsPage() {
               </button>
             </div>
           </div>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            <Plus size={16} />
-            Novo
-          </button>
         </div>
       </div>
 
