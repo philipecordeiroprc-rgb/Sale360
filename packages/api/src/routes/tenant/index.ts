@@ -342,4 +342,106 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     });
     return devices;
   });
+
+  // ============================================================
+  // 2FA (Two-Factor Authentication)
+  // ============================================================
+
+  // Get 2FA status for current user
+  app.get('/me/2fa/status', async (request) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true },
+    });
+    return { enabled: user?.totpEnabled || false };
+  });
+
+  // Start 2FA setup — generate secret and QR code URI
+  app.post('/me/2fa/setup', async (request, reply) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true, email: true, name: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo. Desative primeiro.' });
+    }
+
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(user.email, 'Sale360', secret);
+
+    // Store secret temporarily (not yet enabled)
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: { totpSecret: secret },
+    });
+
+    return { secret, qrCodeUri: otpauth };
+  });
+
+  // Confirm 2FA setup — verify code and enable
+  app.post('/me/2fa/confirm', async (request, reply) => {
+    const schema = z.object({ code: z.string().length(6) });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Código inválido.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpSecret: true, totpEnabled: true },
+    });
+    if (!user?.totpSecret) {
+      return reply.status(400).send({ error: 'Inicie a configuração do 2FA primeiro.' });
+    }
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const isValid = authenticator.check(parsed.data.code, user.totpSecret);
+    if (!isValid) {
+      return reply.status(400).send({ error: 'Código inválido. Tente novamente.' });
+    }
+
+    // Generate 8 backup codes (6-digit random numbers, bcrypt hashed)
+    const backupCodes: string[] = [];
+    const backupHashes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      backupCodes.push(code);
+      backupHashes.push(await bcrypt.hash(code, 10));
+    }
+
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        totpEnabled: true,
+        totpBackupCodes: backupHashes,
+      },
+    });
+
+    return { backupCodes, message: '2FA ativado com sucesso. Guarde os códigos de backup.' };
+  });
+
+  // Disable 2FA
+  app.post('/me/2fa/disable', async (request, reply) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true },
+    });
+    if (!user?.totpEnabled) {
+      return reply.status(400).send({ error: '2FA não está ativo.' });
+    }
+
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        totpEnabled: false,
+        totpSecret: null,
+        totpBackupCodes: null,
+      },
+    });
+
+    return { message: '2FA desativado com sucesso.' };
+  });
 };
