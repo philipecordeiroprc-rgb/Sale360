@@ -234,7 +234,8 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
 
     // Calculate due date for credit_store
     let dueDate: Date | undefined;
-    if (data.paymentMethod === 'credit_store') {
+    const hasFiado = effectivePayments.some(p => p.paymentMethod === 'credit_store');
+    if (hasFiado) {
       const pmSettings = settings.paymentMethods.find((pm) => pm.paymentMethod === 'credit_store');
       const days = pmSettings?.dueDays || 30;
       dueDate = new Date();
@@ -243,6 +244,9 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
     if (data.dueDate) {
       dueDate = new Date(data.dueDate);
     }
+
+    // Primary method for legacy column
+    const primaryMethod = effectivePayments[0].paymentMethod;
 
     // Create order
     const order = await prisma.order.create({
