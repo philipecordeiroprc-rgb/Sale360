@@ -201,7 +201,7 @@ function UsuariosTab() {
     setSaving(true);
     try {
       if (editingId) {
-        await api.tenant.users.update(editingId, { role: form.role, pin: form.pin || undefined });
+        await api.tenant.users.update(editingId, { role: form.role });
         show('Usuario atualizado!');
       } else {
         await api.tenant.users.create({
@@ -209,7 +209,6 @@ function UsuariosTab() {
           name: form.name,
           password: form.password,
           role: form.role,
-          pin: form.pin || undefined,
         });
         show('Usuario adicionado!');
       }
