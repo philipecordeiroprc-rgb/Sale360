@@ -22,7 +22,7 @@ const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/purchases', label: 'Compras', icon: ShoppingBag, roles: ['OWNER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
   { href: '/indicadores', label: 'Indicadores', icon: BarChart3, roles: ['OWNER'] },
-  { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },
+  { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER', 'CASHIER'] },
 ];
 
 const cadastroItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
