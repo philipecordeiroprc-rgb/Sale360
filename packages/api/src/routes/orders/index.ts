@@ -376,6 +376,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       const o = await tx.order.create({
         data: {
           ...orderData,
+          paymentMethod: primaryMethod, // legacy: first payment method
           tenantId: request.tenantId,
           userId: request.userId,
           orderNumber,
@@ -385,8 +386,19 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           syncStatus: 'SYNCED',
           items: { create: itemsData },
         },
-        include: { items: true, customer: true },
+        include: { items: true, customer: true, payments: true },
       });
+
+      // Create OrderPayment records
+      for (const payment of effectivePayments) {
+        await tx.orderPayment.create({
+          data: {
+            orderId: o.id,
+            paymentMethod: payment.paymentMethod,
+            amount: payment.amount,
+          },
+        });
+      }
 
       // Update inventory movements with orderId
       await tx.inventoryMovement.updateMany({
@@ -410,16 +422,19 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         });
 
         // Fiado/credit: increment creditBalance and create LOAN transaction
-        if (orderData.paymentStatus === 'PENDING' || orderData.paymentStatus === 'CREDIT_STORE') {
+        if (isFiado) {
+          const fiadoAmount = effectivePayments
+            .filter(p => p.paymentMethod === 'credit_store')
+            .reduce((sum, p) => sum + p.amount, 0);
           const updatedCustomer = await tx.customer.update({
             where: { id: orderData.customerId },
-            data: { creditBalance: { increment: orderData.total } },
+            data: { creditBalance: { increment: fiadoAmount } },
           });
           await tx.creditTransaction.create({
             data: {
               customerId: orderData.customerId,
               type: 'LOAN',
-              amount: orderData.total,
+              amount: fiadoAmount,
               balanceAfter: updatedCustomer.creditBalance,
               referenceId: o.id,
               notes: `Venda fiado #${orderNumber}`,
