@@ -355,7 +355,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const jwt = await import('jsonwebtoken');
-      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+      const secret = getJwtSecret();
       const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
 
       const user = await prisma.user.findUnique({ where: { id: payload.userId } });
@@ -387,7 +387,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const jwt = await import('jsonwebtoken');
-      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+      const secret = getJwtSecret();
       const decoded = jwt.default.verify(parsed.data.refreshToken, secret) as { userId: string };
 
       const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
