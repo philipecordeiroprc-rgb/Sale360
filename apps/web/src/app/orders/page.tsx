@@ -983,25 +983,71 @@ export default function OrdersPage() {
           {/* ── Payment ── */}
           {cart.length > 0 && (
             <div className="bg-slate-800/50 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-3">Pagamento</h3>
+              <h3 className="text-sm font-semibold text-white mb-1">Pagamento</h3>
+              {(() => {
+                const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                const remaining = totalWithDiscount - paidSoFar;
+                return (
+                  <p className="text-xs text-slate-400 mb-3">
+                    Total: <span className="text-emerald-400 font-semibold">R$ {totalWithDiscount.toFixed(2)}</span>
+                    {paymentLines.length > 0 && (
+                      <> &middot; Faltam: <span className={remaining > 0.01 ? 'text-amber-400' : 'text-emerald-400'}>{remaining > 0.01 ? `R$ ${remaining.toFixed(2)}` : 'R$ 0,00'}</span></>
+                    )}
+                  </p>
+                );
+              })()}
               <div className="grid grid-cols-5 gap-2">
                 {PAYMENT_METHODS.map((pm) => {
                   const Icon = pm.icon;
-                  const isSelected = selectedPayment.id === pm.id;
+                  const handleClick = () => {
+                    const remaining = totalWithDiscount - paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                    if (remaining <= 0.01) return; // already fully paid
+                    // Add as new line with full remaining amount
+                    setPaymentLines(prev => [...prev, { methodId: pm.id, amount: remaining }]);
+                  };
                   return (
-                    <button key={pm.id} onClick={() => setSelectedPayment(pm)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
-                        isSelected
-                          ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                      }`}>
+                    <button key={pm.id} onClick={handleClick}
+                      className="flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">
                       <Icon size={20} />
                       <span className="text-xs font-medium">{pm.label}</span>
                     </button>
                   );
                 })}
               </div>
-              {selectedPayment.paymentStatus === 'PENDING' && (
+
+              {/* Payment lines */}
+              {paymentLines.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {paymentLines.map((pl, idx) => {
+                    const method = PAYMENT_METHODS.find(m => m.id === pl.methodId);
+                    const isFiadoLine = isFiado(pl.methodId);
+                    return (
+                      <div key={idx} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                        <span className={`w-2 h-2 rounded-full ${method?.color || 'bg-slate-500'}`} />
+                        <span className="text-sm text-white flex-1">{method?.label || pl.methodId}</span>
+                        <input
+                          type="number"
+                          value={pl.amount || ''}
+                          onChange={(e) => {
+                            setPaymentLines(prev => prev.map((l, i) => i === idx ? { ...l, amount: parseFloat(e.target.value) || 0 } : l));
+                          }}
+                          className="w-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-sm text-right focus:border-indigo-500 outline-none"
+                          placeholder="0,00"
+                          step="0.01"
+                        />
+                        <button
+                          onClick={() => setPaymentLines(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-slate-500 hover:text-red-400 p-1"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {paymentLines.some(pl => isFiado(pl.methodId)) && (
                 <div className="mt-3 space-y-3">
                   <div>
                     <label className="block text-slate-400 text-xs mb-1">Data de Vencimento</label>
