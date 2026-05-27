@@ -295,7 +295,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             }
           }
 
-          // Remaining: consume from oldest batches (FIFO)
+          // Remaining: consume FEFO (nearest expiry first, nulls last), then FIFO by receivedAt
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -303,7 +303,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               variationId: item.variationId || null,
               remainingQty: { gt: 0 },
             },
-            orderBy: { receivedAt: 'asc' },
+            orderBy: [
+              { expiryDate: { sort: 'asc', nulls: 'last' } },
+              { receivedAt: 'asc' },
+            ],
           });
 
           for (const batch of batches) {
