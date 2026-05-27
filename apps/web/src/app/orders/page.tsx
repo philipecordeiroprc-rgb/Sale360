@@ -17,34 +17,13 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import dynamic from 'next/dynamic';
 import { QuickAddSheet } from '@/components/products/QuickAddSheet';
-const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
-
-const PAYMENT_METHODS = [
-  { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
-  { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
-  { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
-  { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
-  { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
-];
-function paymentLabel(method: string | null | undefined): string {
-  const map: Record<string, string> = {
-    credit_store: 'Fiado',
-    cash: 'Dinheiro',
-    pix: 'Pix',
-    credit: 'Crédito',
-    debit: 'Débito',
-    Dinheiro: 'Dinheiro',
-    Pix: 'Pix',
-    Debito: 'Débito',
-    Credito: 'Crédito',
-    Fiado: 'Fiado',
-  };
-  return map[method || ''] || method || '—';
-}
-
-function isFiado(method: string | null | undefined): boolean {
-  return method === 'credit_store' || method === 'Fiado';
-}
+import {
+  PAYMENT_METHODS,
+  CONFIRM_PAYMENT_METHODS,
+  paymentLabel,
+  isFiado,
+  type PaymentLine,
+} from '@/lib/payment-constants';
 
 function getWhatsAppMessage(order: any): string {
   const customerName = order.customer?.name || order.customerName || 'Cliente';
