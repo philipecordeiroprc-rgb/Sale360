@@ -7,7 +7,7 @@ import {
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut,
   Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3, Shield,
-  ChevronDown, FolderOpen,
+  ChevronDown, FolderOpen, BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
