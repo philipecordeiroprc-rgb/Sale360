@@ -9,7 +9,6 @@ import { z } from 'zod';
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
-  pin: z.string().length(4).optional(),
   deviceId: z.string().optional(),
 });
 
