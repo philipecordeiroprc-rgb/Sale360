@@ -152,6 +152,9 @@ export default function LoginPage() {
     }
   };
 
+  // Store confirm-2fa response for finalize after showing backup codes
+  const [confirmData, setConfirmData] = useState<any>(null);
+
   const handleSetupConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -172,34 +175,21 @@ export default function LoginPage() {
         return;
       }
 
-      // Show backup codes before finalizing
-      if (data.backupCodes) {
-        setBackupCodes(data.backupCodes);
-        setShowBackupCodes(true);
-        // Store data temporarily for finalize
-        setLoading(false);
-        return;
-      }
-
-      finalizeLogin(data);
+      // Show backup codes, then finalize
+      setBackupCodes(data.backupCodes || []);
+      setConfirmData(data);
+      setShowBackupCodes(true);
+      setLoading(false);
     } catch {
       setError('Erro de conexão.');
       setLoading(false);
     }
   };
 
-  const finishSetup = () => {
-    // Re-call confirm to get final auth (codes already saved)
-    // Actually, we need to finalize with what we have
-    // Just redirect to password login so user logs in normally now
-    setShowTwoFactorSetup(false);
-    setShowBackupCodes(false);
-    setSetupToken('');
-    setSetupCode('');
-    setQrDataUrl('');
-    setBackupCodes([]);
-    setError('');
-    // User now has 2FA enabled, so they'll go through the normal 2FA flow
+  const finishSetupAndLogin = () => {
+    if (confirmData) {
+      finalizeLogin(confirmData);
+    }
   };
 
   const backToPassword = () => {
