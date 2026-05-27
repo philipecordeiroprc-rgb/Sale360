@@ -888,6 +888,7 @@ export default function SettingsPage() {
       {activeTab === 'taxas' && <TaxasTab />}
       {activeTab === 'usuarios' && <UsuariosTab />}
       {activeTab === 'catalogo' && <CatalogoTab />}
+      {activeTab === 'seguranca' && <SegurancaTab />}
       {activeTab === 'senha' && <MinhaSenhaTab />}
 
       {/* Toast */}
