@@ -161,14 +161,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
-  toggle: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  toggleText: {
-    color: '#6366F1',
-    fontSize: 14,
-  },
   version: {
     textAlign: 'center',
     color: '#475569',
