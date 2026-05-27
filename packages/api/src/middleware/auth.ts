@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@sale360/db';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-function getJwtSecret(): string {
+export function getJwtSecret(): string {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
   if (process.env.NODE_ENV === 'production') {
     throw new Error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente JWT_SECRET.');
