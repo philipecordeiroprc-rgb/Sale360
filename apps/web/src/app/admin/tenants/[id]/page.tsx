@@ -53,7 +53,7 @@ export default function TenantDetailPage() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
+  const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER' });
   const [userSaving, setUserSaving] = useState(false);
   const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
 
