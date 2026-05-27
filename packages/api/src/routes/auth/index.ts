@@ -25,17 +25,50 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      // Use same error to prevent email enumeration
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
+    }
+
+    // Check account lockout
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const minutesLeft = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      return reply.status(423).send({
+        error: `Conta bloqueada temporariamente. Tente novamente em ${minutesLeft} minuto(s).`,
+        lockedUntil: user.lockedUntil,
+      });
     }
 
     // Verify password
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const LOCK_THRESHOLD = 5;
+      const LOCK_DURATION_MINUTES = 15;
+
+      if (attempts >= LOCK_THRESHOLD) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            loginAttempts: attempts,
+            lockedUntil: new Date(Date.now() + LOCK_DURATION_MINUTES * 60 * 1000),
+          },
+        });
+      } else {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { loginAttempts: attempts },
+        });
+      }
+
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
     }
 
-    // Check if user must change password
+    // Successful login — reset lockout counters
     const mustChangePassword = user.forcePasswordChange === true;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { loginAttempts: 0, lockedUntil: null },
+    });
 
     // SUPER_ADMIN login — also load linked stores for hybrid access
     if (user.role === 'SUPER_ADMIN') {
