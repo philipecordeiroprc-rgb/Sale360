@@ -279,6 +279,17 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       },
     });
 
+    // Create OrderPayment records
+    for (const payment of effectivePayments) {
+      await prisma.orderPayment.create({
+        data: {
+          orderId: order.id,
+          paymentMethod: payment.paymentMethod,
+          amount: payment.amount,
+        },
+      });
+    }
+
     // Increment coupon usage
     if (couponId) {
       await prisma.coupon.update({
