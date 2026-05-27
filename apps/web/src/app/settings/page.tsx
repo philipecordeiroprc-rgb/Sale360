@@ -463,6 +463,277 @@ function UsuariosTab() {
 }
 
 // ============================================================
+// Seguranca Tab (2FA)
+// ============================================================
+
+function SegurancaTab() {
+  const [enabled, setEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState<'idle' | 'qr' | 'verify' | 'backup'>('idle');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [secret, setSecret] = useState('');
+  const [verifyCode, setVerifyCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [actionLoading, setActionLoading] = useState(false);
+  const { toast, show } = useToast();
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  const loadStatus = async () => {
+    setLoading(true);
+    try {
+      const status = await api.tenant.me.twoFactorStatus();
+      setEnabled(status.enabled);
+    } catch {
+      // defaults to disabled
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetup = async () => {
+    setActionLoading(true);
+    try {
+      const data = await api.tenant.me.twoFactorSetup();
+      const dataUrl = await QRCodeLib.toDataURL(data.qrCodeUri, { width: 200, margin: 2 });
+      setQrDataUrl(dataUrl);
+      setSecret(data.secret);
+      setStep('qr');
+    } catch (err: any) {
+      show(err.message || 'Erro ao iniciar configuração', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (verifyCode.length !== 6) return;
+    setActionLoading(true);
+    try {
+      const data = await api.tenant.me.twoFactorConfirm(verifyCode);
+      setBackupCodes(data.backupCodes);
+      setEnabled(true);
+      setStep('backup');
+    } catch (err: any) {
+      show(err.message || 'Código inválido', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDisable = async () => {
+    if (!confirm('Tem certeza que deseja desativar a autenticação em 2 etapas? Isso reduz a segurança da sua conta.')) return;
+    setActionLoading(true);
+    try {
+      await api.tenant.me.twoFactorDisable();
+      setEnabled(false);
+      setStep('idle');
+      show('2FA desativado com sucesso!');
+    } catch (err: any) {
+      show(err.message || 'Erro ao desativar', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const copyBackupCodes = () => {
+    navigator.clipboard.writeText(backupCodes.join('\n'));
+    show('Códigos copiados!');
+  };
+
+  const cancelSetup = () => {
+    setStep('idle');
+    setQrDataUrl('');
+    setSecret('');
+    setVerifyCode('');
+    setBackupCodes([]);
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 flex justify-center">
+        <Loader2 size={24} className="animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Status Card */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden max-w-lg">
+        <div className="p-5 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <Shield size={20} className="text-indigo-400" />
+            </div>
+            <div>
+              <h2 className="text-white font-semibold">Autenticação em 2 Etapas</h2>
+              <p className="text-slate-400 text-xs mt-0.5">
+                Adicione uma camada extra de segurança com Google Authenticator
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5">
+          {!enabled ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-red-400 flex-shrink-0" />
+                <div>
+                  <p className="text-white text-sm font-medium">2FA Desativado</p>
+                  <p className="text-slate-400 text-xs mt-0.5">
+                    Sua conta está protegida apenas por email e senha.
+                  </p>
+                </div>
+              </div>
+
+              {step === 'idle' && (
+                <button
+                  onClick={handleSetup}
+                  disabled={actionLoading}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                  Ativar 2FA
+                </button>
+              )}
+
+              {/* QR Code Step */}
+              {step === 'qr' && (
+                <div className="space-y-4 pt-2">
+                  <div className="bg-slate-800/50 rounded-xl p-4">
+                    <p className="text-slate-300 text-sm mb-3">
+                      1. Abra o Google Authenticator e escaneie o QR code:
+                    </p>
+                    <div className="flex justify-center">
+                      <img
+                        src={qrDataUrl}
+                        alt="QR Code 2FA"
+                        className="w-48 h-48 rounded-xl bg-white p-2"
+                      />
+                    </div>
+                    <p className="text-slate-500 text-xs mt-3 text-center">
+                      Ou use a chave manual: <code className="text-indigo-400 break-all">{secret}</code>
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleVerify} className="space-y-3">
+                    <div>
+                      <label className="block text-slate-400 text-sm mb-1">
+                        2. Digite o código de 6 dígitos do aplicativo:
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        value={verifyCode}
+                        onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        maxLength={6}
+                        placeholder="000000"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                        required
+                        autoFocus
+                      />
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        disabled={actionLoading || verifyCode.length !== 6}
+                        className="flex-1 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors"
+                      >
+                        {actionLoading ? 'Verificando...' : 'Verificar'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelSetup}
+                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-sm transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0" />
+                <div>
+                  <p className="text-white text-sm font-medium">2FA Ativo</p>
+                  <p className="text-slate-400 text-xs mt-0.5">
+                    Sua conta está protegida com autenticação em 2 etapas.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={handleDisable}
+                disabled={actionLoading}
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl text-sm font-medium transition-colors"
+              >
+                {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                Desativar 2FA
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Backup Codes (shown after enabling) */}
+      {step === 'backup' && backupCodes.length > 0 && (
+        <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl overflow-hidden max-w-lg">
+          <div className="p-5 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                <QrCode size={20} className="text-emerald-400" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold">Códigos de Backup</h2>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  Guarde estes códigos em um local seguro. Cada código pode ser usado uma vez.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-4 gap-2">
+              {backupCodes.map((code, i) => (
+                <div
+                  key={i}
+                  className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-center text-white font-mono text-sm"
+                >
+                  {code}
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={copyBackupCodes}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              <Copy size={14} />
+              Copiar Todos
+            </button>
+
+            <p className="text-slate-500 text-xs">
+              Se você perder o acesso ao autenticador, poderá usar um desses códigos para fazer login.
+              Cada código só funciona uma vez.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // Minha Senha Tab
 // ============================================================
 
