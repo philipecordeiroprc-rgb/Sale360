@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store, Copy } from 'lucide-react';
+import { Percent, Save, Loader2, AlertCircle, RefreshCw, Users, Key, Plus, X, Trash2, Store, Copy, Shield, QrCode } from 'lucide-react';
+import QRCodeLib from 'qrcode';
 import { CatalogoTab } from './CatalogoTab';
 import api from '@/lib/api';
 import { useAuth } from '@/lib/auth';
