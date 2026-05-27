@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Edit2, Check, X, Upload, Package } from 'lucide-react';
+import { Plus, Trash2, Edit2, Check, X, Upload, Package, ChevronDown } from 'lucide-react';
 import { ImportModal } from '@/components/ui/ImportModal';
 import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import api, { type CategoryWithCount, type VariationTemplate } from '@/lib/api';
