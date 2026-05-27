@@ -2,7 +2,14 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@sale360/db';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-const JWT_SECRET = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('JWT_SECRET é obrigatório em produção'); })() : 'sale360-dev-secret-change-in-production');
+function getJwtSecret(): string {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente JWT_SECRET.');
+  }
+  return 'sale360-dev-secret-change-in-production';
+}
+const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'; // 7 days for offline support
 
 export interface JwtPayload {
