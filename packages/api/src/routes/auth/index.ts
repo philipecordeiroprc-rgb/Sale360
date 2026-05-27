@@ -34,6 +34,9 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
     }
 
+    // Check if user must change password
+    const mustChangePassword = user.forcePasswordChange === true;
+
     // SUPER_ADMIN login — also load linked stores for hybrid access
     if (user.role === 'SUPER_ADMIN') {
       const token = generateToken({
