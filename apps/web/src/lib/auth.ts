@@ -17,7 +17,6 @@ interface Tenant {
   plan: string;
   status: string;
   role?: string;
-  pin?: string | null;
 }
 
 interface AuthState {
