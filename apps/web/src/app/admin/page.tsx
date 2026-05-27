@@ -354,6 +354,17 @@ function AdminsTab() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  const disable2FA = async (userId: string, userName: string) => {
+    if (!confirm(`Desativar autenticação em 2 etapas para ${userName}?`)) return;
+    try {
+      await api.admin.users.disable2FA(userId);
+      showMsg('2FA desativado com sucesso!', 'success');
+      fetchUsers();
+    } catch (err: any) {
+      showMsg(err.message, 'error');
+    }
+  };
+
   const toggleRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === 'SUPER_ADMIN' ? 'USER' : 'SUPER_ADMIN';
     const label = newRole === 'SUPER_ADMIN' ? 'promover a' : 'remover de';
