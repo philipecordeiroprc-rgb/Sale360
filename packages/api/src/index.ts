@@ -70,15 +70,13 @@ async function buildApp() {
   });
 
   // Plugins
-  const ALLOWED_ORIGINS = process.env.CORS_ORIGINS?.split(',') || [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:8081',
-  ];
+  const isProduction = process.env.NODE_ENV === 'production';
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
+
   await app.register(cors, {
-    origin: process.env.NODE_ENV === 'production'
-      ? ALLOWED_ORIGINS
-      : true,
+    // Se CORS_ORIGINS estiver definido (recomendado em prod), usa whitelist.
+    // Caso contrário, permite todas origens (dev ou prod sem config).
+    origin: (corsOrigins && corsOrigins.length > 0) ? corsOrigins : true,
     credentials: true,
   });
   await app.register(rateLimit, {
