@@ -235,8 +235,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const jwt = await import('jsonwebtoken');
-      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
-      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string; role?: string };
+      const payload = jwt.default.verify(authHeader.slice(7), getJwtSecret()) as { userId: string; role?: string };
 
       // SUPER_ADMIN switching to admin mode
       if (payload.role === 'SUPER_ADMIN' && parsed.data.tenantId === '__admin__') {
