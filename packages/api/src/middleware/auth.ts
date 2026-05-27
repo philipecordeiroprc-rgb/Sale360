@@ -135,3 +135,18 @@ export function verifyTwoFactorToken(token: string): { userId: string; email: st
     return null;
   }
 }
+
+// Short-lived token for forced 2FA setup (10 min expiry — user needs time to scan QR)
+export function generateSetupToken(payload: { userId: string; email: string }): string {
+  return jwt.sign({ ...payload, type: 'setup-2fa' }, JWT_SECRET, { expiresIn: '10m' } as any);
+}
+
+export function verifySetupToken(token: string): { userId: string; email: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (payload.type !== 'setup-2fa') return null;
+    return { userId: payload.userId, email: payload.email };
+  } catch {
+    return null;
+  }
+}
