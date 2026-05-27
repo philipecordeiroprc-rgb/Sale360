@@ -164,10 +164,22 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Esta loja não está aceitando pedidos online no momento.' });
     }
 
-    // Validate payment method is enabled
-    const pmEnabled = settings.paymentMethods.some((pm) => pm.paymentMethod === data.paymentMethod);
-    if (!pmEnabled) {
-      return reply.status(400).send({ error: 'Método de pagamento não disponível.' });
+    // Build effective payments (multi or legacy single)
+    let effectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (data.payments && data.payments.length > 0) {
+      effectivePayments = data.payments;
+    } else if (data.paymentMethod) {
+      effectivePayments = [{ paymentMethod: data.paymentMethod, amount: data.total }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório.' });
+    }
+
+    // Validate all payment methods are enabled
+    for (const p of effectivePayments) {
+      const pmEnabled = settings.paymentMethods.some((pm) => pm.paymentMethod === p.paymentMethod);
+      if (!pmEnabled) {
+        return reply.status(400).send({ error: `Método de pagamento "${p.paymentMethod}" não disponível.` });
+      }
     }
 
     // Find or create customer (by phone if provided)
