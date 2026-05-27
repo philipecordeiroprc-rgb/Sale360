@@ -138,7 +138,6 @@ export default function TenantDetailPage() {
       name: tu.user?.name || '',
       password: '',
       role: tu.role || 'CASHIER',
-      pin: tu.pin || '',
     });
     setShowUserModal(true);
   };
