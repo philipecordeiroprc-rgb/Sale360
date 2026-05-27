@@ -66,6 +66,8 @@ model User {
   avatarUrl            String?
   role                 PlatformRole @default(USER)
   forcePasswordChange  Boolean      @default(false)
+  loginAttempts        Int          @default(0)
+  lockedUntil          DateTime?
   createdAt            DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
