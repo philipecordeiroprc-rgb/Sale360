@@ -63,9 +63,7 @@ export function LoginScreen() {
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.title}>
-          {mode === 'pin' ? 'Login Rápido' : 'Entrar'}
-        </Text>
+        <Text style={styles.title}>Entrar</Text>
 
         <TextInput
           style={styles.input}
@@ -79,13 +77,11 @@ export function LoginScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder={mode === 'pin' ? 'PIN (4 dígitos)' : 'Senha'}
+          placeholder="Senha"
           placeholderTextColor="#64748B"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          maxLength={mode === 'pin' ? 4 : undefined}
-          keyboardType={mode === 'pin' ? 'number-pad' : 'default'}
         />
 
         <TouchableOpacity
@@ -98,15 +94,6 @@ export function LoginScreen() {
           ) : (
             <Text style={styles.buttonText}>Entrar</Text>
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.toggle}
-          onPress={() => setMode(mode === 'pin' ? 'password' : 'pin')}
-        >
-          <Text style={styles.toggleText}>
-            {mode === 'pin' ? 'Usar senha' : 'Usar PIN rápido'}
-          </Text>
         </TouchableOpacity>
       </View>
 
