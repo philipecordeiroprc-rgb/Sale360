@@ -582,6 +582,23 @@ model OrderItem {
 }
 
 // ============================================================
+// ORDER PAYMENTS (split payment per order)
+// ============================================================
+
+model OrderPayment {
+  id            String   @id @default(cuid())
+  orderId       String
+  paymentMethod String   // "cash" | "pix" | "debit" | "credit" | "credit_store"
+  amount        Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_payments")
+}
+
+// ============================================================
 // DELIVERY
 // ============================================================
 
