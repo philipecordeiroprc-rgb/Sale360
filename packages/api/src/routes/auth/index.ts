@@ -56,7 +56,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         plan: tu.tenant.plan,
         status: tu.tenant.status,
         role: tu.role,
-        pin: tu.pin,
       }));
 
       return {
