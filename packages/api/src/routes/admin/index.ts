@@ -443,4 +443,25 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     return { users, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
   });
+
+  // Disable 2FA for any user (SUPER_ADMIN only)
+  app.post('/users/:userId/2fa/disable', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, totpEnabled: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (!user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA não está ativo para este usuário.' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totpEnabled: false, totpSecret: null, totpBackupCodes: null },
+    });
+
+    return { message: '2FA desativado com sucesso.' };
+  });
 };
