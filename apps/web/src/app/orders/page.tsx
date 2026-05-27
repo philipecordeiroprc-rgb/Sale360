@@ -393,9 +393,12 @@ export default function OrdersPage() {
       total: totalWithDiscount,
       couponId: couponData?.couponId || undefined,
       couponDiscount: couponDiscount || undefined,
-      paymentMethod: selectedPayment.id,
-      paymentStatus: selectedPayment.paymentStatus || 'PAID',
-      dueDate: selectedPayment.paymentStatus === 'PENDING' && dueDate ? dueDate : undefined,
+      payments: paymentLines.map(pl => ({
+        paymentMethod: pl.methodId,
+        amount: pl.amount,
+      })),
+      paymentStatus: paymentLines.some(pl => isFiado(pl.methodId)) ? 'PENDING' : 'PAID',
+      dueDate: paymentLines.some(pl => isFiado(pl.methodId)) && dueDate ? dueDate : undefined,
       localId,
     };
 
