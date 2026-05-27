@@ -150,7 +150,6 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       name: z.string().min(1, 'Nome é obrigatório'),
       password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
-      pin: z.string().length(4).optional(),
     });
 
     const parsed = schema.safeParse(request.body);
