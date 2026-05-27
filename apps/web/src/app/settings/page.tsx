@@ -370,7 +370,7 @@ function UsuariosTab() {
                       onChange={(e) => setForm({ ...form, password: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                       required
-                      minLength={6}
+                      minLength={8}
                     />
                   </div>
                 </>
@@ -531,7 +531,7 @@ function MinhaSenhaTab() {
             onChange={(e) => setNewPassword(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             required
-            minLength={6}
+            minLength={8}
           />
         </div>
         <div>
