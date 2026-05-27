@@ -563,15 +563,6 @@ export default function ProductsPage() {
               ? 'Tente ajustar os filtros de busca.'
               : 'Comece cadastrando seu primeiro produto.'}
           </p>
-          {!search && selectedCategory === 'all' && !variationName && (
-            <button
-              onClick={handleCreate}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors mx-auto"
-            >
-              <Plus size={20} />
-              Novo Produto
-            </button>
-          )}
         </div>
       )}
 
