@@ -703,7 +703,14 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center hidden md:table-cell">
                       <div className="flex items-center justify-center gap-1">
-                        {o.paidWithMethod ? (
+                        {o.payments && o.payments.length > 0 ? (
+                          o.payments.map((p: any, idx: number) => (
+                            <span key={idx} className="flex items-center gap-0.5">
+                              {idx > 0 && <span className="text-slate-600 text-[10px]">+</span>}
+                              <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(p.paymentMethod)}</span>
+                            </span>
+                          ))
+                        ) : o.paidWithMethod ? (
                           <>
                             <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paidWithMethod)}</span>
                             <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
