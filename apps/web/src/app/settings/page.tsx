@@ -282,7 +282,6 @@ function UsuariosTab() {
                 <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Nome</th>
                 <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Email</th>
                 <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Funcao</th>
-                <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">PIN</th>
                 <th className="text-right px-6 py-4 text-sm font-medium text-slate-400">Acoes</th>
               </tr>
             </thead>
