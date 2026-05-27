@@ -38,6 +38,12 @@ export default function LoginPage() {
         tenants: data.tenants,
       });
 
+      // Force password change if required
+      if (data.mustChangePassword) {
+        router.push('/change-password');
+        return;
+      }
+
       // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
       if (data.tenants && data.tenants.length > 1) {
         router.push('/select-store');
