@@ -22,7 +22,7 @@ function ResetPasswordForm() {
     setError('');
 
     if (password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.');
+      setError('A senha deve ter no mínimo 8 caracteres.');
       return;
     }
     if (password !== confirm) {
@@ -100,7 +100,7 @@ function ResetPasswordForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 6 caracteres"
+            placeholder="Mínimo 8 caracteres"
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             required
           />
