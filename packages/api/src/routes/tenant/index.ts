@@ -246,7 +246,10 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, forcePasswordChange: true },
+    });
 
     return { message: 'Senha redefinida com sucesso.' };
   });
