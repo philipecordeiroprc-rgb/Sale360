@@ -338,6 +338,32 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
+  // Force password change (when admin reset password)
+  app.post('/force-change-password', async (request, reply) => {
+    const schema = z.object({
+      newPassword: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: request.userId } });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+    if (!user.forcePasswordChange) {
+      return reply.status(400).send({ error: 'Troca de senha não é necessária.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, forcePasswordChange: false },
+    });
+
+    return { message: 'Senha alterada com sucesso.' };
+  });
+
   // Refresh token
   app.post('/refresh', async (request, reply) => {
     const schema = z.object({ refreshToken: z.string() });
