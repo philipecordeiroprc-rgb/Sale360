@@ -151,7 +151,6 @@ export default function TenantDetailPage() {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role,
-          pin: userForm.pin || undefined,
         });
       } else {
         await api.admin.tenants.users.add(id, {
@@ -159,7 +158,6 @@ export default function TenantDetailPage() {
           name: userForm.name,
           password: userForm.password,
           role: userForm.role,
-          pin: userForm.pin || undefined,
         });
       }
 
