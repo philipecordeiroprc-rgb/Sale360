@@ -252,11 +252,98 @@
 
 <div class="note" style="margin-bottom:24px">
   <strong>Objetivo:</strong> Criar um produto e dar entrada no estoque em um único fluxo.<br>
-  <strong>Módulos envolvidos:</strong> Fornecedores → Categorias → Produtos → Compras → Estoque<br>
-  <strong>Tempo estimado:</strong> 2-3 minutos por produto
+  <strong>Ordem correta:</strong> 1º Fornecedores → 2º Categorias → 3º Produto (via assistente)<br>
+  <strong>Tempo estimado:</strong> 8-12 minutos (primeira vez com cadastros prévios), 2-3 minutos (produtos seguintes)
 </div>
 
-<p>O cadastro de produtos usa o <strong>Assistente de Novo Produto</strong> — um fluxo de 3 etapas em uma única tela que cria o fornecedor (se necessário), o produto, a compra e já dá entrada no estoque automaticamente.</p>
+<p>Antes de cadastrar produtos, você precisa ter <strong>Fornecedores</strong> e <strong>Categorias</strong> configurados. Siga os passos abaixo na ordem — cada etapa depende da anterior.</p>
+
+<!-- ─────────────────────────────────────────────────────────────────────────── -->
+<h2>Pré-requisito 1 — Cadastrar Fornecedores</h2>
+<p>O fornecedor registra a origem da mercadoria e é obrigatório para toda entrada de estoque.</p>
+
+<div class="step">
+  <div class="num">1</div>
+  <div class="body">
+    <strong>Acesse o menu Fornecedores</strong>
+    No menu lateral, clique em <strong>"Fornecedores"</strong> (ícone de caminhão).
+  </div>
+</div>
+<div class="step">
+  <div class="num">2</div>
+  <div class="body">
+    <strong>Clique em "Novo Fornecedor"</strong>
+    O modal de cadastro será aberto.
+  </div>
+</div>
+<div class="step">
+  <div class="num">3</div>
+  <div class="body">
+    <strong>Preencha os dados</strong>
+    Informe ao menos o <strong>Nome</strong> (obrigatório). CNPJ, telefone, e-mail e endereço são opcionais mas recomendados. Deixe <strong>Ativo = Sim</strong>.
+  </div>
+</div>
+<div class="step">
+  <div class="num">4</div>
+  <div class="body">
+    <strong>Salve</strong>
+    Clique em <strong>"Salvar"</strong>. Repita para cada fornecedor que você trabalha.
+  </div>
+</div>
+
+<div class="tip">
+  <strong>Dica:</strong> Cadastre todos os seus fornecedores de uma vez. Isso agiliza o cadastro de produtos depois, pois você só precisa selecioná-los no dropdown do assistente.
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────────── -->
+<h2>Pré-requisito 2 — Cadastrar Categorias</h2>
+<p>Categorias organizam seus produtos e, quando vinculadas a um <strong>Template de Variação</strong>, habilitam o controle de variações (tamanho, cor, volume, etc.) automaticamente no cadastro do produto.</p>
+
+<div class="step">
+  <div class="num">1</div>
+  <div class="body">
+    <strong>Acesse o menu Categorias</strong>
+    No menu lateral, clique em <strong>"Categorias"</strong> (ícone de etiqueta).
+  </div>
+</div>
+<div class="step">
+  <div class="num">2</div>
+  <div class="body">
+    <strong>Crie uma nova categoria</strong>
+    Digite o <strong>Nome da Categoria</strong> (ex: "Camisetas", "Calçados", "Bebidas").
+  </div>
+</div>
+<div class="step">
+  <div class="num">3</div>
+  <div class="body">
+    <strong>Escolha o Template de Variação (se aplicável)</strong>
+    Se os produtos dessa categoria têm variações, selecione o template correspondente:
+    <ul style="margin-top:6px">
+      <li><strong>Vestuário Adulto</strong> — Tamanho (Letra), Tamanho (Número), Cor</li>
+      <li><strong>Vestuário Infantil</strong> — Tamanho (Idade), Cor</li>
+      <li><strong>Calçados</strong> — Tamanho (Número), Cor</li>
+      <li><strong>Volume (Líquidos)</strong> — Volume (ml), Sabor/Aroma</li>
+      <li><strong>Peso (Granel/Alimentos)</strong> — Peso (g/kg), Sabor/Variedade</li>
+      <li><strong>Unidades (Geral)</strong> — Tamanho/Modelo, Cor/Estilo</li>
+    </ul>
+    Deixe "Sem template" se a categoria não tem variações (ex: "Acessórios", "Serviços").
+  </div>
+</div>
+<div class="step">
+  <div class="num">4</div>
+  <div class="body">
+    <strong>Clique em "Adicionar"</strong>
+    Repita o processo para cada categoria que você precisa. A legenda de cada template aparece ao selecioná-lo no dropdown.
+  </div>
+</div>
+
+<div class="warn">
+  <strong>Importante:</strong> O template de variação define quais combinações estarão disponíveis no cadastro do produto. Uma categoria sem template terá cadastro simplificado (sem variações). Escolha com atenção — o template pode ser alterado depois na edição da categoria.
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────────── -->
+<h2>Agora sim — Assistente de Novo Produto</h2>
+<p>Com fornecedores e categorias prontos, o cadastro de produtos usa o <strong>Assistente de Novo Produto</strong> — um fluxo de 3 etapas em uma única tela que cria o produto, a compra e já dá entrada no estoque automaticamente.</p>
 
 <div class="flow-arrow">
   <span class="step-badge">1. Fornecedor</span>
@@ -266,105 +353,106 @@
   <span class="step-badge">3. Custos</span>
 </div>
 
-<h2>Etapa 1 — Fornecedor</h2>
+<h3>Etapa 1 — Fornecedor</h3>
 <div class="step">
   <div class="num">1</div>
   <div class="body">
     <strong>Abra o assistente</strong>
-    No menu lateral, clique em <strong>"Compras"</strong> e depois no botão <strong>"Novo Produto"</strong>. O assistente será aberto.
+    No menu lateral, clique em <strong>"Compras"</strong> e depois no botão <strong>"Novo Produto"</strong>.
   </div>
 </div>
 <div class="step">
   <div class="num">2</div>
   <div class="body">
-    <strong>Selecione um fornecedor existente</strong>
-    Escolha no dropdown de fornecedores ativos. Se ainda não tem fornecedor cadastrado, marque a opção <strong>"Novo fornecedor"</strong> e digite o nome.
+    <strong>Selecione o fornecedor</strong>
+    Escolha no dropdown um dos fornecedores que você cadastrou. Se precisar de um fornecedor que ainda não está cadastrado, marque <strong>"Novo fornecedor"</strong> e digite o nome ali mesmo.
   </div>
 </div>
 <div class="step">
   <div class="num">3</div>
   <div class="body">
-    <strong>Avance para a etapa 2</strong>
-    Clique no botão da etapa <strong>"Produto"</strong> para expandi-la.
+    <strong>Avance</strong>
+    Clique na etapa <strong>"Produto"</strong> para expandi-la.
   </div>
 </div>
 
-<h2>Etapa 2 — Produto</h2>
+<h3>Etapa 2 — Produto</h3>
 <div class="step">
   <div class="num">1</div>
   <div class="body">
-    <strong>Preencha os dados do produto</strong>
-    Informe o <strong>Nome do Produto</strong> (obrigatório). Opcionalmente, preencha: Categoria, SKU (código interno), Código de Barras (pode escanear com a câmera), Descrição, Preço de Venda e Estoque Mínimo.
+    <strong>Preencha os dados básicos</strong>
+    Informe o <strong>Nome do Produto</strong> (obrigatório). Opcionalmente: SKU, Código de Barras (escaneável pela câmera), Descrição e Estoque Mínimo.
   </div>
 </div>
 <div class="step">
   <div class="num">2</div>
   <div class="body">
-    <strong>Escolha a Categoria (importante para variações)</strong>
-    Se a categoria tiver um <strong>Template de Variação</strong> associado, o sistema mostrará o construtor de variações. Por exemplo, a categoria "Camisetas" com template "Vestuário Adulto" permite criar variações por Tamanho (P/M/G), Cor (Azul/Preto/Branco), etc.
+    <strong>Selecione a Categoria</strong>
+    Escolha uma das categorias que você cadastrou. Se a categoria tiver um <strong>Template de Variação</strong>, o construtor de variações aparece automaticamente com as dimensões configuradas (ex: Tamanho + Cor para Vestuário Adulto).
   </div>
 </div>
 <div class="step">
   <div class="num">3</div>
   <div class="body">
-    <strong>Monte as variações (se aplicável)</strong>
-    Para cada dimensão do template, selecione uma opção nos dropdowns ou digite um valor personalizado. Informe a quantidade, clique em <strong>"+"</strong> para adicionar a combinação. Repita para todas as combinações que receberão estoque.
+    <strong>Monte as variações (se houver template)</strong>
+    Selecione as opções em cada dimensão (ou digite "Outro..." para valores personalizados), informe a quantidade e clique em <strong>"+"</strong>. Repita para cada combinação que vai receber estoque. O sistema mostra o total de variações e quantidade geral.
   </div>
 </div>
 <div class="step">
   <div class="num">4</div>
   <div class="body">
-    <strong>Envie uma foto do produto</strong>
-    Use o botão de upload para enviar uma imagem. A imagem é comprimida automaticamente para otimizar o carregamento no catálogo.
+    <strong>Envie uma foto (recomendado)</strong>
+    Use o upload de imagem. A foto é comprimida automaticamente e aparece no catálogo online.
   </div>
 </div>
 <div class="step">
   <div class="num">5</div>
   <div class="body">
-    <strong>Avance para a etapa 3</strong>
-    Clique em <strong>"Custos e Variações"</strong>.
+    <strong>Informe o Preço de Venda (opcional aqui)</strong>
+    Você pode definir o preço agora ou usar a calculadora na etapa 3 para calculá-lo com base nos custos.
   </div>
 </div>
 
-<h2>Etapa 3 — Custos e Entrada no Estoque</h2>
+<h3>Etapa 3 — Custos e Entrada no Estoque</h3>
 <div class="step">
   <div class="num">1</div>
   <div class="body">
     <strong>Use a Calculadora de Preços</strong>
-    Preencha: <strong>Custo Unitário (R$)</strong> — obrigatório —, Custo Operacional (R$), Taxa (%), Margem desejada (%). O <strong>Preço de Venda</strong> é calculado automaticamente. Você também pode digitar o preço diretamente e a margem será recalculada.
+    Preencha: <strong>Custo Unitário (R$)</strong> — obrigatório —, Custo Operacional (frete, embalagem), Taxa % (da forma de pagamento) e Margem % desejada. O <strong>Preço de Venda</strong> é calculado automaticamente. Você também pode digitar o preço diretamente e ver a margem resultante.
   </div>
 </div>
 
 <div class="tip">
-  <strong>Como a margem é calculada:</strong> Preço de Venda = (Custo + Custo Operacional) ÷ (1 − Taxa/100 − Margem/100). O resumo mostra Margem (%), Markup (multiplicador) e Lucro estimado (R$) por unidade.
+  <strong>Entenda os números:</strong> O resumo mostra Margem (%), Markup (multiplicador sobre o custo), Custo Total (com taxa) e Lucro Estimado (R$) por unidade. Use isso para garantir que seu preço cobre todos os custos.
 </div>
 
 <div class="step">
   <div class="num">2</div>
   <div class="body">
-    <strong>Informe as quantidades compradas</strong>
-    Para produtos <strong>com variações</strong>: ajuste a quantidade de cada variação e, opcionalmente, informe a data de validade de cada uma. Para produtos <strong>sem variações</strong>: informe a quantidade comprada e a data de validade (opcional).
+    <strong>Defina as quantidades compradas</strong>
+    <strong>Com variações:</strong> ajuste a quantidade de cada variação e, se quiser controle de validade, informe a data para cada uma.<br>
+    <strong>Sem variações:</strong> informe a quantidade comprada e a data de validade (opcional, mas recomendada para produtos perecíveis).
   </div>
 </div>
 <div class="step">
   <div class="num">3</div>
   <div class="body">
-    <strong>Desconto na compra</strong>
-    Se o fornecedor deu algum desconto no total da compra, informe o valor em reais.
+    <strong>Informe desconto na compra (se houver)</strong>
+    Se o fornecedor deu desconto no total, informe o valor em R$.
   </div>
 </div>
 <div class="step">
   <div class="num">4</div>
   <div class="body">
-    <strong>Finalize</strong>
-    Clique em <strong>"Finalizar Cadastro"</strong>. O sistema irá, em sequência automática:
+    <strong>Finalize o cadastro</strong>
+    Clique em <strong>"Finalizar Cadastro"</strong>. O sistema executa em sequência automática:
     <ul style="margin-top:4px">
-      <li>Criar o fornecedor (se for novo)</li>
-      <li>Criar o produto com todas as características</li>
-      <li>Criar as variações (se houver)</li>
-      <li>Registrar a compra</li>
-      <li><strong>Dar entrada no estoque automaticamente</strong> com as datas de validade informadas</li>
+      <li>Cria o fornecedor (se for novo)</li>
+      <li>Cria o produto com foto, categoria e variações</li>
+      <li>Registra a compra com os custos informados</li>
+      <li><strong>Dá entrada no estoque automaticamente</strong> com as datas de validade (FEFO)</li>
     </ul>
+    Pronto! Produto disponível para venda no PDV e no catálogo online.
   </div>
 </div>
 
