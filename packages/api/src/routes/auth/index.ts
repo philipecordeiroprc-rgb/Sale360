@@ -104,6 +104,20 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       data: { loginAttempts: 0, lockedUntil: null },
     });
 
+    // Check if 2FA is required
+    if (user.totpEnabled && user.totpSecret) {
+      if (mustChangePassword) {
+        // If user must also change password, let them do that first
+        // Force-change-password endpoint handles this case
+      }
+      const twoFactorToken = generateTwoFactorToken({ userId: user.id, email: user.email });
+      return reply.status(200).send({
+        requireTwoFactor: true,
+        twoFactorToken,
+        mustChangePassword,
+      });
+    }
+
     // SUPER_ADMIN login — also load linked stores for hybrid access
     if (user.role === 'SUPER_ADMIN') {
       const token = generateToken({
