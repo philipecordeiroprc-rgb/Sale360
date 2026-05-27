@@ -217,7 +217,146 @@ export default function LoginPage() {
 
         {/* Form Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          {!showTwoFactor ? (
+          {showTwoFactorSetup ? (
+            showBackupCodes ? (
+              <>
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Shield size={24} className="text-green-400" />
+                  </div>
+                </div>
+                <h2 className="text-lg font-bold text-white text-center mb-2">2FA Configurado!</h2>
+                <p className="text-slate-400 text-sm text-center mb-4">
+                  Guarde estes códigos de backup. Cada um pode ser usado uma vez.
+                </p>
+                <div className="bg-slate-950 rounded-xl p-3 mb-4 grid grid-cols-2 gap-2">
+                  {backupCodes.map((code, i) => (
+                    <code key={i} className="text-indigo-400 text-sm font-mono text-center bg-slate-900 rounded px-2 py-1 select-all">
+                      {code}
+                    </code>
+                  ))}
+                </div>
+                <button
+                  onClick={finishSetupAndLogin}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors"
+                >
+                  Entendi, Continuar
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <button onClick={() => { setShowTwoFactorSetup(false); setSetupToken(''); setError(''); }} className="text-slate-400 hover:text-white transition-colors">
+                    <ArrowLeft size={18} />
+                  </button>
+                  <h2 className="text-lg font-bold text-white">Configurar 2FA</h2>
+                </div>
+
+                <div className="flex justify-center mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                    <Shield size={24} className="text-yellow-400" />
+                  </div>
+                </div>
+                <p className="text-slate-400 text-sm text-center mb-2">
+                  O administrador exige autenticação em 2 etapas.
+                </p>
+                <p className="text-slate-500 text-xs text-center mb-4">
+                  Escaneie o QR code com o Google Authenticator e digite o código abaixo.
+                </p>
+
+                {/* QR Code */}
+                {qrDataUrl ? (
+                  <div className="flex justify-center mb-4">
+                    <img src={qrDataUrl} alt="QR Code 2FA" className="rounded-xl bg-white p-2 w-48 h-48" />
+                  </div>
+                ) : (
+                  <div className="flex justify-center mb-4">
+                    <div className="w-48 h-48 rounded-xl bg-slate-800 animate-pulse" />
+                  </div>
+                )}
+
+                <form onSubmit={handleSetupConfirm} className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={setupCode}
+                      onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      placeholder="000000"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading || setupCode.length !== 6}
+                    className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Verificando...' : 'Verificar e Ativar'}
+                  </button>
+                </form>
+              </>
+            )
+          ) : showTwoFactor ? (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <button onClick={backToPassword} className="text-slate-400 hover:text-white transition-colors">
+                  <ArrowLeft size={18} />
+                </button>
+                <h2 className="text-lg font-bold text-white">Verificação em 2 Etapas</h2>
+              </div>
+
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <Shield size={24} className="text-indigo-400" />
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm text-center mb-4">
+                Digite o código de 6 dígitos do seu aplicativo Google Authenticator.
+              </p>
+
+              <form onSubmit={handleTwoFactorSubmit} className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    placeholder="000000"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || totpCode.length !== 6}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Verificando...' : 'Verificar'}
+                </button>
+              </form>
+            </>
+          ) : (
             <>
               <h2 className="text-lg font-bold text-white text-center mb-4">Entrar</h2>
 
@@ -269,56 +408,6 @@ export default function LoginPage() {
                   Esqueceu a senha?
                 </a>
               </div>
-            </>
-          ) : (
-            <>
-              <div className="flex items-center gap-2 mb-4">
-                <button onClick={backToPassword} className="text-slate-400 hover:text-white transition-colors">
-                  <ArrowLeft size={18} />
-                </button>
-                <h2 className="text-lg font-bold text-white">Verificação em 2 Etapas</h2>
-              </div>
-
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                  <Shield size={24} className="text-indigo-400" />
-                </div>
-              </div>
-              <p className="text-slate-400 text-sm text-center mb-4">
-                Digite o código de 6 dígitos do seu aplicativo Google Authenticator.
-              </p>
-
-              <form onSubmit={handleTwoFactorSubmit} className="space-y-3">
-                <div>
-                  <label className="block text-slate-400 text-sm mb-1">Código de Verificação</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    value={totpCode}
-                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    maxLength={6}
-                    placeholder="000000"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                {error && (
-                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading || totpCode.length !== 6}
-                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Verificando...' : 'Verificar'}
-                </button>
-              </form>
             </>
           )}
         </div>
