@@ -70,7 +70,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     if (customerId) where.customerId = customerId;
     if (paymentMethod) {
       const methods = paymentMethod.split(',').filter(Boolean);
-      where.paymentMethod = methods.length === 1 ? methods[0] : { in: methods };
+      where.OR = [
+        { paymentMethod: methods.length === 1 ? methods[0] : { in: methods } },
+        { payments: { some: { paymentMethod: { in: methods } } } },
+      ];
     }
     if (startDate || endDate) {
       where.createdAt = {};
