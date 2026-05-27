@@ -183,7 +183,6 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
         tenantId,
         userId: user.id,
         role: parsed.data.role as any,
-        pin: parsed.data.pin || '',
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
