@@ -388,17 +388,6 @@ function UsuariosTab() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-slate-400 text-sm mb-1">PIN (4 digitos, opcional)</label>
-                <input
-                  type="text"
-                  value={form.pin}
-                  onChange={(e) => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                  maxLength={4}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                />
-              </div>
-
               <button
                 type="submit"
                 disabled={saving}
