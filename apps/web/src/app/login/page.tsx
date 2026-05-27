@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { Shield, ArrowLeft } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,7 +12,12 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 2FA step
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -31,35 +37,80 @@ export default function LoginPage() {
         return;
       }
 
-      useAuth.getState().setAuth({
-        token: data.token,
-        user: data.user,
-        tenant: data.tenant,
-        tenants: data.tenants,
-      });
-
-      // Force password change if required
-      if (data.mustChangePassword) {
-        router.push('/change-password');
+      // 2FA required — show code input
+      if (data.requireTwoFactor) {
+        setTwoFactorToken(data.twoFactorToken);
+        setShowTwoFactor(true);
+        setLoading(false);
         return;
       }
 
-      // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
-      if (data.tenants && data.tenants.length > 1) {
-        router.push('/select-store');
-      } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
-        // SUPER_ADMIN with single store: also show selector so they can pick admin or store
-        router.push('/select-store');
-      } else {
-        const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
-        router.push(redirectTo);
-        router.refresh();
-      }
+      // No 2FA — proceed with normal login
+      finalizeLogin(data);
     } catch (err) {
       setError('Erro de conexão. Verifique sua internet.');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ twoFactorToken, code: totpCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Código inválido');
+        setLoading(false);
+        return;
+      }
+
+      finalizeLogin(data);
+    } catch (err) {
+      setError('Erro de conexão. Verifique sua internet.');
+      setLoading(false);
+    }
+  };
+
+  const finalizeLogin = (data: any) => {
+    useAuth.getState().setAuth({
+      token: data.token,
+      user: data.user,
+      tenant: data.tenant,
+      tenants: data.tenants,
+    });
+
+    // Force password change if required
+    if (data.mustChangePassword) {
+      router.push('/change-password');
+      return;
+    }
+
+    // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
+    if (data.tenants && data.tenants.length > 1) {
+      router.push('/select-store');
+    } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
+      router.push('/select-store');
+    } else {
+      const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
+      router.push(redirectTo);
+      router.refresh();
+    }
+  };
+
+  const backToPassword = () => {
+    setShowTwoFactor(false);
+    setTwoFactorToken('');
+    setTotpCode('');
+    setError('');
   };
 
   return (
@@ -80,63 +131,118 @@ export default function LoginPage() {
 
         {/* Form Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white text-center mb-4">Entrar</h2>
+          {!showTwoFactor ? (
+            <>
+              <h2 className="text-lg font-bold text-white text-center mb-4">Entrar</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {/* Email */}
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                required
-              />
-            </div>
+              <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                  />
+                </div>
 
-            {/* Password */}
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                required
-              />
-            </div>
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Senha</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                  />
+                </div>
 
-            {/* Error */}
-            {error && (
-              <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
-                {error}
+                {error && (
+                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </button>
+              </form>
+
+              <div className="mt-3 text-center text-sm">
+                <a
+                  href="/forgot-password"
+                  className="text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Esqueceu a senha?
+                </a>
               </div>
-            )}
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <button onClick={backToPassword} className="text-slate-400 hover:text-white transition-colors">
+                  <ArrowLeft size={18} />
+                </button>
+                <h2 className="text-lg font-bold text-white">Verificação em 2 Etapas</h2>
+              </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <Shield size={24} className="text-indigo-400" />
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm text-center mb-4">
+                Digite o código de 6 dígitos do seu aplicativo Google Authenticator.
+              </p>
 
-          {/* Forgot password */}
-          <div className="mt-3 text-center text-sm">
-            <a
-              href="/forgot-password"
-              className="text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Esqueceu a senha?
-            </a>
-          </div>
+              <form onSubmit={handleTwoFactorSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Código de Verificação</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    placeholder="000000"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                    autoFocus
+                  />
+                </div>
 
+                {error && (
+                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || totpCode.length !== 6}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Verificando...' : 'Verificar'}
+                </button>
+              </form>
+            </>
+          )}
         </div>
+
+        {/* Backup code hint */}
+        {showTwoFactor && (
+          <p className="text-center mt-4 text-slate-500 text-xs">
+            Perdeu o acesso ao autenticador? Use um código de backup ou contate o administrador.
+          </p>
+        )}
       </div>
     </div>
   );
