@@ -219,11 +219,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post('/reset-password', async (request, reply) => {
     const schema = z.object({
       token: z.string().min(1),
-      password: z.string().min(8, 'A senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Dados inválidos. A senha deve ter no mínimo 6 caracteres.' });
+      return reply.status(400).send({ error: 'Dados inválidos. A senha deve ter no mínimo 8 caracteres.' });
     }
 
     const { token, password } = parsed.data;
@@ -373,7 +373,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   // Force password change (when admin reset password)
   app.post('/force-change-password', async (request, reply) => {
     const schema = z.object({
-      newPassword: z.string().min(8, 'Senha deve ter no mínimo 6 caracteres'),
+      newPassword: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
