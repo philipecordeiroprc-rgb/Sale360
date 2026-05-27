@@ -847,7 +847,7 @@ const TABS: { key: Tab; label: string; icon: any }[] = [
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('taxas');
   const { user } = useAuth();
-  const storeRole = user?.storeRole || '';
+  const storeRole = user?.storeRole || user?.role || '';
 
   // CASHIER only sees "Seguranca" and "Minha Senha"
   const availableTabs = storeRole === 'CASHIER'
