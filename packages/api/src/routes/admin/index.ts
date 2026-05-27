@@ -387,7 +387,10 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
 
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, forcePasswordChange: true },
+    });
 
     return { message: 'Senha redefinida com sucesso.' };
   });
