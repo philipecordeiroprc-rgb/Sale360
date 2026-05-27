@@ -74,9 +74,7 @@ export default function LoginPage() {
 
         {/* Form Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white text-center mb-4">
-            {mode === 'pin' ? 'Login Rápido (PIN)' : 'Entrar'}
-          </h2>
+          <h2 className="text-lg font-bold text-white text-center mb-4">Entrar</h2>
 
           <form onSubmit={handleSubmit} className="space-y-3">
             {/* Email */}
@@ -92,17 +90,14 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password or PIN */}
+            {/* Password */}
             <div>
-              <label className="block text-slate-400 text-sm mb-1">
-                {mode === 'pin' ? 'PIN (4 dígitos)' : 'Senha'}
-              </label>
+              <label className="block text-slate-400 text-sm mb-1">Senha</label>
               <input
-                type={mode === 'pin' ? 'text' : 'password'}
-                value={mode === 'pin' ? pin : password}
-                onChange={(e) => mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value)}
-                maxLength={mode === 'pin' ? 4 : undefined}
-                placeholder={mode === 'pin' ? '1234' : '••••••'}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                 required
               />
@@ -125,14 +120,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Toggle & Forgot */}
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <button
-              onClick={() => { setMode(mode === 'pin' ? 'password' : 'pin'); setError(''); }}
-              className="text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              {mode === 'pin' ? 'Usar senha' : 'Usar PIN'}
-            </button>
+          {/* Forgot password */}
+          <div className="mt-3 text-center text-sm">
             <a
               href="/forgot-password"
               className="text-slate-500 hover:text-slate-300 transition-colors"
