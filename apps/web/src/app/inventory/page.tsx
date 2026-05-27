@@ -243,7 +243,7 @@ export default function InventoryPage() {
           ? Number(b.variation?.stockQty || 0)
           : Number(b.product?.stockQty || 0);
         const lowStockAt = hasVariation
-          ? Number(b.variation?.lowStockAt || 0)
+          ? Number(b.variation?.lowStockAt || b.product?.lowStockAt || 0)
           : Number(b.product?.lowStockAt || 0);
         map.set(key, {
           key,
