@@ -5,7 +5,6 @@ import { prisma } from '@sale360/db';
 import { generateToken, generateRefreshToken, generateTwoFactorToken, verifyTwoFactorToken, getJwtSecret } from '../../middleware/auth.js';
 import { sendResetEmail } from '../../services/email.js';
 import { authenticator } from 'otplib';
-import bcryptTs from 'bcrypt';
 import { z } from 'zod';
 
 const loginSchema = z.object({
