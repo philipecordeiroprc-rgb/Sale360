@@ -26,6 +26,35 @@ export default function LoginPage() {
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [showBackupCodes, setShowBackupCodes] = useState(false);
 
+  // Generate QR code when forced setup starts
+  useEffect(() => {
+    if (!showTwoFactorSetup || !setupToken) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/setup-2fa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setupToken }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Erro ao iniciar configuração 2FA.');
+          return;
+        }
+        if (!cancelled) {
+          const dataUrl = await QRCodeLib.toDataURL(data.qrCodeUri, { width: 200, margin: 2 });
+          setQrDataUrl(dataUrl);
+        }
+      } catch {
+        if (!cancelled) setError('Erro de conexão.');
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [showTwoFactorSetup, setupToken]);
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
