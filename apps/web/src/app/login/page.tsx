@@ -152,6 +152,56 @@ export default function LoginPage() {
     }
   };
 
+  const handleSetupConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/confirm-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setupToken, code: setupCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Código inválido');
+        setLoading(false);
+        return;
+      }
+
+      // Show backup codes before finalizing
+      if (data.backupCodes) {
+        setBackupCodes(data.backupCodes);
+        setShowBackupCodes(true);
+        // Store data temporarily for finalize
+        setLoading(false);
+        return;
+      }
+
+      finalizeLogin(data);
+    } catch {
+      setError('Erro de conexão.');
+      setLoading(false);
+    }
+  };
+
+  const finishSetup = () => {
+    // Re-call confirm to get final auth (codes already saved)
+    // Actually, we need to finalize with what we have
+    // Just redirect to password login so user logs in normally now
+    setShowTwoFactorSetup(false);
+    setShowBackupCodes(false);
+    setSetupToken('');
+    setSetupCode('');
+    setQrDataUrl('');
+    setBackupCodes([]);
+    setError('');
+    // User now has 2FA enabled, so they'll go through the normal 2FA flow
+  };
+
   const backToPassword = () => {
     setShowTwoFactor(false);
     setTwoFactorToken('');
