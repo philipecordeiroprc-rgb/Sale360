@@ -849,9 +849,9 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const storeRole = user?.storeRole || '';
 
-  // CASHIER only sees "Minha Senha"
+  // CASHIER only sees "Seguranca" and "Minha Senha"
   const availableTabs = storeRole === 'CASHIER'
-    ? TABS.filter(t => t.key === 'senha')
+    ? TABS.filter(t => t.key === 'seguranca' || t.key === 'senha')
     : TABS;
 
   const { toast, show } = useToast();
