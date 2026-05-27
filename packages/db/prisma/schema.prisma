@@ -63,9 +63,10 @@ model User {
   email     String       @unique
   name      String
   password  String       // bcrypt
-  avatarUrl String?
-  role      PlatformRole @default(USER)
-  createdAt DateTime     @default(now())
+  avatarUrl            String?
+  role                 PlatformRole @default(USER)
+  forcePasswordChange  Boolean      @default(false)
+  createdAt            DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
   tenants             TenantUser[]
