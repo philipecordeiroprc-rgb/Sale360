@@ -134,6 +134,12 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       where: { tenantId: id },
       include: {
         user: { select: { id: true, name: true, email: true, role: true, createdAt: true, totpEnabled: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return users;
+  });
 
   // Add user to tenant
   app.post('/tenants/:id/users', async (request, reply) => {
