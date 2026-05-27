@@ -255,15 +255,6 @@ export default function ProductsPage() {
   }, [loadProducts]);
 
   // Open form for create
-  const handleCreate = () => {
-    setEditingProduct(null);
-    setFormData({ ...emptyForm });
-    setFormVariations([]);
-    setSelectedTemplate(null);
-    setFormError('');
-    setFormOpen(true);
-  };
-
   // Open form for edit
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
