@@ -704,7 +704,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               variationId: (item as any).variationId || null,
               remainingQty: { gt: 0 },
             },
-            orderBy: { receivedAt: 'asc' },
+            orderBy: [
+              { expiryDate: { sort: 'asc', nulls: 'last' } },
+              { receivedAt: 'asc' },
+            ],
           });
 
           for (const batch of batches) {
