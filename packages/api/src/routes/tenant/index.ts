@@ -184,7 +184,6 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
         tenantId: request.tenantId,
         userId: user.id,
         role: parsed.data.role as any,
-        pin: parsed.data.pin || '',
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
