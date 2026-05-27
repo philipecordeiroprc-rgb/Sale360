@@ -127,7 +127,7 @@ export default function TenantDetailPage() {
 
   const openUserCreate = () => {
     setEditingUserId(null);
-    setUserForm({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
+    setUserForm({ email: '', name: '', password: '', role: 'CASHIER' });
     setShowUserModal(true);
   };
 
