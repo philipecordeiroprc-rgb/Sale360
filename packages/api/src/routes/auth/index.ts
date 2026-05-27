@@ -126,7 +126,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         name: user.name,
         email: user.email,
         role: selectedTu.role,
-        pin: selectedTu.pin,
       },
       tenant: {
         id: selectedTu.tenant.id,
