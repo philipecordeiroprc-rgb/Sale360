@@ -192,7 +192,6 @@ function UsuariosTab() {
       name: tu.user.name,
       password: '',
       role: tu.role,
-      pin: tu.pin || '',
     });
     setShowModal(true);
   };
