@@ -134,24 +134,24 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) return reply.status(400).send({ error: 'Dados inválidos' });
 
-    // Build effective payments
-    let cmdEffectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
-    if (parsed.success && parsed.data.payments && parsed.data.payments.length > 0) {
-      cmdEffectivePayments = parsed.data.payments;
-    } else if (parsed.success && parsed.data.paymentMethod) {
-      cmdEffectivePayments = [{ paymentMethod: parsed.data.paymentMethod, amount: total }];
-    } else if (parsed.success) {
-      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
-    }
-    const cmdPrimaryMethod = cmdEffectivePayments.length > 0 ? cmdEffectivePayments[0].paymentMethod : parsed.data?.paymentMethod;
-
     const command = await prisma.tableCommand.findFirst({
       where: { id, tenantId: request.tenantId, status: 'OPEN' },
       include: { items: true },
     });
     if (!command) return reply.status(404).send({ error: 'Comanda não encontrada ou já fechada' });
 
-    const total = Number(command.subtotal) - parsed.data.discount;
+    const total = Number(command.subtotal) - (parsed.success ? parsed.data.discount : 0);
+
+    // Build effective payments
+    let cmdEffectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (parsed.data.payments && parsed.data.payments.length > 0) {
+      cmdEffectivePayments = parsed.data.payments;
+    } else if (parsed.data.paymentMethod) {
+      cmdEffectivePayments = [{ paymentMethod: parsed.data.paymentMethod, amount: total }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
+    }
+    const cmdPrimaryMethod = cmdEffectivePayments[0].paymentMethod;
 
     // Create order from command
     const lastOrder = await prisma.order.findFirst({
