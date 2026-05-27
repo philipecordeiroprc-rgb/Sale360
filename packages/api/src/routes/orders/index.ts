@@ -617,7 +617,23 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
   // Confirm an ONLINE pending order (consume stock, mark as paid)
   app.post('/:id/confirm', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { itemBatchIds } = (request.body || {}) as { itemBatchIds?: Record<string, string> };
+    const body = (request.body || {}) as {
+      itemBatchIds?: Record<string, string>;
+      paymentMethod?: string;
+      payments?: Array<{ paymentMethod: string; amount: number }>;
+    };
+    const { itemBatchIds, paymentMethod: legacyPaymentMethod, payments } = body;
+
+    // Build effective payments for confirm
+    let confirmPayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payments && payments.length > 0) {
+      confirmPayments = payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (legacyPaymentMethod) {
+      confirmPayments = [{ paymentMethod: normalizePaymentMethod(legacyPaymentMethod), amount: 0 }];
+    }
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
