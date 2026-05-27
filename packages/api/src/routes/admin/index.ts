@@ -459,7 +459,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { totpEnabled: false, totpSecret: null, totpBackupCodes: null },
+      data: { totpEnabled: false, totpSecret: null, totpBackupCodes: Prisma.JsonNull },
     });
 
     return { message: '2FA desativado com sucesso.' };
