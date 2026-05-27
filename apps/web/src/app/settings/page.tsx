@@ -834,12 +834,13 @@ function MinhaSenhaTab() {
 // Settings Page (with tabs)
 // ============================================================
 
-type Tab = 'taxas' | 'usuarios' | 'catalogo' | 'senha';
+type Tab = 'taxas' | 'usuarios' | 'catalogo' | 'seguranca' | 'senha';
 
 const TABS: { key: Tab; label: string; icon: any }[] = [
   { key: 'taxas', label: 'Taxas', icon: Percent },
   { key: 'usuarios', label: 'Usuarios', icon: Users },
   { key: 'catalogo', label: 'Catalogo', icon: Store },
+  { key: 'seguranca', label: 'Seguranca', icon: Shield },
   { key: 'senha', label: 'Minha Senha', icon: Key },
 ];
 
