@@ -12,7 +12,40 @@ const loginSchema = z.object({
   deviceId: z.string().optional(),
 });
 
+// In-memory rate limiter (cleans up every 10 minutes)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 10; // max requests per window per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup stale entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}, 600_000).unref();
+
 export const authRoutes: FastifyPluginAsync = async (app) => {
+  // Rate limit middleware for auth endpoints
+  app.addHook('onRequest', async (request, reply) => {
+    const ip = request.ip || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return reply.status(429).send({ error: 'Muitas requisições. Tente novamente em instantes.' });
+    }
+  });
+
   // Login with email + password
   app.post('/login', async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
