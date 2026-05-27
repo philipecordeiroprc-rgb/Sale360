@@ -317,7 +317,7 @@ export default function OrdersPage() {
     setCouponCode('');
     setCouponData(null);
     setCouponError('');
-    setSelectedPayment(PAYMENT_METHODS[0]);
+    setPaymentLines([]);
     setDueDate('');
     setSaleOpen(true);
   };
