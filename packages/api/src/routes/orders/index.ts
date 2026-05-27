@@ -872,12 +872,30 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       paidAmount: z.number().optional(), // valor parcial (default: total)
-      paymentMethod: z.string().optional(), // novo metodo de pagamento ao quitar fiado
+      paymentMethod: z.string().optional(), // legacy: metodo de pagamento ao quitar fiado
+      payments: z.array(paymentEntrySchema).optional(), // multi-payment ao quitar
     });
     const parsed = schema.safeParse(request.body || {});
     const paidAmount = parsed.success && parsed.data.paidAmount ? parsed.data.paidAmount : Number(order.total);
     const paymentMethod = parsed.success ? parsed.data.paymentMethod : undefined;
+    const payPayments = parsed.success && parsed.data.payments ? parsed.data.payments : undefined;
     const newPaymentStatus = paidAmount >= Number(order.total) ? 'PAID' : 'PARTIAL';
+
+    // Build effective payments for this pay action
+    let effectivePayPayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payPayments && payPayments.length > 0) {
+      effectivePayPayments = payPayments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (paymentMethod) {
+      effectivePayPayments = [{ paymentMethod: normalizePaymentMethod(paymentMethod), amount: paidAmount }];
+    }
+
+    // Primary payment method for legacy fields
+    const primaryPayMethod = effectivePayPayments.length > 0
+      ? effectivePayPayments[0].paymentMethod
+      : paymentMethod;
 
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
