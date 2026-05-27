@@ -244,7 +244,7 @@ export const api = {
     pay(id: string, data?: { paidAmount?: number; paymentMethod?: string }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
-    confirm(id: string, data?: { paymentMethod?: string }) {
+    confirm(id: string, data?: { paymentMethod?: string; payments?: Array<{ paymentMethod: string; amount: number }>; itemBatchIds?: Record<string, string> }) {
       return request<any>(`/api/orders/${id}/confirm`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
   },
