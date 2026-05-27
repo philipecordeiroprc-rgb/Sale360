@@ -510,6 +510,9 @@ export const api = {
       resetPassword(userId: string, password: string) {
         return request<any>(`/api/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
       },
+      disable2FA(userId: string) {
+        return request<any>(`/api/admin/users/${userId}/2fa/disable`, { method: 'POST' });
+      },
     },
   },
 
