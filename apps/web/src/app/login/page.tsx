@@ -75,6 +75,14 @@ export default function LoginPage() {
         return;
       }
 
+      // Forced 2FA setup — admin requires user to set up 2FA
+      if (data.mustSetupTwoFactor) {
+        setSetupToken(data.setupToken);
+        setShowTwoFactorSetup(true);
+        setLoading(false);
+        return;
+      }
+
       // 2FA required — show code input
       if (data.requireTwoFactor) {
         setTwoFactorToken(data.twoFactorToken);
