@@ -550,6 +550,7 @@ model Order {
   customer Customer?  @relation(fields: [customerId], references: [id])
   coupon   Coupon?    @relation(fields: [couponId], references: [id])
   delivery Delivery?
+  payments OrderPayment[]
   items    OrderItem[]
 
   @@index([tenantId, createdAt(sort: Desc)])
