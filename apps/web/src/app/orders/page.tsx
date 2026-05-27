@@ -64,12 +64,6 @@ function getWhatsAppUrl(phone: string, message: string): string {
   return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
-const CONFIRM_PAYMENT_METHODS = [
-  { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
-  { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
-  { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
-  { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
-];
 
 interface CartItem {
   productId?: string;
