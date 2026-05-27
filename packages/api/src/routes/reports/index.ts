@@ -28,6 +28,7 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         items: { include: { product: { select: { operationalCost: true } } } },
         customer: { select: { id: true, name: true } },
         user: { select: { id: true, name: true } },
+        payments: { select: { paymentMethod: true, amount: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
