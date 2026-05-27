@@ -567,6 +567,9 @@ export default function OrdersPage() {
     } catch { show('Erro ao carregar detalhes', 'error'); }
   };
 
+  const paidSum = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+  const paymentValid = paymentLines.length > 0 && Math.abs(paidSum - totalWithDiscount) <= 0.01;
+
   return (
     <div className="animate-slide-up">
       {/* Header */}
