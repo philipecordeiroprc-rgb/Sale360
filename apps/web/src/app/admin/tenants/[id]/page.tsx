@@ -569,7 +569,7 @@ export default function TenantDetailPage() {
                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                 </div>
               )}
