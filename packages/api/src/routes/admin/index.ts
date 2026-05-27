@@ -433,7 +433,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: { id: true, name: true, email: true, role: true, createdAt: true, _count: { select: { tenants: true } } },
+        select: { id: true, name: true, email: true, role: true, createdAt: true, totpEnabled: true, _count: { select: { tenants: true } } },
         orderBy: { createdAt: 'desc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
         take: parseInt(limit),
