@@ -324,6 +324,12 @@ export default function OrdersPage() {
 
   const handleCreateSale = async () => {
     if (cart.length === 0) { show('Adicione produtos', 'error'); return; }
+    // Validate payment lines
+    const paidSum = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+    if (paymentLines.length === 0 || Math.abs(paidSum - totalWithDiscount) > 0.01) {
+      show('Informe as formas de pagamento. A soma deve igualar o total.', 'error');
+      return;
+    }
 
     // Check for products that have batches with expiry dates
     const productsWithStock = cart.filter(c => c.productId);
