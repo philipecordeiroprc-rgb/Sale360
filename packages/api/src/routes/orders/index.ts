@@ -232,19 +232,22 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         let totalCost: number | undefined;
 
         if (item.productId) {
-          // Tax rate from payment method config (product taxRate is for pricing reference only)
-          let taxRate: number | undefined;
-          const normalizedMethod = normalizePaymentMethod(orderData.paymentMethod);
-          const paymentConfig = await tx.paymentMethodConfig.findUnique({
-            where: {
-              tenantId_paymentMethod: {
-                tenantId: request.tenantId,
-                paymentMethod: normalizedMethod,
+          // Tax rate: weighted average from all payment methods
+          let taxRate = 0;
+          for (const payment of effectivePayments) {
+            const config = await tx.paymentMethodConfig.findUnique({
+              where: {
+                tenantId_paymentMethod: {
+                  tenantId: request.tenantId,
+                  paymentMethod: payment.paymentMethod,
+                },
               },
-            },
-            select: { taxRate: true },
-          });
-          taxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+              select: { taxRate: true },
+            });
+            const rate = config?.taxRate ? Number(config.taxRate) : 0;
+            taxRate += (rate * payment.amount) / orderData.total;
+          }
+          taxRate = Math.round(taxRate * 100) / 100;
 
           // FIFO: consume from oldest batches, optionally starting from a specific batch
           let remaining = item.quantity;
