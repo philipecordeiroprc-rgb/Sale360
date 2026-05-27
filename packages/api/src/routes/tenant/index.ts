@@ -438,7 +438,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
       data: {
         totpEnabled: false,
         totpSecret: null,
-        totpBackupCodes: null,
+        totpBackupCodes: Prisma.JsonNull,
       },
     });
 
