@@ -400,10 +400,10 @@ export const api = {
       list() {
         return request<any[]>('/api/tenant/users');
       },
-      create(data: { email: string; name: string; password: string; role: string; pin?: string }) {
+      create(data: { email: string; name: string; password: string; role: string }) {
         return request<any>('/api/tenant/users', { method: 'POST', body: JSON.stringify(data) });
       },
-      update(userId: string, data: { role?: string; pin?: string }) {
+      update(userId: string, data: { role?: string }) {
         return request<any>(`/api/tenant/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
       },
       remove(userId: string) {
