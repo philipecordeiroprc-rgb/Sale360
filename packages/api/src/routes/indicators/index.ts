@@ -128,11 +128,26 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
     // Faturamento por forma de pagamento
     const paymentMap = new Map<string, { count: number; total: number }>();
     for (const o of paidOrders) {
-      const method = o.paymentMethod || 'outro';
-      const entry = paymentMap.get(method) || { count: 0, total: 0 };
-      entry.count++;
-      entry.total += Number(o.total);
-      paymentMap.set(method, entry);
+      if (o.payments && o.payments.length > 0) {
+        for (const p of o.payments) {
+          const method = p.paymentMethod || 'outro';
+          const entry = paymentMap.get(method) || { count: 0, total: 0 };
+          entry.total += Number(p.amount);
+          paymentMap.set(method, entry);
+        }
+        // Count the order once under its first payment method
+        const firstMethod = o.payments[0].paymentMethod || 'outro';
+        const firstEntry = paymentMap.get(firstMethod) || { count: 0, total: 0 };
+        firstEntry.count++;
+        paymentMap.set(firstMethod, firstEntry);
+      } else {
+        // Fallback for old orders without OrderPayment records
+        const method = o.paymentMethod || 'outro';
+        const entry = paymentMap.get(method) || { count: 0, total: 0 };
+        entry.count++;
+        entry.total += Number(o.total);
+        paymentMap.set(method, entry);
+      }
     }
     const faturamentoPorFormaPagamento = Array.from(paymentMap.entries())
       .map(([method, v]) => ({
