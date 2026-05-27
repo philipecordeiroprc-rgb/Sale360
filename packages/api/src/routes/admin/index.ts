@@ -133,13 +133,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const users = await prisma.tenantUser.findMany({
       where: { tenantId: id },
       include: {
-        user: { select: { id: true, name: true, email: true, role: true, createdAt: true } },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
-
-    return users;
-  });
+        user: { select: { id: true, name: true, email: true, role: true, createdAt: true, totpEnabled: true } },
 
   // Add user to tenant
   app.post('/tenants/:id/users', async (request, reply) => {
