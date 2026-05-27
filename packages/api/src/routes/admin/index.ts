@@ -148,7 +148,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const schema = z.object({
       email: z.string().email(),
       name: z.string().min(1, 'Nome é obrigatório'),
-      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'Senha deve ter no mínimo 6 caracteres'),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
     });
 
@@ -247,7 +247,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   app.post('/tenants/:id/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
 
-    const schema = z.object({ password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'A senha deve ter no mínimo 6 caracteres') });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
@@ -376,7 +376,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   // Reset any user's password
   app.post('/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
-    const schema = z.object({ password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'A senha deve ter no mínimo 6 caracteres') });
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
