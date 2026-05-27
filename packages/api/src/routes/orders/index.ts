@@ -120,7 +120,39 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { items, localId, createdAtDevice, ...orderData } = parsed.data;
+    const { items, localId, createdAtDevice, payments, ...orderData } = parsed.data;
+
+    // Build effective payments list (new multi-payment or legacy single)
+    let effectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payments && payments.length > 0) {
+      // Validate sum equals total
+      if (!validatePaymentTotal(payments, orderData.total)) {
+        return reply.status(400).send({
+          error: 'Soma dos pagamentos não corresponde ao total da venda',
+        });
+      }
+      effectivePayments = payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (orderData.paymentMethod) {
+      // Backward compatible: single payment
+      effectivePayments = [{
+        paymentMethod: normalizePaymentMethod(orderData.paymentMethod),
+        amount: orderData.total,
+      }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
+    }
+
+    // Derive paymentStatus: PENDING if any payment is fiado
+    const isFiado = hasFiadoPayment(effectivePayments);
+    if (isFiado && orderData.paymentStatus === 'PAID') {
+      orderData.paymentStatus = 'PENDING';
+    }
+
+    // Primary method for legacy Order.paymentMethod column
+    const primaryMethod = effectivePayments[0].paymentMethod;
 
     // Generate order number
     const lastOrder = await prisma.order.findFirst({
