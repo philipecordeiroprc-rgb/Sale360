@@ -501,7 +501,10 @@ export default function OrdersPage() {
     const id = confirmingOrderId;
     if (!id) return;
     try {
-      const body: any = { paymentMethod: selectedConfirmPayment.id };
+      const body: any = {};
+      if (paymentLines.length > 0) {
+        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
+      }
       if (itemBatchIds && Object.keys(itemBatchIds).length > 0) {
         body.itemBatchIds = itemBatchIds;
       }
