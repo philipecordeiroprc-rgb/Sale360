@@ -7,14 +7,7 @@ import path from 'path';
 export default function TutoriaisPage() {
   const manualDir = path.resolve(process.cwd(), '..', '..', 'manual');
 
-  let manualHtml = '';
   let guiasHtml = '';
-
-  try {
-    manualHtml = fs.readFileSync(path.join(manualDir, 'Manual_Sale360.html'), 'utf-8');
-  } catch {
-    manualHtml = '<html><body><p style="color:white;text-align:center;padding:2rem">Manual não encontrado.</p></body></html>';
-  }
 
   try {
     guiasHtml = fs.readFileSync(path.join(manualDir, 'guias.html'), 'utf-8');
@@ -26,10 +19,5 @@ export default function TutoriaisPage() {
   const fixPaths = (html: string) =>
     html.replace(/src="screenshots\//g, 'src="/manual/screenshots/');
 
-  return (
-    <TutoriaisClient
-      manualHtml={fixPaths(manualHtml)}
-      guiasHtml={fixPaths(guiasHtml)}
-    />
-  );
+  return <TutoriaisClient guiasHtml={fixPaths(guiasHtml)} />;
 }
