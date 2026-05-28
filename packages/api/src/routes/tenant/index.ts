@@ -129,12 +129,27 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     return users;
   });
 
+  // Lookup user by email (for smart user creation)
+  app.get('/users/lookup', async (request, reply) => {
+    const { email } = request.query as { email?: string };
+    if (!email || !email.includes('@')) {
+      return reply.status(400).send({ error: 'Email inválido' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true },
+    });
+
+    return { exists: !!user, user: user || null };
+  });
+
   // Add user to tenant
   app.post('/users', async (request, reply) => {
     const schema = z.object({
       email: z.string().email(),
       name: z.string().min(1, 'Nome é obrigatório'),
-      password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+      password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres').optional(),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
     });
 
@@ -169,7 +184,17 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
       if (alreadyLinked) {
         return reply.status(400).send({ error: 'Usuário já está vinculado a esta loja.' });
       }
+      // User exists: update name if provided
+      if (parsed.data.name && parsed.data.name !== user.name) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { name: parsed.data.name },
+        });
+      }
     } else {
+      if (!parsed.data.password) {
+        return reply.status(400).send({ error: 'Senha é obrigatória para novos usuários.' });
+      }
       const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
       user = await prisma.user.create({
         data: {
