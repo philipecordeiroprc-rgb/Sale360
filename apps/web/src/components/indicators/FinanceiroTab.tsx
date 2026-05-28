@@ -125,17 +125,36 @@ export function FinanceiroTab({ data, loading }: { data: FinancialIndicators | n
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5">
           <h4 className="text-sm font-semibold text-white mb-4">Faturamento por Forma de Pagamento</h4>
           <div className="space-y-1">
-            {f.faturamentoPorFormaPagamento.map(pm => (
-              <PaymentBar
-                key={pm.method}
-                method={pm.method}
-                count={pm.count}
-                total={pm.total}
-                percentage={pm.percentage}
-                maxPct={f.faturamentoPorFormaPagamento[0]?.percentage || 0}
-              />
-            ))}
+            {f.faturamentoPorFormaPagamento
+              .filter(pm => pm.method !== 'credit_store' && pm.method !== 'Fiado')
+              .map(pm => (
+                <PaymentBar
+                  key={pm.method}
+                  method={pm.method}
+                  count={pm.count}
+                  total={pm.total}
+                  percentage={pm.percentage}
+                  maxPct={f.faturamentoPorFormaPagamento[0]?.percentage || 0}
+                />
+              ))}
           </div>
+          {f.faturamentoPorFormaPagamento.some(pm => pm.method === 'credit_store' || pm.method === 'Fiado') && (
+            <p className="text-xs text-slate-500 mt-3">
+              Os valores acima incluem vendas que foram pagas no momento da compra.
+            </p>
+          )}
+          {f.fiadoSettled && f.fiadoSettled.count > 0 && (
+            <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-sm text-slate-300">Fiado Recebido</span>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-white font-medium">R$ {fmt(f.fiadoSettled.total)}</p>
+                <p className="text-[10px] text-slate-500">{f.fiadoSettled.count} fiados quitados</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

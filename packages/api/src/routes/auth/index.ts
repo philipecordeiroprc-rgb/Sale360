@@ -2,18 +2,51 @@ import type { FastifyPluginAsync } from 'fastify';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { prisma } from '@sale360/db';
-import { generateToken, generateRefreshToken } from '../../middleware/auth.js';
+import { generateToken, generateRefreshToken, generateTwoFactorToken, verifyTwoFactorToken, generateSetupToken, verifySetupToken, getJwtSecret } from '../../middleware/auth.js';
 import { sendResetEmail } from '../../services/email.js';
+import { authenticator } from 'otplib';
 import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
-  pin: z.string().length(4).optional(),
+  password: z.string().min(8),
   deviceId: z.string().optional(),
 });
 
+// In-memory rate limiter (cleans up every 10 minutes)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 10; // max requests per window per IP
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
+// Cleanup stale entries periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of rateLimitMap) {
+    if (now > val.resetAt) rateLimitMap.delete(key);
+  }
+}, 600_000).unref();
+
 export const authRoutes: FastifyPluginAsync = async (app) => {
+  // Rate limit middleware for auth endpoints
+  app.addHook('onRequest', async (request, reply) => {
+    const ip = request.ip || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return reply.status(429).send({ error: 'Muitas requisições. Tente novamente em instantes.' });
+    }
+  });
+
   // Login with email + password
   app.post('/login', async (request, reply) => {
     const parsed = loginSchema.safeParse(request.body);
@@ -21,18 +54,83 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { email, password, pin, deviceId } = parsed.data;
+    const { email, password, deviceId } = parsed.data;
 
     // Find user
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      // Use same error to prevent email enumeration
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
+    }
+
+    // Check account lockout
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const minutesLeft = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      return reply.status(423).send({
+        error: `Conta bloqueada temporariamente. Tente novamente em ${minutesLeft} minuto(s).`,
+        lockedUntil: user.lockedUntil,
+      });
     }
 
     // Verify password
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
+      const attempts = (user.loginAttempts || 0) + 1;
+      const LOCK_THRESHOLD = 5;
+      const LOCK_DURATION_MINUTES = 15;
+
+      if (attempts >= LOCK_THRESHOLD) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            loginAttempts: attempts,
+            lockedUntil: new Date(Date.now() + LOCK_DURATION_MINUTES * 60 * 1000),
+          },
+        });
+      } else {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { loginAttempts: attempts },
+        });
+      }
+
       return reply.status(401).send({ error: 'Email ou senha incorretos' });
+    }
+
+    // Successful login — reset lockout counters
+    const mustChangePassword = user.forcePasswordChange === true;
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { loginAttempts: 0, lockedUntil: null },
+    });
+
+    // Check if 2FA is forced by any tenant and user hasn't enabled it yet
+    if (!user.totpEnabled) {
+      const forcedTenant = await prisma.tenantUser.findFirst({
+        where: { userId: user.id, forceTwoFactor: true },
+      });
+      if (forcedTenant) {
+        const setupToken = generateSetupToken({ userId: user.id, email: user.email });
+        return reply.status(200).send({
+          mustSetupTwoFactor: true,
+          setupToken,
+          mustChangePassword,
+        });
+      }
+    }
+
+    // Check if 2FA is required
+    if (user.totpEnabled && user.totpSecret) {
+      if (mustChangePassword) {
+        // If user must also change password, let them do that first
+        // Force-change-password endpoint handles this case
+      }
+      const twoFactorToken = generateTwoFactorToken({ userId: user.id, email: user.email });
+      return reply.status(200).send({
+        requireTwoFactor: true,
+        twoFactorToken,
+        mustChangePassword,
+      });
     }
 
     // SUPER_ADMIN login — also load linked stores for hybrid access
@@ -57,7 +155,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         plan: tu.tenant.plan,
         status: tu.tenant.status,
         role: tu.role,
-        pin: tu.pin,
       }));
 
       return {
@@ -71,6 +168,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         },
         tenant: null,
         tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
       };
     }
 
@@ -93,18 +191,10 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       plan: tu.tenant.plan,
       status: tu.tenant.status,
       role: tu.role,
-      pin: tu.pin,
     }));
 
-    // Pick first tenant as default (or match by PIN if provided)
-    let selectedTu = tenantUsers[0];
-    if (pin) {
-      const matched = tenantUsers.find((tu) => tu.pin === pin);
-      if (!matched) {
-        return reply.status(401).send({ error: 'PIN incorreto' });
-      }
-      selectedTu = matched;
-    }
+    // Pick first tenant as default
+    const selectedTu = tenantUsers[0];
 
     // If deviceId, register device
     if (deviceId) {
@@ -136,7 +226,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         name: user.name,
         email: user.email,
         role: selectedTu.role,
-        pin: selectedTu.pin,
       },
       tenant: {
         id: selectedTu.tenant.id,
@@ -146,30 +235,121 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         status: selectedTu.tenant.status,
       },
       tenants,
+      mustChangePassword,
     };
   });
 
-  // Quick login with PIN (for PDV — less clicks)
-  app.post('/login-pin', async (request, reply) => {
+  // Login step 2: verify TOTP code and return full auth
+  app.post('/login-2fa', async (request, reply) => {
     const schema = z.object({
-      email: z.string().email(),
-      pin: z.string().length(4),
+      twoFactorToken: z.string().min(1),
+      code: z.string().length(6),
       deviceId: z.string().optional(),
     });
-
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Dados inválidos' });
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { email, pin, deviceId } = parsed.data;
+    const { twoFactorToken, code, deviceId } = parsed.data;
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      return reply.status(401).send({ error: 'Credenciais inválidas' });
+    // Verify the twoFactorToken
+    const tfPayload = verifyTwoFactorToken(twoFactorToken);
+    if (!tfPayload) {
+      return reply.status(401).send({ error: 'Sessão expirada. Faça login novamente.' });
     }
 
-    // Find all tenants for this user
+    const user = await prisma.user.findUnique({ where: { id: tfPayload.userId } });
+    if (!user || !user.totpEnabled || !user.totpSecret) {
+      return reply.status(401).send({ error: 'Usuário não encontrado ou 2FA não configurado.' });
+    }
+
+    // Check account lockout (2FA failures count too)
+    if (user.lockedUntil && new Date(user.lockedUntil) > new Date()) {
+      const minutesLeft = Math.ceil((new Date(user.lockedUntil).getTime() - Date.now()) / 60000);
+      return reply.status(423).send({
+        error: `Conta bloqueada temporariamente. Tente novamente em ${minutesLeft} minuto(s).`,
+        lockedUntil: user.lockedUntil,
+      });
+    }
+
+    // Verify TOTP code
+    try {
+      const isValid = authenticator.check(code, user.totpSecret);
+      if (!isValid) {
+        // Check backup codes
+        const backupCodes = (user.totpBackupCodes as string[]) || [];
+        const bcrypt = await import('bcrypt');
+        let backupMatch = false;
+        for (let i = 0; i < backupCodes.length; i++) {
+          if (await bcrypt.default.compare(code, backupCodes[i])) {
+            backupMatch = true;
+            // Remove used backup code
+            backupCodes.splice(i, 1);
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { totpBackupCodes: backupCodes },
+            });
+            break;
+          }
+        }
+        if (!backupMatch) {
+          // Increment login attempts for 2FA failures
+          const attempts = (user.loginAttempts || 0) + 1;
+          if (attempts >= 5) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: attempts,
+                lockedUntil: new Date(Date.now() + 15 * 60 * 1000),
+              },
+            });
+          } else {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { loginAttempts: attempts },
+            });
+          }
+          return reply.status(401).send({ error: 'Código inválido.' });
+        }
+      }
+    } catch {
+      return reply.status(401).send({ error: 'Código inválido.' });
+    }
+
+    const mustChangePassword = user.forcePasswordChange === true;
+
+    // SUPER_ADMIN login
+    if (user.role === 'SUPER_ADMIN') {
+      const token = generateToken({ userId: user.id, role: 'SUPER_ADMIN' });
+      const refreshToken = generateRefreshToken(user.id);
+
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id,
+        slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName,
+        plan: tu.tenant.plan,
+        status: tu.tenant.status,
+        role: tu.role,
+      }));
+
+      return {
+        token,
+        refreshToken,
+        user: { id: user.id, name: user.name, email: user.email, role: 'SUPER_ADMIN' },
+        tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
+      };
+    }
+
+    // Regular user login
     const tenantUsers = await prisma.tenantUser.findMany({
       where: { userId: user.id },
       include: { tenant: true },
@@ -180,12 +360,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
     }
 
-    // Match by PIN
-    const matched = tenantUsers.find((tu) => tu.pin === pin);
-    if (!matched) {
-      return reply.status(401).send({ error: 'PIN incorreto' });
-    }
-
     const tenants = tenantUsers.map((tu) => ({
       id: tu.tenant.id,
       slug: tu.tenant.slug,
@@ -193,41 +367,39 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
       plan: tu.tenant.plan,
       status: tu.tenant.status,
       role: tu.role,
-      pin: tu.pin,
     }));
+
+    const selectedTu = tenantUsers[0];
 
     if (deviceId) {
       await prisma.device.upsert({
-        where: { tenantId_name: { tenantId: matched.tenantId, name: deviceId } },
+        where: { tenantId_name: { tenantId: selectedTu.tenantId, name: deviceId } },
         update: { lastSyncAt: new Date() },
-        create: {
-          tenantId: matched.tenantId,
-          name: deviceId,
-          type: 'mobile',
-        },
+        create: { tenantId: selectedTu.tenantId, name: deviceId, type: 'mobile' },
       });
     }
 
     const token = generateToken({
       userId: user.id,
-      tenantId: matched.tenantId,
+      tenantId: selectedTu.tenantId,
       deviceId,
-      role: matched.role,
+      role: selectedTu.role,
     });
     const refreshToken = generateRefreshToken(user.id);
 
     return {
       token,
       refreshToken,
-      user: { id: user.id, name: user.name, email: user.email, role: matched.role, pin: matched.pin },
+      user: { id: user.id, name: user.name, email: user.email, role: selectedTu.role },
       tenant: {
-        id: matched.tenant.id,
-        slug: matched.tenant.slug,
-        companyName: matched.tenant.companyName,
-        plan: matched.tenant.plan,
-        status: matched.tenant.status,
+        id: selectedTu.tenant.id,
+        slug: selectedTu.tenant.slug,
+        companyName: selectedTu.tenant.companyName,
+        plan: selectedTu.tenant.plan,
+        status: selectedTu.tenant.status,
       },
       tenants,
+      mustChangePassword,
     };
   });
 
@@ -274,11 +446,11 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
   app.post('/reset-password', async (request, reply) => {
     const schema = z.object({
       token: z.string().min(1),
-      password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
-      return reply.status(400).send({ error: 'Dados inválidos. A senha deve ter no mínimo 6 caracteres.' });
+      return reply.status(400).send({ error: 'Dados inválidos. A senha deve ter no mínimo 8 caracteres.' });
     }
 
     const { token, password } = parsed.data;
@@ -294,7 +466,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: resetToken.userId },
-        data: { password: hashedPassword },
+        data: { password: hashedPassword, forcePasswordChange: false },
       }),
       prisma.passwordResetToken.update({
         where: { id: resetToken.id },
@@ -303,6 +475,165 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
     ]);
 
     return { message: 'Senha redefinida com sucesso.' };
+  });
+
+  // ============================================================
+  // Forced 2FA Setup (when admin requires 2FA and user hasn't set it up)
+  // ============================================================
+
+  app.post('/setup-2fa', async (request, reply) => {
+    const schema = z.object({
+      setupToken: z.string().min(1),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Token inválido.' });
+    }
+
+    const payload = verifySetupToken(parsed.data.setupToken);
+    if (!payload) {
+      return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: { id: true, email: true, totpEnabled: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(user.email, 'Sale360', secret);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { totpSecret: secret },
+    });
+
+    return { secret, qrCodeUri: otpauth };
+  });
+
+  app.post('/confirm-2fa', async (request, reply) => {
+    const schema = z.object({
+      setupToken: z.string().min(1),
+      code: z.string().length(6),
+      deviceId: z.string().optional(),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos.' });
+    }
+
+    const payload = verifySetupToken(parsed.data.setupToken);
+    if (!payload) {
+      return reply.status(401).send({ error: 'Token inválido ou expirado.' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user?.totpSecret) {
+      return reply.status(400).send({ error: 'Setup não iniciado.' });
+    }
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const isValid = authenticator.check(parsed.data.code, user.totpSecret);
+    if (!isValid) {
+      return reply.status(400).send({ error: 'Código inválido. Tente novamente.' });
+    }
+
+    // Generate backup codes
+    const backupCodes: string[] = [];
+    const backupHashes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      backupCodes.push(code);
+      backupHashes.push(await bcrypt.hash(code, 10));
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        totpEnabled: true,
+        totpBackupCodes: backupHashes,
+      },
+    });
+
+    const mustChangePassword = user.forcePasswordChange === true;
+
+    // Return full auth — same logic as login
+    if (user.role === 'SUPER_ADMIN') {
+      const token = generateToken({ userId: user.id, role: 'SUPER_ADMIN' });
+      const refreshToken = generateRefreshToken(user.id);
+
+      const tenantUsers = await prisma.tenantUser.findMany({
+        where: { userId: user.id },
+        include: { tenant: true },
+        orderBy: { tenant: { companyName: 'asc' } },
+      });
+
+      const tenants = tenantUsers.map((tu) => ({
+        id: tu.tenant.id, slug: tu.tenant.slug,
+        companyName: tu.tenant.companyName, plan: tu.tenant.plan,
+        status: tu.tenant.status, role: tu.role,
+      }));
+
+      return {
+        token, refreshToken,
+        user: { id: user.id, name: user.name, email: user.email, role: 'SUPER_ADMIN' },
+        tenant: null,
+        tenants: tenants.length > 0 ? tenants : undefined,
+        mustChangePassword,
+        backupCodes,
+      };
+    }
+
+    const tenantUsers = await prisma.tenantUser.findMany({
+      where: { userId: user.id },
+      include: { tenant: true },
+      orderBy: { tenant: { companyName: 'asc' } },
+    });
+
+    if (tenantUsers.length === 0) {
+      return reply.status(401).send({ error: 'Nenhuma empresa vinculada ao usuário' });
+    }
+
+    const tenants = tenantUsers.map((tu) => ({
+      id: tu.tenant.id, slug: tu.tenant.slug,
+      companyName: tu.tenant.companyName, plan: tu.tenant.plan,
+      status: tu.tenant.status, role: tu.role,
+    }));
+
+    const selectedTu = tenantUsers[0];
+
+    if (parsed.data.deviceId) {
+      await prisma.device.upsert({
+        where: { tenantId_name: { tenantId: selectedTu.tenantId, name: parsed.data.deviceId } },
+        update: { lastSyncAt: new Date() },
+        create: { tenantId: selectedTu.tenantId, name: parsed.data.deviceId, type: 'mobile' },
+      });
+    }
+
+    const token = generateToken({
+      userId: user.id, tenantId: selectedTu.tenantId,
+      deviceId: parsed.data.deviceId, role: selectedTu.role,
+    });
+    const refreshToken = generateRefreshToken(user.id);
+
+    return {
+      token, refreshToken,
+      user: { id: user.id, name: user.name, email: user.email, role: selectedTu.role },
+      tenant: {
+        id: selectedTu.tenant.id, slug: selectedTu.tenant.slug,
+        companyName: selectedTu.tenant.companyName,
+        plan: selectedTu.tenant.plan, status: selectedTu.tenant.status,
+      },
+      tenants,
+      mustChangePassword,
+      backupCodes,
+    };
   });
 
   // Switch tenant (for users with multiple stores, or SUPER_ADMIN switching store/admin mode)
@@ -323,8 +654,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const jwt = await import('jsonwebtoken');
-      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
-      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string; role?: string };
+      const payload = jwt.default.verify(authHeader.slice(7), getJwtSecret()) as { userId: string; role?: string };
 
       // SUPER_ADMIN switching to admin mode
       if (payload.role === 'SUPER_ADMIN' && parsed.data.tenantId === '__admin__') {
@@ -412,7 +742,6 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
         user: {
           id: payload.userId,
           role: tenantUser.role,
-          pin: tenantUser.pin,
         },
         tenant: {
           id: tenantUser.tenant.id,
@@ -422,6 +751,46 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
           status: tenantUser.tenant.status,
         },
       };
+    } catch {
+      return reply.status(401).send({ error: 'Token inválido ou expirado' });
+    }
+  });
+
+  // Force password change (when admin reset password)
+  app.post('/force-change-password', async (request, reply) => {
+    const schema = z.object({
+      newPassword: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+    });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
+    }
+
+    // Manual JWT verification (auth routes are public, no middleware)
+    const authHeader = request.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      return reply.status(401).send({ error: 'Token não encontrado' });
+    }
+
+    try {
+      const jwt = await import('jsonwebtoken');
+      const secret = getJwtSecret();
+      const payload = jwt.default.verify(authHeader.slice(7), secret) as { userId: string };
+
+      const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+      if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+
+      if (!user.forcePasswordChange) {
+        return reply.status(400).send({ error: 'Troca de senha não é necessária.' });
+      }
+
+      const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { password: hashedPassword, forcePasswordChange: false },
+      });
+
+      return { message: 'Senha alterada com sucesso.' };
     } catch {
       return reply.status(401).send({ error: 'Token inválido ou expirado' });
     }
@@ -437,7 +806,7 @@ export const authRoutes: FastifyPluginAsync = async (app) => {
 
     try {
       const jwt = await import('jsonwebtoken');
-      const secret = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+      const secret = getJwtSecret();
       const decoded = jwt.default.verify(parsed.data.refreshToken, secret) as { userId: string };
 
       const user = await prisma.user.findUnique({ where: { id: decoded.userId } });

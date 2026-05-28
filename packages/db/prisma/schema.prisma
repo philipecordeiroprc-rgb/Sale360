@@ -45,12 +45,12 @@ model Tenant {
 }
 
 model TenantUser {
-  id       String   @id @default(cuid())
-  tenantId String
-  userId   String
-  role     UserRole @default(CASHIER)
-  pin      String   // PIN rápido para login no PDV (4 dígitos)
-  createdAt DateTime @default(now())
+  id             String   @id @default(cuid())
+  tenantId       String
+  userId         String
+  role           UserRole @default(CASHIER)
+  forceTwoFactor Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -64,9 +64,15 @@ model User {
   email     String       @unique
   name      String
   password  String       // bcrypt
-  avatarUrl String?
-  role      PlatformRole @default(USER)
-  createdAt DateTime     @default(now())
+  avatarUrl            String?
+  role                 PlatformRole @default(USER)
+  forcePasswordChange  Boolean      @default(false)
+  loginAttempts        Int          @default(0)
+  lockedUntil          DateTime?
+  totpSecret           String?
+  totpEnabled          Boolean      @default(false)
+  totpBackupCodes      Json?
+  createdAt            DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
   tenants             TenantUser[]
@@ -528,7 +534,7 @@ model Order {
   discount      Decimal   @default(0) @db.Decimal(10, 2)
   total         Decimal   @db.Decimal(10, 2)
   paidAmount    Decimal   @default(0) @db.Decimal(10, 2)
-  paymentMethod  String    // "pix", "credit", "debit", "cash", "credit_store"
+  paymentMethod  String    // DEPRECATED: use payments[] OrderPayment. Still populated for backward compat.
   paidWithMethod String?   // método usado para quitar fiado (ex: "Dinheiro")
   paymentStatus  PaymentStatus @default(PAID)
   dueDate        DateTime?   // data de vencimento para vendas fiado
@@ -544,6 +550,7 @@ model Order {
   customer Customer?  @relation(fields: [customerId], references: [id])
   coupon   Coupon?    @relation(fields: [couponId], references: [id])
   delivery Delivery?
+  payments OrderPayment[]
   items    OrderItem[]
 
   @@index([tenantId, createdAt(sort: Desc)])
@@ -572,6 +579,23 @@ model OrderItem {
   variation ProductVariation?  @relation(fields: [variationId], references: [id])
 
   @@map("order_items")
+}
+
+// ============================================================
+// ORDER PAYMENTS (split payment per order)
+// ============================================================
+
+model OrderPayment {
+  id            String   @id @default(cuid())
+  orderId       String
+  paymentMethod String   // "cash" | "pix" | "debit" | "credit" | "credit_store"
+  amount        Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_payments")
 }
 
 // ============================================================

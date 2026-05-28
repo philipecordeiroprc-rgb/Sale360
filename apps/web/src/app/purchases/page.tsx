@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan, Pencil, Upload } from 'lucide-react';
+import { Plus, Search, Check, X, ShoppingBag, ChevronDown, ChevronUp, Info, Scan, Pencil, Upload, RefreshCw, Sparkles } from 'lucide-react';
 import { ImportModal } from '@/components/ui/ImportModal';
 import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
+import { NewProductPurchaseWizard } from '@/components/purchases/NewProductPurchaseWizard';
 import dynamic from 'next/dynamic';
 import { type VariationData } from '@/components/products/VariationEditor';
 const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
@@ -87,6 +88,8 @@ export default function PurchasesPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [tab, setTab] = useState<'restock' | 'new-product'>('restock');
+  const [wizardOpen, setWizardOpen] = useState(false);
   const { toast, show } = useToast();
 
   // Create form
@@ -524,11 +527,38 @@ export default function PurchasesPage() {
           >
             <Upload size={16} /> Importar
           </button>
-          <button onClick={openForm}
-            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-            <Plus size={18} /> Nova Compra
-          </button>
+          {tab === 'restock' ? (
+            <button onClick={openForm}
+              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
+              <Plus size={18} /> Nova Compra
+            </button>
+          ) : (
+            <button onClick={() => setWizardOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-sm transition-colors">
+              <Sparkles size={18} /> Novo Produto + Compra
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setTab('restock')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+            ${tab === 'restock'
+              ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+          <RefreshCw size={16} /> Reposição de Estoque
+        </button>
+        <button
+          onClick={() => setTab('new-product')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+            ${tab === 'new-product'
+              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
+              : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+          <Sparkles size={16} /> Novo Produto + Compra
+        </button>
       </div>
 
       {/* Filters */}
@@ -545,31 +575,33 @@ export default function PurchasesPage() {
         </div>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
-              <div className="h-5 bg-slate-800 rounded w-1/3 mb-3" />
-              <div className="h-4 bg-slate-800 rounded w-1/2" />
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="text-center py-12">
-          <p className="text-red-400 mb-3">{error}</p>
-          <button onClick={loadPurchases} className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm">Tentar novamente</button>
-        </div>
-      ) : purchases.length === 0 ? (
-        <div className="text-center py-12">
-          <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
-          <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
-          <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
-        </div>
-      ) : (
+      {/* Content — Tab: Reposição de Estoque */}
+      {tab === 'restock' && (
         <>
-          <div className="space-y-3">
-            {purchases.map((p: any) => (
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-slate-900 border border-slate-800 rounded-xl p-5 animate-pulse">
+                  <div className="h-5 bg-slate-800 rounded w-1/3 mb-3" />
+                  <div className="h-4 bg-slate-800 rounded w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-400 mb-3">{error}</p>
+              <button onClick={loadPurchases} className="px-4 py-2 bg-slate-800 text-white rounded-xl text-sm">Tentar novamente</button>
+            </div>
+          ) : purchases.length === 0 ? (
+            <div className="text-center py-12">
+              <ShoppingBag size={48} className="mx-auto text-slate-600 mb-3" />
+              <p className="text-slate-400 mb-3">Nenhuma compra encontrada</p>
+              <button onClick={openForm} className="px-4 py-2 bg-indigo-500 text-white rounded-xl text-sm">Criar primeira compra</button>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {purchases.map((p: any) => (
               <div key={p.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
                 <div className="p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-4 cursor-pointer hover:bg-slate-800/50 transition-colors" onClick={() => toggleExpand(p.id)}>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${PURCHASE_STATUS[p.status]?.color || 'bg-slate-600'}`} />
@@ -657,6 +689,31 @@ export default function PurchasesPage() {
           )}
         </>
       )}
+        </>
+      )}
+
+      {/* Content — Tab: Novo Produto + Compra */}
+      {tab === 'new-product' && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6">
+            <Sparkles size={36} className="text-emerald-400" />
+          </div>
+          <h2 className="text-xl font-bold text-white mb-2">Novo Produto + Compra</h2>
+          <p className="text-slate-400 max-w-md mb-8">
+            Cadastre um produto que ainda não existe no sistema e já dê entrada no estoque com a compra.
+            Tudo em um único fluxo: fornecedor, produto, custos e variações.
+          </p>
+          <button
+            onClick={() => setWizardOpen(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-emerald-500/20"
+          >
+            <Sparkles size={18} /> Iniciar Cadastro
+          </button>
+          <p className="text-xs text-slate-600 mt-4">
+            Se o produto já existe no sistema, use a aba <strong className="text-indigo-400">Reposição de Estoque</strong>.
+          </p>
+        </div>
+      )}
 
       {/* ========== CREATE MODAL (simplified) ========== */}
       <Modal open={formOpen} onClose={() => { setFormOpen(false); setEditingId(null); }} title={editingId ? 'Editar Compra' : 'Nova Compra'} size="lg" closeOnOverlayClick={false}>
@@ -716,6 +773,11 @@ export default function PurchasesPage() {
                   onDetected={(product) => {
                     setScannerOpen(false);
                     selectProduct(product);
+                  }}
+                  onCodeScanned={(code: string) => {
+                    setScannerOpen(false);
+                    setProductSearch(code);
+                    show(`Código ${code} não cadastrado. Use "Novo Produto + Compra" para cadastrar.`, 'error');
                   }}
                   onError={(msg) => show(msg, 'error')}
                 />
@@ -942,17 +1004,18 @@ export default function PurchasesPage() {
                         </div>
                         <button
                           onClick={() => {
-                            const allDims = templateDims.every((d: any) => {
+                            const hasAtLeastOne = templateDims.some((d: any) => {
                               const val = rowDims[d.label];
                               if (!val) return false;
                               if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
                               return true;
                             });
-                            if (!allDims || rowQty <= 0) return;
+                            if (!hasAtLeastOne || rowQty <= 0) return;
                             const name = templateDims.map((d: any) => {
                               const val = rowDims[d.label];
+                              if (!val) return '';
                               return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).join(' ');
+                            }).filter(Boolean).join(' ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
@@ -964,7 +1027,7 @@ export default function PurchasesPage() {
                             setRowCustom({});
                             setRowQty(0);
                           }}
-                          disabled={!templateDims.every((d: any) => {
+                          disabled={!templateDims.some((d: any) => {
                             const val = rowDims[d.label];
                             if (!val) return false;
                             if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
@@ -1031,13 +1094,24 @@ export default function PurchasesPage() {
                         onClick={() => {
                           const name = newVarName.trim();
                           if (!name || newVarQty <= 0) return;
-                          setCurrentItem({
-                            ...currentItem,
-                            variations: [
-                              ...currentItem.variations,
-                              { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
-                            ],
-                          });
+                          // Check if variation already exists (avoid duplicate)
+                          const existingIdx = currentItem.variations.findIndex(
+                            (v: any) => v.name.toLowerCase() === name.toLowerCase()
+                          );
+                          if (existingIdx >= 0) {
+                            // Update quantity of existing variation
+                            const updated = [...currentItem.variations];
+                            updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
+                            setCurrentItem({ ...currentItem, variations: updated });
+                          } else {
+                            setCurrentItem({
+                              ...currentItem,
+                              variations: [
+                                ...currentItem.variations,
+                                { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
+                              ],
+                            });
+                          }
                           setNewVarName('');
                           setNewVarQty(0);
                         }}
@@ -1198,6 +1272,13 @@ export default function PurchasesPage() {
         onClose={() => setImportOpen(false)}
         onImported={() => loadPurchases()}
         config={IMPORT_CONFIGS.purchases}
+      />
+
+      {/* New Product + Purchase Wizard */}
+      <NewProductPurchaseWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={() => loadPurchases()}
       />
 
       {/* Toast */}

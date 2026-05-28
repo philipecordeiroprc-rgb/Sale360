@@ -123,7 +123,11 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
   app.post('/:id/close', async (request, reply) => {
     const { id } = request.params as { id: string };
     const schema = z.object({
-      paymentMethod: z.string(),
+      paymentMethod: z.string().optional(),
+      payments: z.array(z.object({
+        paymentMethod: z.string().min(1),
+        amount: z.number().positive(),
+      })).optional(),
       discount: z.number().default(0),
       paymentReceived: z.number().optional(),
     });
@@ -136,7 +140,18 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
     });
     if (!command) return reply.status(404).send({ error: 'Comanda não encontrada ou já fechada' });
 
-    const total = Number(command.subtotal) - parsed.data.discount;
+    const total = Number(command.subtotal) - (parsed.success ? parsed.data.discount : 0);
+
+    // Build effective payments
+    let cmdEffectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (parsed.data.payments && parsed.data.payments.length > 0) {
+      cmdEffectivePayments = parsed.data.payments;
+    } else if (parsed.data.paymentMethod) {
+      cmdEffectivePayments = [{ paymentMethod: parsed.data.paymentMethod, amount: total }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
+    }
+    const cmdPrimaryMethod = cmdEffectivePayments[0].paymentMethod;
 
     // Create order from command
     const lastOrder = await prisma.order.findFirst({
@@ -148,7 +163,7 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
 
     await prisma.$transaction(async (tx) => {
       // Create order
-      await tx.order.create({
+      const order = await tx.order.create({
         data: {
           tenantId: request.tenantId,
           userId: request.userId,
@@ -158,7 +173,7 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
           discount: parsed.data.discount,
           total,
           paidAmount: parsed.data.paymentReceived || total,
-          paymentMethod: parsed.data.paymentMethod,
+          paymentMethod: cmdPrimaryMethod,
           paymentStatus: parsed.data.paymentReceived && parsed.data.paymentReceived < total ? 'PARTIAL' : 'PAID',
           notes: `Comanda mesa ${command.tableNumber}`,
           items: {
@@ -172,6 +187,17 @@ export const commandRoutes: FastifyPluginAsync = async (app) => {
           },
         },
       });
+
+      // Create OrderPayment records
+      for (const payment of cmdEffectivePayments) {
+        await tx.orderPayment.create({
+          data: {
+            orderId: order.id,
+            paymentMethod: payment.paymentMethod,
+            amount: payment.amount,
+          },
+        });
+      }
 
       // Close command
       await tx.tableCommand.update({

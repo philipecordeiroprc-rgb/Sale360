@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, X, Trash2, Loader2, Save, Copy } from 'lucide-react';
+import { ArrowLeft, Plus, X, Trash2, Loader2, Save, Copy, Shield } from 'lucide-react';
 import api from '@/lib/api';
 
 function useToast() {
@@ -53,8 +53,10 @@ export default function TenantDetailPage() {
   const [usersLoading, setUsersLoading] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
+  const [userForm, setUserForm] = useState({ email: '', name: '', password: '', role: 'CASHIER' });
   const [userSaving, setUserSaving] = useState(false);
+  const [existingUser, setExistingUser] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [resetModal, setResetModal] = useState<{ userId: string; userName: string; loading: boolean; resetLink: string; emailSent: boolean } | null>(null);
 
   // Modules
@@ -127,8 +129,26 @@ export default function TenantDetailPage() {
 
   const openUserCreate = () => {
     setEditingUserId(null);
-    setUserForm({ email: '', name: '', password: '', role: 'CASHIER', pin: '' });
+    setUserForm({ email: '', name: '', password: '', role: 'CASHIER' });
+    setExistingUser(null);
     setShowUserModal(true);
+  };
+
+  const lookupEmail = async (email: string) => {
+    if (!email || !email.includes('@')) { setExistingUser(null); return; }
+    setCheckingEmail(true);
+    try {
+      const result = await api.admin.lookupUser(email);
+      setExistingUser(result.exists ? result.user : null);
+      // Auto-fill name if user exists
+      if (result.exists && result.user) {
+        setUserForm(prev => ({ ...prev, name: result.user!.name, password: '' }));
+      }
+    } catch {
+      setExistingUser(null);
+    } finally {
+      setCheckingEmail(false);
+    }
   };
 
   const openUserEdit = (tu: any) => {
@@ -138,7 +158,6 @@ export default function TenantDetailPage() {
       name: tu.user?.name || '',
       password: '',
       role: tu.role || 'CASHIER',
-      pin: tu.pin || '',
     });
     setShowUserModal(true);
   };
@@ -152,15 +171,13 @@ export default function TenantDetailPage() {
           name: userForm.name,
           email: userForm.email,
           role: userForm.role,
-          pin: userForm.pin || undefined,
         });
       } else {
         await api.admin.tenants.users.add(id, {
           email: userForm.email,
           name: userForm.name,
-          password: userForm.password,
+          ...(existingUser ? {} : { password: userForm.password }),
           role: userForm.role,
-          pin: userForm.pin || undefined,
         });
       }
 
@@ -193,6 +210,31 @@ export default function TenantDetailPage() {
     } catch (err: any) {
       show(err.message || 'Erro ao gerar link', 'error');
       setResetModal(null);
+    }
+  };
+
+  const handleToggleForce2FA = async (userId: string, currentValue: boolean, userName: string) => {
+    if (!confirm(currentValue
+      ? `Deixar de exigir 2FA para ${userName}?`
+      : `Exigir 2FA para ${userName}? O usuario sera obrigado a configurar no proximo login.`
+    )) return;
+    try {
+      await api.admin.tenants.users.update(id, userId, { forceTwoFactor: !currentValue });
+      show(currentValue ? 'Exigencia de 2FA removida.' : '2FA agora e obrigatorio para este usuario.');
+      loadUsers();
+    } catch (err: any) {
+      show(err.message, 'error');
+    }
+  };
+
+  const handleDisable2FA = async (userId: string, userName: string) => {
+    if (!confirm(`Desativar autenticacao em 2 etapas para ${userName}?`)) return;
+    try {
+      await api.admin.users.disable2FA(userId);
+      show('2FA desativado com sucesso!');
+      loadUsers();
+    } catch (err: any) {
+      show(err.message, 'error');
     }
   };
 
@@ -420,7 +462,6 @@ export default function TenantDetailPage() {
                     <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Nome</th>
                     <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Email</th>
                     <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">Função</th>
-                    <th className="text-left px-6 py-4 text-sm font-medium text-slate-400">PIN</th>
                     <th className="text-right px-6 py-4 text-sm font-medium text-slate-400">Ações</th>
                   </tr>
                 </thead>
@@ -436,7 +477,6 @@ export default function TenantDetailPage() {
                           {tu.role === 'OWNER' ? 'Admin' : 'Vendedor'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-slate-400 text-sm">{tu.pin || '—'}</td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
@@ -451,6 +491,22 @@ export default function TenantDetailPage() {
                           >
                             Reset Senha
                           </button>
+                          <button
+                            onClick={() => handleToggleForce2FA(tu.userId, tu.forceTwoFactor, tu.user.name)}
+                            className={`text-sm transition-colors ${tu.forceTwoFactor ? 'text-emerald-400 hover:text-emerald-300' : 'text-slate-600 hover:text-slate-400'}`}
+                            title={tu.forceTwoFactor ? '2FA obrigatorio - clique para remover' : 'Exigir 2FA para este usuario'}
+                          >
+                            <Shield size={16} />
+                          </button>
+                          {tu.user?.totpEnabled && (
+                            <button
+                              onClick={() => handleDisable2FA(tu.user.id, tu.user.name)}
+                              className="text-sm text-orange-400 hover:text-orange-300 transition-colors"
+                              title="Desativar 2FA"
+                            >
+                              <Shield size={16} />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleRemoveUser(tu.userId)}
                             className="text-sm text-red-400 hover:text-red-300 transition-colors"
@@ -560,12 +616,22 @@ export default function TenantDetailPage() {
                 <input
                   type="email"
                   value={userForm.email}
-                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  onChange={(e) => { setUserForm({ ...userForm, email: e.target.value }); setExistingUser(null); }}
+                  onBlur={(e) => !editingUserId && lookupEmail(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                   required
+                  disabled={!!editingUserId}
                 />
+                {checkingEmail && (
+                  <p className="text-xs text-slate-500 mt-1">Verificando...</p>
+                )}
+                {!editingUserId && existingUser && (
+                  <p className="text-xs text-emerald-400 mt-1">
+                    Usuario ja possui conta no sistema. Nao e necessario definir senha.
+                  </p>
+                )}
               </div>
-              {!editingUserId && (
+              {!editingUserId && !existingUser && (
                 <div>
                   <label className="block text-slate-400 text-sm mb-1">Senha</label>
                   <input
@@ -574,7 +640,7 @@ export default function TenantDetailPage() {
                     onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                 </div>
               )}
@@ -589,17 +655,6 @@ export default function TenantDetailPage() {
                   <option value="CASHIER">Vendedor</option>
                   <option value="OWNER">Administrador</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-400 text-sm mb-1">PIN (4 dígitos, opcional)</label>
-                <input
-                  type="text"
-                  value={userForm.pin}
-                  onChange={(e) => setUserForm({ ...userForm, pin: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                  maxLength={4}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
-                />
               </div>
 
               <button

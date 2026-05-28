@@ -7,7 +7,6 @@ interface User {
   name: string;
   email: string;
   role: string;
-  pin?: string;
   storeRole?: string;
 }
 
@@ -18,7 +17,6 @@ interface Tenant {
   plan: string;
   status: string;
   role?: string;
-  pin?: string | null;
 }
 
 interface AuthState {
@@ -152,7 +150,7 @@ export const useAuth = create<AuthState>((set, get) => ({
     const data = await res.json();
     get().setAuth({
       token: data.token,
-      user: { ...user!, role: data.user.role, pin: data.user.pin },
+      user: { ...user!, role: data.user.role },
       tenant: data.tenant,
       tenants: availableTenants,
     });

@@ -162,7 +162,7 @@ log "🔨 Iniciando build..."
 # Install dependencies if needed (while services are running)
 if [ "${NEED_INSTALL:-false}" = true ]; then
   log "Instalando dependências..."
-  cd "$ROOT" && pnpm install --frozen-lockfile 2>&1 | tail -3 || fail "pnpm install falhou"
+  cd "$ROOT" && CI=true pnpm install --no-frozen-lockfile 2>&1 | tail -3 || fail "pnpm install falhou"
   ok "Dependências instaladas"
 fi
 

@@ -65,7 +65,6 @@ async function main() {
       tenantId: tenant.id,
       userId: user.id,
       role: UserRole.OWNER,
-      pin: '1234',
     },
   });
 

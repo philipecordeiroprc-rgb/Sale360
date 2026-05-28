@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { prisma } from '@sale360/db';
+import { prisma, Prisma } from '@sale360/db';
 import { sendResetEmail } from '../../services/email.js';
 import { z } from 'zod';
 
@@ -133,12 +133,27 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const users = await prisma.tenantUser.findMany({
       where: { tenantId: id },
       include: {
-        user: { select: { id: true, name: true, email: true, role: true, createdAt: true } },
+        user: { select: { id: true, name: true, email: true, role: true, createdAt: true, totpEnabled: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
 
     return users;
+  });
+
+  // Lookup user by email (for smart user creation)
+  app.get('/users/lookup', async (request, reply) => {
+    const { email } = request.query as { email?: string };
+    if (!email || !email.includes('@')) {
+      return reply.status(400).send({ error: 'Email inválido' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true },
+    });
+
+    return { exists: !!user, user: user || null };
   });
 
   // Add user to tenant
@@ -148,9 +163,8 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const schema = z.object({
       email: z.string().email(),
       name: z.string().min(1, 'Nome é obrigatório'),
-      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres').optional(),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
-      pin: z.string().length(4).optional(),
     });
 
     const parsed = schema.safeParse(request.body);
@@ -168,7 +182,17 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
       if (alreadyLinked) {
         return reply.status(400).send({ error: 'Usuário já está vinculado a esta loja.' });
       }
+      // User exists: update name if provided (name may have changed)
+      if (parsed.data.name && parsed.data.name !== user.name) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { name: parsed.data.name },
+        });
+      }
     } else {
+      if (!parsed.data.password) {
+        return reply.status(400).send({ error: 'Senha é obrigatória para novos usuários.' });
+      }
       const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
       user = await prisma.user.create({
         data: {
@@ -184,7 +208,6 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
         tenantId,
         userId: user.id,
         role: parsed.data.role as any,
-        pin: parsed.data.pin || '',
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
@@ -192,13 +215,13 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(tenantUser);
   });
 
-  // Update user role/pin in tenant
+  // Update user role in tenant
   app.put('/tenants/:id/users/:userId', async (request, reply) => {
     const { id: tenantId, userId } = request.params as { id: string; userId: string };
 
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
-      pin: z.string().length(4).optional(),
+      forceTwoFactor: z.boolean().optional(),
       name: z.string().min(1).optional(),
       email: z.string().email().optional(),
     });
@@ -213,13 +236,14 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     });
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
-    // Update TenantUser role/pin
+    // Update TenantUser role + forceTwoFactor
+    const updateData: any = {};
+    if (parsed.data.role !== undefined) updateData.role = parsed.data.role;
+    if (parsed.data.forceTwoFactor !== undefined) updateData.forceTwoFactor = parsed.data.forceTwoFactor;
+
     const updated = await prisma.tenantUser.update({
       where: { id: tenantUser.id },
-      data: {
-        ...(parsed.data.role !== undefined ? { role: parsed.data.role as any } : {}),
-        ...(parsed.data.pin !== undefined ? { pin: parsed.data.pin } : {}),
-      },
+      data: updateData,
       include: { user: { select: { id: true, name: true, email: true } } },
     });
 
@@ -251,7 +275,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   app.post('/tenants/:id/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
 
-    const schema = z.object({ password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres') });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
@@ -261,7 +285,10 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
 
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, forcePasswordChange: true },
+    });
 
     return { message: 'Senha redefinida com sucesso.' };
   });
@@ -377,7 +404,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
   // Reset any user's password
   app.post('/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
-    const schema = z.object({ password: z.string().min(6, 'A senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres') });
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
@@ -388,7 +415,10 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
 
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, forcePasswordChange: true },
+    });
 
     return { message: 'Senha redefinida com sucesso.' };
   });
@@ -417,10 +447,12 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     return updated;
   });
 
-  // List all users (across all tenants)
+  // List all users (across all tenants) — only users linked to at least one store
   app.get('/users', async (request) => {
     const { search, page = '1', limit = '50' } = request.query as Record<string, string>;
-    const where: any = {};
+    const where: any = {
+      tenants: { some: {} }, // only users with at least one linked tenant
+    };
     if (search) {
       where.OR = [
         { email: { contains: search, mode: 'insensitive' } },
@@ -431,7 +463,7 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where,
-        select: { id: true, name: true, email: true, role: true, createdAt: true, _count: { select: { tenants: true } } },
+        select: { id: true, name: true, email: true, role: true, createdAt: true, totpEnabled: true, _count: { select: { tenants: true } } },
         orderBy: { createdAt: 'desc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
         take: parseInt(limit),
@@ -440,5 +472,26 @@ export const adminRoutes: FastifyPluginAsync = async (app) => {
     ]);
 
     return { users, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
+  });
+
+  // Disable 2FA for any user (SUPER_ADMIN only)
+  app.post('/users/:userId/2fa/disable', async (request, reply) => {
+    const { userId } = request.params as { userId: string };
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, totpEnabled: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (!user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA não está ativo para este usuário.' });
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { totpEnabled: false, totpSecret: null, totpBackupCodes: Prisma.JsonNull },
+    });
+
+    return { message: '2FA desativado com sucesso.' };
   });
 };

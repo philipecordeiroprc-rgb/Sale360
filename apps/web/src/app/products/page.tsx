@@ -3,13 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import {
-  Plus, Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
-  Tags, X, Layers, DollarSign, Upload,
+  Search, Barcode, Edit2, ToggleLeft, ToggleRight, Trash2,
+  X, Layers, DollarSign, Upload,
 } from 'lucide-react';
 import { ImportModal } from '@/components/ui/ImportModal';
 import { IMPORT_CONFIGS } from '@/lib/import-configs';
 import { Modal } from '@/components/ui/Modal';
-import { CategoriesModal } from '@/components/products/CategoriesModal';
 import { StockDetailModal } from '@/components/products/StockDetailModal';
 import { VariationEditor, type VariationData } from '@/components/products/VariationEditor';
 import api, { type Product, type CategoryWithCount, type VariationTemplate } from '@/lib/api';
@@ -99,8 +98,6 @@ export default function ProductsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState('');
 
-  // Categories modal
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [stockProduct, setStockProduct] = useState<Product | null>(null);
   const [costProduct, setCostProduct] = useState<Product | null>(null);
@@ -258,15 +255,6 @@ export default function ProductsPage() {
   }, [loadProducts]);
 
   // Open form for create
-  const handleCreate = () => {
-    setEditingProduct(null);
-    setFormData({ ...emptyForm });
-    setFormVariations([]);
-    setSelectedTemplate(null);
-    setFormError('');
-    setFormOpen(true);
-  };
-
   // Open form for edit
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -426,13 +414,6 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2 self-start">
-          <button
-            onClick={() => setCategoriesOpen(true)}
-            className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Tags size={15} />
-            Categorias
-          </button>
           <div className="relative group">
             <button
               onClick={() => { setImportType('products'); setImportOpen(true); }}
@@ -455,21 +436,8 @@ export default function ProductsPage() {
               >
                 Produtos com Variações
               </button>
-              <button
-                onClick={() => { setCategoriesOpen(true); }}
-                className="w-full text-left px-3 py-2.5 hover:bg-slate-800 rounded-b-xl text-sm text-slate-300 transition-colors border-t border-slate-800"
-              >
-                Importar Categorias...
-              </button>
             </div>
           </div>
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-1.5 bg-indigo-500 hover:bg-indigo-400 text-white px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            <Plus size={16} />
-            Novo
-          </button>
         </div>
       </div>
 
@@ -593,17 +561,8 @@ export default function ProductsPage() {
           <p className="text-slate-400 mb-6">
             {search || selectedCategory !== 'all' || variationName
               ? 'Tente ajustar os filtros de busca.'
-              : 'Comece cadastrando seu primeiro produto.'}
+              : 'Use o menu Compras para cadastrar produtos.'}
           </p>
-          {!search && selectedCategory === 'all' && !variationName && (
-            <button
-              onClick={handleCreate}
-              className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-400 text-white px-5 py-3 rounded-xl font-semibold transition-colors mx-auto"
-            >
-              <Plus size={20} />
-              Novo Produto
-            </button>
-          )}
         </div>
       )}
 
@@ -1054,13 +1013,6 @@ export default function ProductsPage() {
           </div>
         </form>
       </Modal>
-
-      {/* Categories Modal */}
-      <CategoriesModal
-        open={categoriesOpen}
-        onClose={() => setCategoriesOpen(false)}
-        onChanged={() => { loadCategories(); loadProducts(); }}
-      />
 
       {/* Stock Detail Modal */}
       {stockProduct && (

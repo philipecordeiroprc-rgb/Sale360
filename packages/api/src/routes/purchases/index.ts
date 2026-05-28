@@ -232,52 +232,74 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
     const { id } = request.params as { id: string };
     const { itemExpiryDates } = (request.body || {}) as { itemExpiryDates?: Record<string, string | null> };
 
-    const purchase = await prisma.purchase.findFirst({
+    // Quick existence check (status validation happens atomically inside transaction)
+    const purchaseExists = await prisma.purchase.findFirst({
       where: { id, tenantId: request.tenantId },
-      include: { items: true },
+      select: { id: true, status: true },
     });
-    if (!purchase) return reply.status(404).send({ error: 'Compra não encontrada' });
-    if (purchase.status === 'RECEIVED') {
-      return reply.status(400).send({ error: 'Compra já foi recebida' });
-    }
-    if (purchase.status === 'CANCELLED') {
+    if (!purchaseExists) return reply.status(404).send({ error: 'Compra não encontrada' });
+    if (purchaseExists.status === 'CANCELLED') {
       return reply.status(400).send({ error: 'Compra cancelada não pode ser recebida' });
+    }
+    if (purchaseExists.status === 'RECEIVED') {
+      return reply.status(400).send({ error: 'Compra já foi recebida' });
     }
 
     const receivedAt = new Date();
 
-    await prisma.$transaction(async (tx) => {
-      // Update purchase status
-      await tx.purchase.update({
-        where: { id },
-        data: { status: 'RECEIVED', receivedAt },
-      });
+    try {
+      await prisma.$transaction(async (tx) => {
+        // Atomic guard: only proceed if still DRAFT (prevents TOCTOU race condition)
+        const result = await tx.purchase.updateMany({
+          where: { id, status: 'DRAFT' },
+          data: { status: 'RECEIVED', receivedAt },
+        });
+        if (result.count === 0) {
+          throw new Error('DUPLICATE_RECEIVE');
+        }
+
+        // Re-read items inside transaction after lock is acquired
+        const purchase = await tx.purchase.findFirst({
+          where: { id },
+          include: { items: true },
+        });
+        if (!purchase) throw new Error('PURCHASE_NOT_FOUND');
 
       // For each item, resolve variations first, then create batches
       for (const item of purchase.items) {
         let variationId = item.variationId || undefined;
 
-        // If no variationId but product name has " - " (template-generated variation), create it
+        // If no variationId but product name has " - ", find or create variation
         if (!variationId && item.productId && item.productName.includes(' - ')) {
-          const varName = item.productName.split(' - ')[1];
-          const newVar = await tx.productVariation.create({
-            data: {
-              productId: item.productId,
-              name: varName,
-              stockQty: 0,
-            },
+          const varName = item.productName.split(' - ').slice(1).join(' - ');
+          // Try existing variation first to avoid duplicates
+          const existingVar = await tx.productVariation.findFirst({
+            where: { productId: item.productId, name: varName },
           });
-          variationId = newVar.id;
-          // Link the purchase item
-          await tx.purchaseItem.update({
-            where: { id: item.id },
-            data: { variationId: newVar.id },
-          });
-          // Mark product as having variations
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { hasVariations: true },
-          });
+          if (existingVar) {
+            variationId = existingVar.id;
+            await tx.purchaseItem.update({
+              where: { id: item.id },
+              data: { variationId: existingVar.id },
+            });
+          } else {
+            const newVar = await tx.productVariation.create({
+              data: {
+                productId: item.productId,
+                name: varName,
+                stockQty: 0,
+              },
+            });
+            variationId = newVar.id;
+            await tx.purchaseItem.update({
+              where: { id: item.id },
+              data: { variationId: newVar.id },
+            });
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { hasVariations: true },
+            });
+          }
         }
 
         // Update variation stock
@@ -340,15 +362,21 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
           }
         }
       }
-    });
+      });
 
-    // Return updated purchase
-    const updated = await prisma.purchase.findFirst({
-      where: { id },
-      include: { items: true, supplier: true },
-    });
+      // Return updated purchase
+      const updated = await prisma.purchase.findFirst({
+        where: { id },
+        include: { items: true, supplier: true },
+      });
 
-    return reply.status(200).send(updated);
+      return reply.status(200).send(updated);
+    } catch (err: any) {
+      if (err.message === 'DUPLICATE_RECEIVE') {
+        return reply.status(409).send({ error: 'Compra já foi recebida em outra requisição simultânea' });
+      }
+      throw err;
+    }
   });
 
   // Import purchases (bulk CSV)

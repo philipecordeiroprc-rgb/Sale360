@@ -196,6 +196,16 @@ export const syncRoutes: FastifyPluginAsync = async (app) => {
           });
         }
 
+        // Build OrderPayment records from sync data
+        const syncPayments: Array<{ paymentMethod: string; amount: number }> = (data as any).payments?.length
+          ? (data as any).payments.map((p: any) => ({
+              paymentMethod: p.paymentMethod,
+              amount: p.amount,
+            }))
+          : data.paymentMethod
+            ? [{ paymentMethod: data.paymentMethod, amount: data.total }]
+            : [];
+
         // Create order with items (including cost data)
         const order = await prisma.order.create({
           data: {
@@ -209,7 +219,7 @@ export const syncRoutes: FastifyPluginAsync = async (app) => {
             discount: data.discount || 0,
             total: data.total,
             paidAmount: data.paidAmount || data.total,
-            paymentMethod: data.paymentMethod,
+            paymentMethod: syncPayments.length > 0 ? syncPayments[0].paymentMethod : data.paymentMethod,
             paymentStatus: data.paymentStatus || 'PAID',
             source: data.source || 'PDV',
             syncStatus: 'SYNCED',
@@ -220,6 +230,17 @@ export const syncRoutes: FastifyPluginAsync = async (app) => {
           },
           include: { items: true },
         });
+
+        // Create OrderPayment records for sync
+        for (const payment of syncPayments) {
+          await prisma.orderPayment.create({
+            data: {
+              orderId: order.id,
+              paymentMethod: payment.paymentMethod,
+              amount: payment.amount,
+            },
+          });
+        }
 
         // Cash flow
         await prisma.cashFlow.create({

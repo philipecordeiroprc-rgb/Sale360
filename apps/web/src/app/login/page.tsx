@@ -1,36 +1,70 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { Shield, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import QRCodeLib from 'qrcode';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'password' | 'pin'>('password');
-  const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  // 2FA step
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [twoFactorToken, setTwoFactorToken] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+
+  // Forced 2FA setup step (admin required 2FA but user hasn't set it up)
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [setupToken, setSetupToken] = useState('');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [setupCode, setSetupCode] = useState('');
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [showBackupCodes, setShowBackupCodes] = useState(false);
+
+  // Generate QR code when forced setup starts
+  useEffect(() => {
+    if (!showTwoFactorSetup || !setupToken) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/setup-2fa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setupToken }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || 'Erro ao iniciar configuração 2FA.');
+          return;
+        }
+        if (!cancelled) {
+          const dataUrl = await QRCodeLib.toDataURL(data.qrCodeUri, { width: 200, margin: 2 });
+          setQrDataUrl(dataUrl);
+        }
+      } catch {
+        if (!cancelled) setError('Erro de conexão.');
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [showTwoFactorSetup, setupToken]);
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      const endpoint = mode === 'pin'
-        ? '/api/auth/login-pin'
-        : '/api/auth/login';
-
-      const body = mode === 'pin'
-        ? { email: email.trim(), pin }
-        : { email: email.trim(), password };
-
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -41,29 +75,128 @@ export default function LoginPage() {
         return;
       }
 
-      useAuth.getState().setAuth({
-        token: data.token,
-        user: data.user,
-        tenant: data.tenant,
-        tenants: data.tenants,
-      });
-
-      // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
-      if (data.tenants && data.tenants.length > 1) {
-        router.push('/select-store');
-      } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
-        // SUPER_ADMIN with single store: also show selector so they can pick admin or store
-        router.push('/select-store');
-      } else {
-        const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
-        router.push(redirectTo);
-        router.refresh();
+      // Forced 2FA setup — admin requires user to set up 2FA
+      if (data.mustSetupTwoFactor) {
+        setSetupToken(data.setupToken);
+        setShowTwoFactorSetup(true);
+        setLoading(false);
+        return;
       }
+
+      // 2FA required — show code input
+      if (data.requireTwoFactor) {
+        setTwoFactorToken(data.twoFactorToken);
+        setShowTwoFactor(true);
+        setLoading(false);
+        return;
+      }
+
+      // No 2FA — proceed with normal login
+      finalizeLogin(data);
     } catch (err) {
       setError('Erro de conexão. Verifique sua internet.');
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ twoFactorToken, code: totpCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Código inválido');
+        setLoading(false);
+        return;
+      }
+
+      finalizeLogin(data);
+    } catch (err) {
+      setError('Erro de conexão. Verifique sua internet.');
+      setLoading(false);
+    }
+  };
+
+  const finalizeLogin = (data: any) => {
+    useAuth.getState().setAuth({
+      token: data.token,
+      user: data.user,
+      tenant: data.tenant,
+      tenants: data.tenants,
+    });
+
+    // Force password change if required
+    if (data.mustChangePassword) {
+      router.push('/change-password');
+      return;
+    }
+
+    // If user has multiple tenants (or is SUPER_ADMIN with stores), let them choose
+    if (data.tenants && data.tenants.length > 1) {
+      router.push('/select-store');
+    } else if (data.tenants && data.tenants.length === 1 && data.user.role === 'SUPER_ADMIN') {
+      router.push('/select-store');
+    } else {
+      const redirectTo = data.user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
+      router.push(redirectTo);
+      router.refresh();
+    }
+  };
+
+  // Store confirm-2fa response for finalize after showing backup codes
+  const [confirmData, setConfirmData] = useState<any>(null);
+
+  const handleSetupConfirm = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/confirm-2fa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setupToken, code: setupCode }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Código inválido');
+        setLoading(false);
+        return;
+      }
+
+      // Show backup codes, then finalize
+      setBackupCodes(data.backupCodes || []);
+      setConfirmData(data);
+      setShowBackupCodes(true);
+      setLoading(false);
+    } catch {
+      setError('Erro de conexão.');
+      setLoading(false);
+    }
+  };
+
+  const finishSetupAndLogin = () => {
+    if (confirmData) {
+      finalizeLogin(confirmData);
+    }
+  };
+
+  const backToPassword = () => {
+    setShowTwoFactor(false);
+    setTwoFactorToken('');
+    setTotpCode('');
+    setError('');
   };
 
   return (
@@ -84,74 +217,207 @@ export default function LoginPage() {
 
         {/* Form Card */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-          <h2 className="text-lg font-bold text-white text-center mb-4">
-            {mode === 'pin' ? 'Login Rápido (PIN)' : 'Entrar'}
-          </h2>
+          {showTwoFactorSetup ? (
+            showBackupCodes ? (
+              <>
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                    <Shield size={24} className="text-green-400" />
+                  </div>
+                </div>
+                <h2 className="text-lg font-bold text-white text-center mb-2">2FA Configurado!</h2>
+                <p className="text-slate-400 text-sm text-center mb-4">
+                  Guarde estes códigos de backup. Cada um pode ser usado uma vez.
+                </p>
+                <div className="bg-slate-950 rounded-xl p-3 mb-4 grid grid-cols-2 gap-2">
+                  {backupCodes.map((code, i) => (
+                    <code key={i} className="text-indigo-400 text-sm font-mono text-center bg-slate-900 rounded px-2 py-1 select-all">
+                      {code}
+                    </code>
+                  ))}
+                </div>
+                <button
+                  onClick={finishSetupAndLogin}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors"
+                >
+                  Entendi, Continuar
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <button onClick={() => { setShowTwoFactorSetup(false); setSetupToken(''); setError(''); }} className="text-slate-400 hover:text-white transition-colors">
+                    <ArrowLeft size={18} />
+                  </button>
+                  <h2 className="text-lg font-bold text-white">Configurar 2FA</h2>
+                </div>
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            {/* Email */}
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                required
-              />
-            </div>
+                <div className="flex justify-center mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-yellow-500/20 flex items-center justify-center">
+                    <Shield size={24} className="text-yellow-400" />
+                  </div>
+                </div>
+                <p className="text-slate-400 text-sm text-center mb-2">
+                  O administrador exige autenticação em 2 etapas.
+                </p>
+                <p className="text-slate-500 text-xs text-center mb-4">
+                  Escaneie o QR code com o Google Authenticator e digite o código abaixo.
+                </p>
 
-            {/* Password or PIN */}
-            <div>
-              <label className="block text-slate-400 text-sm mb-1">
-                {mode === 'pin' ? 'PIN (4 dígitos)' : 'Senha'}
-              </label>
-              <input
-                type={mode === 'pin' ? 'text' : 'password'}
-                value={mode === 'pin' ? pin : password}
-                onChange={(e) => mode === 'pin' ? setPin(e.target.value) : setPassword(e.target.value)}
-                maxLength={mode === 'pin' ? 4 : undefined}
-                placeholder={mode === 'pin' ? '1234' : '••••••'}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                required
-              />
-            </div>
+                {/* QR Code */}
+                {qrDataUrl ? (
+                  <div className="flex justify-center mb-4">
+                    <img src={qrDataUrl} alt="QR Code 2FA" className="rounded-xl bg-white p-2 w-48 h-48" />
+                  </div>
+                ) : (
+                  <div className="flex justify-center mb-4">
+                    <div className="w-48 h-48 rounded-xl bg-slate-800 animate-pulse" />
+                  </div>
+                )}
 
-            {/* Error */}
-            {error && (
-              <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
-                {error}
+                <form onSubmit={handleSetupConfirm} className="space-y-3">
+                  <div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      value={setupCode}
+                      onChange={(e) => setSetupCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      maxLength={6}
+                      placeholder="000000"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading || setupCode.length !== 6}
+                    className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Verificando...' : 'Verificar e Ativar'}
+                  </button>
+                </form>
+              </>
+            )
+          ) : showTwoFactor ? (
+            <>
+              <div className="flex items-center gap-2 mb-4">
+                <button onClick={backToPassword} className="text-slate-400 hover:text-white transition-colors">
+                  <ArrowLeft size={18} />
+                </button>
+                <h2 className="text-lg font-bold text-white">Verificação em 2 Etapas</h2>
               </div>
-            )}
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Entrando...' : 'Entrar'}
-            </button>
-          </form>
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <Shield size={24} className="text-indigo-400" />
+                </div>
+              </div>
+              <p className="text-slate-400 text-sm text-center mb-4">
+                Digite o código de 6 dígitos do seu aplicativo Google Authenticator.
+              </p>
 
-          {/* Toggle & Forgot */}
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <button
-              onClick={() => { setMode(mode === 'pin' ? 'password' : 'pin'); setError(''); }}
-              className="text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              {mode === 'pin' ? 'Usar senha' : 'Usar PIN'}
-            </button>
-            <a
-              href="/forgot-password"
-              className="text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              Esqueceu a senha?
-            </a>
-          </div>
+              <form onSubmit={handleTwoFactorSubmit} className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    value={totpCode}
+                    onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    placeholder="000000"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white text-center text-2xl tracking-widest placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                    autoFocus
+                  />
+                </div>
 
+                {error && (
+                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || totpCode.length !== 6}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Verificando...' : 'Verificar'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <h2 className="text-lg font-bold text-white text-center mb-4">Entrar</h2>
+
+              <form onSubmit={handlePasswordSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="seu@email.com"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-400 text-sm mb-1">Senha</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-400/10 border border-red-400/30 rounded-xl px-4 py-2.5 text-red-400 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-indigo-500 hover:bg-indigo-400 text-white py-2.5 rounded-xl font-semibold transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Entrando...' : 'Entrar'}
+                </button>
+              </form>
+
+              <div className="mt-3 text-center text-sm">
+                <a
+                  href="/forgot-password"
+                  className="text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  Esqueceu a senha?
+                </a>
+              </div>
+            </>
+          )}
         </div>
+
+        {/* Backup code hint */}
+        {showTwoFactor && (
+          <p className="text-center mt-4 text-slate-500 text-xs">
+            Perdeu o acesso ao autenticador? Use um código de backup ou contate o administrador.
+          </p>
+        )}
       </div>
     </div>
   );

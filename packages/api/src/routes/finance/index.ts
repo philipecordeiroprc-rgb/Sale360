@@ -105,7 +105,7 @@ export const financeRoutes: FastifyPluginAsync = async (app) => {
 
     const orders = await prisma.order.findMany({
       where,
-      select: { total: true, paymentMethod: true, createdAt: true },
+      select: { total: true, paymentMethod: true, createdAt: true, payments: { select: { paymentMethod: true, amount: true } } },
     });
 
     const totalSales = orders.reduce((s, o) => s + Number(o.total), 0);

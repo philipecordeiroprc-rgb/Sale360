@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { prisma } from '@sale360/db';
+import { prisma, Prisma } from '@sale360/db';
 import { sendResetEmail } from '../../services/email.js';
+import { authenticator } from 'otplib';
 import { z } from 'zod';
 
 export const tenantRoutes: FastifyPluginAsync = async (app) => {
@@ -128,14 +129,28 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     return users;
   });
 
+  // Lookup user by email (for smart user creation)
+  app.get('/users/lookup', async (request, reply) => {
+    const { email } = request.query as { email?: string };
+    if (!email || !email.includes('@')) {
+      return reply.status(400).send({ error: 'Email inválido' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, name: true, email: true },
+    });
+
+    return { exists: !!user, user: user || null };
+  });
+
   // Add user to tenant
   app.post('/users', async (request, reply) => {
     const schema = z.object({
       email: z.string().email(),
       name: z.string().min(1, 'Nome é obrigatório'),
-      password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
+      password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres').optional(),
       role: z.enum(['OWNER', 'CASHIER']).default('CASHIER'),
-      pin: z.string().length(4).optional(),
     });
 
     const parsed = schema.safeParse(request.body);
@@ -169,7 +184,17 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
       if (alreadyLinked) {
         return reply.status(400).send({ error: 'Usuário já está vinculado a esta loja.' });
       }
+      // User exists: update name if provided
+      if (parsed.data.name && parsed.data.name !== user.name) {
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { name: parsed.data.name },
+        });
+      }
     } else {
+      if (!parsed.data.password) {
+        return reply.status(400).send({ error: 'Senha é obrigatória para novos usuários.' });
+      }
       const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
       user = await prisma.user.create({
         data: {
@@ -185,7 +210,6 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
         tenantId: request.tenantId,
         userId: user.id,
         role: parsed.data.role as any,
-        pin: parsed.data.pin || '',
       },
       include: { user: { select: { id: true, name: true, email: true } } },
     });
@@ -193,12 +217,11 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     return reply.status(201).send(tenantUser);
   });
 
-  // Update user role/pin in tenant
+  // Update user role in tenant
   app.put('/users/:userId', async (request, reply) => {
     const { userId } = request.params as { userId: string };
     const schema = z.object({
       role: z.enum(['OWNER', 'CASHIER']).optional(),
-      pin: z.string().length(4).optional(),
     });
 
     const parsed = schema.safeParse(request.body);
@@ -235,7 +258,7 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
   // Reset user password (ADMIN only)
   app.post('/users/:userId/reset-password', async (request, reply) => {
     const { userId } = request.params as { userId: string };
-    const schema = z.object({ password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres') });
+    const schema = z.object({ password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres') });
 
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
@@ -249,7 +272,10 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     if (!tenantUser) return reply.status(404).send({ error: 'Usuário não encontrado nesta loja.' });
 
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
-    await prisma.user.update({ where: { id: userId }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword, forcePasswordChange: true },
+    });
 
     return { message: 'Senha redefinida com sucesso.' };
   });
@@ -299,17 +325,17 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
 
     const tenantUser = await prisma.tenantUser.findUnique({
       where: { tenantId_userId: { tenantId: request.tenantId, userId: request.userId } },
-      select: { role: true, pin: true },
+      select: { role: true },
     });
 
-    return { ...user, storeRole: tenantUser?.role, pin: tenantUser?.pin };
+    return { ...user, storeRole: tenantUser?.role };
   });
 
   // Change own password
   app.post('/me/change-password', async (request, reply) => {
     const schema = z.object({
       currentPassword: z.string().min(1, 'Senha atual é obrigatória'),
-      newPassword: z.string().min(6, 'Nova senha deve ter no mínimo 6 caracteres'),
+      newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
@@ -325,7 +351,10 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
     }
 
     const hashedPassword = await bcrypt.hash(parsed.data.newPassword, 10);
-    await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword, forcePasswordChange: false },
+    });
 
     return { message: 'Senha alterada com sucesso.' };
   });
@@ -337,5 +366,107 @@ export const tenantRoutes: FastifyPluginAsync = async (app) => {
       orderBy: { lastSyncAt: 'desc' },
     });
     return devices;
+  });
+
+  // ============================================================
+  // 2FA (Two-Factor Authentication)
+  // ============================================================
+
+  // Get 2FA status for current user
+  app.get('/me/2fa/status', async (request) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true },
+    });
+    return { enabled: user?.totpEnabled || false };
+  });
+
+  // Start 2FA setup — generate secret and QR code URI
+  app.post('/me/2fa/setup', async (request, reply) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true, email: true, name: true },
+    });
+    if (!user) return reply.status(404).send({ error: 'Usuário não encontrado.' });
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo. Desative primeiro.' });
+    }
+
+    const secret = authenticator.generateSecret();
+    const otpauth = authenticator.keyuri(user.email, 'Sale360', secret);
+
+    // Store secret temporarily (not yet enabled)
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: { totpSecret: secret },
+    });
+
+    return { secret, qrCodeUri: otpauth };
+  });
+
+  // Confirm 2FA setup — verify code and enable
+  app.post('/me/2fa/confirm', async (request, reply) => {
+    const schema = z.object({ code: z.string().length(6) });
+    const parsed = schema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ error: 'Código inválido.' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpSecret: true, totpEnabled: true },
+    });
+    if (!user?.totpSecret) {
+      return reply.status(400).send({ error: 'Inicie a configuração do 2FA primeiro.' });
+    }
+    if (user.totpEnabled) {
+      return reply.status(400).send({ error: '2FA já está ativo.' });
+    }
+
+    const isValid = authenticator.check(parsed.data.code, user.totpSecret);
+    if (!isValid) {
+      return reply.status(400).send({ error: 'Código inválido. Tente novamente.' });
+    }
+
+    // Generate 8 backup codes (6-digit random numbers, bcrypt hashed)
+    const backupCodes: string[] = [];
+    const backupHashes: string[] = [];
+    for (let i = 0; i < 8; i++) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      backupCodes.push(code);
+      backupHashes.push(await bcrypt.hash(code, 10));
+    }
+
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        totpEnabled: true,
+        totpBackupCodes: backupHashes,
+      },
+    });
+
+    return { backupCodes, message: '2FA ativado com sucesso. Guarde os códigos de backup.' };
+  });
+
+  // Disable 2FA
+  app.post('/me/2fa/disable', async (request, reply) => {
+    const user = await prisma.user.findUnique({
+      where: { id: request.userId },
+      select: { totpEnabled: true },
+    });
+    if (!user?.totpEnabled) {
+      return reply.status(400).send({ error: '2FA não está ativo.' });
+    }
+
+    await prisma.user.update({
+      where: { id: request.userId },
+      data: {
+        totpEnabled: false,
+        totpSecret: null,
+        totpBackupCodes: Prisma.JsonNull,
+      },
+    });
+
+    return { message: '2FA desativado com sucesso.' };
   });
 };

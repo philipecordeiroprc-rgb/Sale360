@@ -101,6 +101,12 @@ export const api = {
         body: JSON.stringify({ tenantId }),
       });
     },
+    login2FA(twoFactorToken: string, code: string, deviceId?: string) {
+      return request<any>('/api/auth/login-2fa', {
+        method: 'POST',
+        body: JSON.stringify({ twoFactorToken, code, deviceId }),
+      });
+    },
   },
 
   // Products
@@ -214,7 +220,8 @@ export const api = {
       subtotal: number;
       discount?: number;
       total: number;
-      paymentMethod: string;
+      paymentMethod?: string;
+      payments?: Array<{ paymentMethod: string; amount: number }>;
       paymentStatus?: string;
       dueDate?: string;
       notes?: string;
@@ -234,10 +241,10 @@ export const api = {
     cancel(id: string) {
       return request<any>(`/api/orders/${id}/cancel`, { method: 'POST' });
     },
-    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string }) {
+    pay(id: string, data?: { paidAmount?: number; paymentMethod?: string; payments?: Array<{ paymentMethod: string; amount: number }> }) {
       return request<any>(`/api/orders/${id}/pay`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
-    confirm(id: string, data?: { paymentMethod?: string }) {
+    confirm(id: string, data?: { paymentMethod?: string; payments?: Array<{ paymentMethod: string; amount: number }>; itemBatchIds?: Record<string, string> }) {
       return request<any>(`/api/orders/${id}/confirm`, { method: 'POST', body: JSON.stringify(data || {}) });
     },
   },
@@ -397,13 +404,16 @@ export const api = {
   // Tenant users (ADMIN)
   tenant: {
     users: {
+      lookup(email: string) {
+        return request<{ exists: boolean; user: { id: string; name: string; email: string } | null }>(`/api/tenant/users/lookup?email=${encodeURIComponent(email)}`);
+      },
       list() {
         return request<any[]>('/api/tenant/users');
       },
-      create(data: { email: string; name: string; password: string; role: string; pin?: string }) {
+      create(data: { email: string; name: string; password?: string; role: string }) {
         return request<any>('/api/tenant/users', { method: 'POST', body: JSON.stringify(data) });
       },
-      update(userId: string, data: { role?: string; pin?: string }) {
+      update(userId: string, data: { role?: string }) {
         return request<any>(`/api/tenant/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
       },
       remove(userId: string) {
@@ -423,6 +433,18 @@ export const api = {
       changePassword(currentPassword: string, newPassword: string) {
         return request<any>('/api/tenant/me/change-password', { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
       },
+      twoFactorStatus() {
+        return request<{ enabled: boolean }>('/api/tenant/me/2fa/status');
+      },
+      twoFactorSetup() {
+        return request<{ secret: string; qrCodeUri: string }>('/api/tenant/me/2fa/setup', { method: 'POST' });
+      },
+      twoFactorConfirm(code: string) {
+        return request<{ backupCodes: string[]; message: string }>('/api/tenant/me/2fa/confirm', { method: 'POST', body: JSON.stringify({ code }) });
+      },
+      twoFactorDisable() {
+        return request<{ message: string }>('/api/tenant/me/2fa/disable', { method: 'POST' });
+      },
     },
     features() {
       return request<any>('/api/tenant/features');
@@ -434,6 +456,9 @@ export const api = {
 
   // Admin (SUPER_ADMIN)
   admin: {
+    lookupUser(email: string) {
+      return request<{ exists: boolean; user: { id: string; name: string; email: string } | null }>(`/api/admin/users/lookup?email=${encodeURIComponent(email)}`);
+    },
     tenants: {
       list(params?: { search?: string }) {
         const sp = new URLSearchParams();
@@ -454,10 +479,10 @@ export const api = {
         list(tenantId: string) {
           return request<any[]>(`/api/admin/tenants/${tenantId}/users`);
         },
-        add(tenantId: string, data: { email: string; name: string; password: string; role: string; pin?: string }) {
+        add(tenantId: string, data: { email: string; name: string; password?: string; role: string }) {
           return request<any>(`/api/admin/tenants/${tenantId}/users`, { method: 'POST', body: JSON.stringify(data) });
         },
-        update(tenantId: string, userId: string, data: { role?: string; pin?: string; name?: string; email?: string }) {
+        update(tenantId: string, userId: string, data: { role?: string; forceTwoFactor?: boolean; name?: string; email?: string }) {
           return request<any>(`/api/admin/tenants/${tenantId}/users/${userId}`, { method: 'PUT', body: JSON.stringify(data) });
         },
         remove(tenantId: string, userId: string) {
@@ -491,6 +516,9 @@ export const api = {
       },
       resetPassword(userId: string, password: string) {
         return request<any>(`/api/admin/users/${userId}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
+      },
+      disable2FA(userId: string) {
+        return request<any>(`/api/admin/users/${userId}/2fa/disable`, { method: 'POST' });
       },
     },
   },

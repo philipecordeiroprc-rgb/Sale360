@@ -17,34 +17,14 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { ProductGrid } from '@/components/products/ProductGrid';
 import dynamic from 'next/dynamic';
 import { QuickAddSheet } from '@/components/products/QuickAddSheet';
+import {
+  PAYMENT_METHODS,
+  CONFIRM_PAYMENT_METHODS,
+  paymentLabel,
+  isFiado,
+  type PaymentLine,
+} from '@/lib/payment-constants';
 const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
-
-const PAYMENT_METHODS = [
-  { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
-  { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
-  { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
-  { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
-  { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
-];
-function paymentLabel(method: string | null | undefined): string {
-  const map: Record<string, string> = {
-    credit_store: 'Fiado',
-    cash: 'Dinheiro',
-    pix: 'Pix',
-    credit: 'Crédito',
-    debit: 'Débito',
-    Dinheiro: 'Dinheiro',
-    Pix: 'Pix',
-    Debito: 'Débito',
-    Credito: 'Crédito',
-    Fiado: 'Fiado',
-  };
-  return map[method || ''] || method || '—';
-}
-
-function isFiado(method: string | null | undefined): boolean {
-  return method === 'credit_store' || method === 'Fiado';
-}
 
 function getWhatsAppMessage(order: any): string {
   const customerName = order.customer?.name || order.customerName || 'Cliente';
@@ -84,12 +64,10 @@ function getWhatsAppUrl(phone: string, message: string): string {
   return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
-const CONFIRM_PAYMENT_METHODS = [
-  { id: 'Dinheiro', label: 'Dinheiro', icon: Banknote, color: 'bg-emerald-500' },
-  { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
-  { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
-  { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
-];
+function orderHasFiado(order: any): boolean {
+  return order.payments?.some((p: any) => p.paymentMethod === 'credit_store') || isFiado(order.paymentMethod);
+}
+
 
 interface CartItem {
   productId?: string;
@@ -152,7 +130,7 @@ export default function OrdersPage() {
   const [couponData, setCouponData] = useState<any>(null);
   const [couponError, setCouponError] = useState('');
   const [validatingCoupon, setValidatingCoupon] = useState(false);
-  const [selectedPayment, setSelectedPayment] = useState(PAYMENT_METHODS[0]);
+  const [paymentLines, setPaymentLines] = useState<PaymentLine[]>([]);
   const [dueDate, setDueDate] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -169,7 +147,7 @@ export default function OrdersPage() {
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
   const [confirmingIsOnline, setConfirmingIsOnline] = useState(false);
-  const [selectedConfirmPayment, setSelectedConfirmPayment] = useState(CONFIRM_PAYMENT_METHODS[0]);
+  const [confirmTotal, setConfirmTotal] = useState(0);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -337,13 +315,19 @@ export default function OrdersPage() {
     setCouponCode('');
     setCouponData(null);
     setCouponError('');
-    setSelectedPayment(PAYMENT_METHODS[0]);
+    setPaymentLines([]);
     setDueDate('');
     setSaleOpen(true);
   };
 
   const handleCreateSale = async () => {
     if (cart.length === 0) { show('Adicione produtos', 'error'); return; }
+    // Validate payment lines
+    const paidSum = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+    if (paymentLines.length === 0 || Math.abs(paidSum - totalWithDiscount) > 0.01) {
+      show('Informe as formas de pagamento. A soma deve igualar o total.', 'error');
+      return;
+    }
 
     // Check for products that have batches with expiry dates
     const productsWithStock = cart.filter(c => c.productId);
@@ -413,9 +397,12 @@ export default function OrdersPage() {
       total: totalWithDiscount,
       couponId: couponData?.couponId || undefined,
       couponDiscount: couponDiscount || undefined,
-      paymentMethod: selectedPayment.id,
-      paymentStatus: selectedPayment.paymentStatus || 'PAID',
-      dueDate: selectedPayment.paymentStatus === 'PENDING' && dueDate ? dueDate : undefined,
+      payments: paymentLines.map(pl => ({
+        paymentMethod: pl.methodId,
+        amount: pl.amount,
+      })),
+      paymentStatus: paymentLines.some(pl => isFiado(pl.methodId)) ? 'PENDING' : 'PAID',
+      dueDate: paymentLines.some(pl => isFiado(pl.methodId)) && dueDate ? dueDate : undefined,
       localId,
     };
 
@@ -472,10 +459,14 @@ export default function OrdersPage() {
     }
   };
 
-  const handlePay = (id: string) => {
+  const handlePay = async (id: string) => {
     setConfirmingOrderId(id);
     setConfirmingIsOnline(false);
-    setSelectedConfirmPayment(CONFIRM_PAYMENT_METHODS[0]);
+    setPaymentLines([]);
+    try {
+      const order = await api.orders.get(id);
+      setConfirmTotal(Number(order.total) || 0);
+    } catch { /* ignore */ }
     setConfirmPaymentOpen(true);
   };
 
@@ -483,7 +474,11 @@ export default function OrdersPage() {
     const id = confirmingOrderId;
     if (!id) return;
     try {
-      const result = await api.orders.pay(id, { paymentMethod: selectedConfirmPayment.id });
+      const body: any = {};
+      if (paymentLines.length > 0) {
+        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
+      }
+      const result = await api.orders.pay(id, body);
       show(result.message || 'Pagamento recebido!');
       setConfirmPaymentOpen(false);
       setConfirmingOrderId(null);
@@ -495,10 +490,14 @@ export default function OrdersPage() {
     }
   };
 
-  const handleConfirmOnline = (id: string) => {
+  const handleConfirmOnline = async (id: string) => {
     setConfirmingOrderId(id);
     setConfirmingIsOnline(true);
-    setSelectedConfirmPayment(CONFIRM_PAYMENT_METHODS[0]);
+    setPaymentLines([]);
+    try {
+      const order = await api.orders.get(id);
+      setConfirmTotal(Number(order.total) || 0);
+    } catch { /* ignore */ }
     setConfirmPaymentOpen(true);
   };
 
@@ -506,7 +505,10 @@ export default function OrdersPage() {
     const id = confirmingOrderId;
     if (!id) return;
     try {
-      const body: any = { paymentMethod: selectedConfirmPayment.id };
+      const body: any = {};
+      if (paymentLines.length > 0) {
+        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
+      }
       if (itemBatchIds && Object.keys(itemBatchIds).length > 0) {
         body.itemBatchIds = itemBatchIds;
       }
@@ -577,6 +579,9 @@ export default function OrdersPage() {
       if (order) { setDetailOrder(order); setDetailOpen(true); }
     } catch { show('Erro ao carregar detalhes', 'error'); }
   };
+
+  const paidSum = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+  const paymentValid = paymentLines.length > 0 && Math.abs(paidSum - totalWithDiscount) <= 0.01;
 
   return (
     <div className="animate-slide-up">
@@ -711,7 +716,14 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-right text-white font-semibold">R$ {Number(o.total).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center hidden md:table-cell">
                       <div className="flex items-center justify-center gap-1">
-                        {o.paidWithMethod ? (
+                        {o.payments && o.payments.length > 0 ? (
+                          o.payments.map((p: any, idx: number) => (
+                            <span key={idx} className="flex items-center gap-0.5">
+                              {idx > 0 && <span className="text-slate-600 text-[10px]">+</span>}
+                              <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(p.paymentMethod)}</span>
+                            </span>
+                          ))
+                        ) : o.paidWithMethod ? (
                           <>
                             <span className="text-xs bg-slate-800 rounded-md px-2 py-1 text-white">{paymentLabel(o.paidWithMethod)}</span>
                             <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
@@ -759,7 +771,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
-                        {isFiado(o.paymentMethod) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED' && o.customer?.phone && (
+                        {orderHasFiado(o) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED' && o.customer?.phone && (
                           <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o))}
                             target="_blank" rel="noopener noreferrer"
                             className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors"
@@ -767,13 +779,13 @@ export default function OrdersPage() {
                             <WhatsAppIcon size={16} />
                           </a>
                         )}
-                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && !orderHasFiado(o) && (
                           <button onClick={() => handleConfirmOnline(o.id)}
                             className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
                             <CheckCircle size={16} />
                           </button>
                         )}
-                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && o.source !== 'ONLINE' && (
+                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (o.source !== 'ONLINE' || orderHasFiado(o)) && (
                           <button onClick={() => handlePay(o.id)}
                             className="p-1.5 text-amber-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Receber pagamento">
                             <Banknote size={16} />
@@ -1000,25 +1012,71 @@ export default function OrdersPage() {
           {/* ── Payment ── */}
           {cart.length > 0 && (
             <div className="bg-slate-800/50 rounded-xl p-4">
-              <h3 className="text-sm font-semibold text-white mb-3">Pagamento</h3>
+              <h3 className="text-sm font-semibold text-white mb-1">Pagamento</h3>
+              {(() => {
+                const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                const remaining = totalWithDiscount - paidSoFar;
+                return (
+                  <p className="text-xs text-slate-400 mb-3">
+                    Total: <span className="text-emerald-400 font-semibold">R$ {totalWithDiscount.toFixed(2)}</span>
+                    {paymentLines.length > 0 && (
+                      <> &middot; Faltam: <span className={remaining > 0.01 ? 'text-amber-400' : 'text-emerald-400'}>{remaining > 0.01 ? `R$ ${remaining.toFixed(2)}` : 'R$ 0,00'}</span></>
+                    )}
+                  </p>
+                );
+              })()}
               <div className="grid grid-cols-5 gap-2">
                 {PAYMENT_METHODS.map((pm) => {
                   const Icon = pm.icon;
-                  const isSelected = selectedPayment.id === pm.id;
+                  const handleClick = () => {
+                    const remaining = totalWithDiscount - paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                    if (remaining <= 0.01) return; // already fully paid
+                    // Add as new line with full remaining amount
+                    setPaymentLines(prev => [...prev, { methodId: pm.id, amount: remaining }]);
+                  };
                   return (
-                    <button key={pm.id} onClick={() => setSelectedPayment(pm)}
-                      className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
-                        isSelected
-                          ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
-                          : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                      }`}>
+                    <button key={pm.id} onClick={handleClick}
+                      className="flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">
                       <Icon size={20} />
                       <span className="text-xs font-medium">{pm.label}</span>
                     </button>
                   );
                 })}
               </div>
-              {selectedPayment.paymentStatus === 'PENDING' && (
+
+              {/* Payment lines */}
+              {paymentLines.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {paymentLines.map((pl, idx) => {
+                    const method = PAYMENT_METHODS.find(m => m.id === pl.methodId);
+                    const isFiadoLine = isFiado(pl.methodId);
+                    return (
+                      <div key={idx} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                        <span className={`w-2 h-2 rounded-full ${method?.color || 'bg-slate-500'}`} />
+                        <span className="text-sm text-white flex-1">{method?.label || pl.methodId}</span>
+                        <input
+                          type="number"
+                          value={pl.amount || ''}
+                          onChange={(e) => {
+                            setPaymentLines(prev => prev.map((l, i) => i === idx ? { ...l, amount: parseFloat(e.target.value) || 0 } : l));
+                          }}
+                          className="w-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-sm text-right focus:border-indigo-500 outline-none"
+                          placeholder="0,00"
+                          step="0.01"
+                        />
+                        <button
+                          onClick={() => setPaymentLines(prev => prev.filter((_, i) => i !== idx))}
+                          className="text-slate-500 hover:text-red-400 p-1"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {paymentLines.some(pl => isFiado(pl.methodId)) && (
                 <div className="mt-3 space-y-3">
                   <div>
                     <label className="block text-slate-400 text-xs mb-1">Data de Vencimento</label>
@@ -1041,7 +1099,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => setSaleOpen(false)} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button onClick={handleCreateSale}
-              disabled={saving || cart.length === 0}
+              disabled={saving || cart.length === 0 || !paymentValid}
               className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors">
               {saving ? 'Finalizando...' : `Finalizar Venda (R$ ${totalWithDiscount.toFixed(2)})`}
             </button>
@@ -1069,23 +1127,34 @@ export default function OrdersPage() {
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Pagamento</p>
-                <p className="text-white text-sm flex items-center gap-1.5">
-                  {detailOrder.paidWithMethod ? (
-                    <>
+                <div className="text-white text-sm">
+                  {detailOrder.payments && detailOrder.payments.length > 0 ? (
+                    <div className="space-y-1">
+                      {detailOrder.payments.map((p: any, idx: number) => (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1 whitespace-nowrap">{paymentLabel(p.paymentMethod)}</span>
+                          <span className="text-xs text-slate-400 whitespace-nowrap">R$ {Number(p.amount).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : detailOrder.paidWithMethod ? (
+                    <p className="flex items-center gap-1.5">
                       {paymentLabel(detailOrder.paidWithMethod)}
                       <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
-                    </>
+                    </p>
                   ) : isFiado(detailOrder.paymentMethod) ? (
                     <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-medium">Fiado</span>
                   ) : (
-                    paymentLabel(detailOrder.paymentMethod)
+                    <p>{paymentLabel(detailOrder.paymentMethod)}</p>
                   )}
                   {detailOrder.source === 'ONLINE' && (
-                    <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                      <Link2 size={10} /> Link
-                    </span>
+                    <p className="mt-1">
+                      <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 w-fit">
+                        <Link2 size={10} /> Link
+                      </span>
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
               <div className="bg-slate-800/50 rounded-lg p-3">
                 <p className="text-[10px] text-slate-500 uppercase">Data</p>
@@ -1148,7 +1217,7 @@ export default function OrdersPage() {
               </tfoot>
             </table>
 
-            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && !orderHasFiado(detailOrder) && (
               <button
                 onClick={() => { handleConfirmOnline(detailOrder.id); }}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
@@ -1157,7 +1226,7 @@ export default function OrdersPage() {
                 Confirmar Pedido Online (Baixar Estoque)
               </button>
             )}
-            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && detailOrder.source !== 'ONLINE' && (
+            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (detailOrder.source !== 'ONLINE' || orderHasFiado(detailOrder)) && (
               <button
                 onClick={() => handlePay(detailOrder.id)}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
@@ -1172,36 +1241,82 @@ export default function OrdersPage() {
         )}
       </Modal>
 
-      {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
-      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm" closeOnOverlayClick={false}>
+      {/* Confirm Payment Sub-Modal (split payment for Fiado receipt / online confirm) */}
+      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="md" closeOnOverlayClick={false}>
         <div className="space-y-4">
-          <p className="text-slate-400 text-sm">
-            {confirmingIsOnline
-              ? 'Escolha a forma de pagamento para confirmar este pedido:'
-              : 'Escolha a forma de pagamento recebida:'}
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {CONFIRM_PAYMENT_METHODS.map((pm) => {
-              const Icon = pm.icon;
-              const isSelected = selectedConfirmPayment.id === pm.id;
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-white mb-1">Pagamento</h3>
+            {(() => {
+              const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+              const remaining = confirmTotal - paidSoFar;
               return (
-                <button key={pm.id} onClick={() => setSelectedConfirmPayment(pm)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
-                    isSelected
-                      ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}>
-                  <Icon size={20} />
-                  <span className="text-xs font-medium">{pm.label}</span>
-                </button>
+                <p className="text-xs text-slate-400 mb-3">
+                  Total: <span className="text-emerald-400 font-semibold">R$ {confirmTotal.toFixed(2)}</span>
+                  {paymentLines.length > 0 && (
+                    <> &middot; Faltam: <span className={remaining > 0.01 ? 'text-amber-400' : 'text-emerald-400'}>{remaining > 0.01 ? `R$ ${remaining.toFixed(2)}` : 'R$ 0,00'}</span></>
+                  )}
+                </p>
               );
-            })}
+            })()}
+            <div className="grid grid-cols-4 gap-2">
+              {CONFIRM_PAYMENT_METHODS.map((pm) => {
+                const Icon = pm.icon;
+                const handleClick = () => {
+                  const remaining = confirmTotal - paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                  if (remaining <= 0.01) return;
+                  setPaymentLines(prev => [...prev, { methodId: pm.id, amount: remaining }]);
+                };
+                return (
+                  <button key={pm.id} onClick={handleClick}
+                    className="flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">
+                    <Icon size={20} />
+                    <span className="text-xs font-medium">{pm.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Payment lines */}
+            {paymentLines.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {paymentLines.map((pl, idx) => {
+                  const method = CONFIRM_PAYMENT_METHODS.find(m => m.id === pl.methodId as any);
+                  return (
+                    <div key={idx} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                      <span className={`w-2 h-2 rounded-full ${(method as any)?.color || 'bg-slate-500'}`} />
+                      <span className="text-sm text-white flex-1">{(method as any)?.label || pl.methodId}</span>
+                      <input
+                        type="number"
+                        value={pl.amount || ''}
+                        onChange={(e) => {
+                          setPaymentLines(prev => prev.map((l, i) => i === idx ? { ...l, amount: parseFloat(e.target.value) || 0 } : l));
+                        }}
+                        className="w-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-sm text-right focus:border-indigo-500 outline-none"
+                        placeholder="0,00"
+                        step="0.01"
+                      />
+                      <button
+                        onClick={() => setPaymentLines(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-slate-500 hover:text-red-400 p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button
               onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(); else handlePayExecute(); }}
-              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+              disabled={(() => {
+                const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                return paymentLines.length === 0 || Math.abs(paidSoFar - confirmTotal) > 0.01;
+              })()}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
               {confirmingIsOnline ? 'Confirmar Pedido' : 'Receber Pagamento'}
             </button>

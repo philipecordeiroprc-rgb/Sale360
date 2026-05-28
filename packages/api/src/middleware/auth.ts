@@ -2,7 +2,14 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '@sale360/db';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'sale360-dev-secret-change-in-production';
+export function getJwtSecret(): string {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET é obrigatório em produção. Defina a variável de ambiente JWT_SECRET.');
+  }
+  return 'sale360-dev-secret-change-in-production';
+}
+const JWT_SECRET = getJwtSecret();
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'; // 7 days for offline support
 
 export interface JwtPayload {
@@ -112,4 +119,34 @@ export function generateToken(payload: JwtPayload): string {
 
 export function generateRefreshToken(userId: string): string {
   return jwt.sign({ userId, type: 'refresh' }, JWT_SECRET, { expiresIn: '30d' } as any);
+}
+
+// Short-lived token for 2FA step (5 min expiry)
+export function generateTwoFactorToken(payload: { userId: string; email: string }): string {
+  return jwt.sign({ ...payload, type: '2fa' }, JWT_SECRET, { expiresIn: '5m' } as any);
+}
+
+export function verifyTwoFactorToken(token: string): { userId: string; email: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (payload.type !== '2fa') return null;
+    return { userId: payload.userId, email: payload.email };
+  } catch {
+    return null;
+  }
+}
+
+// Short-lived token for forced 2FA setup (10 min expiry — user needs time to scan QR)
+export function generateSetupToken(payload: { userId: string; email: string }): string {
+  return jwt.sign({ ...payload, type: 'setup-2fa' }, JWT_SECRET, { expiresIn: '10m' } as any);
+}
+
+export function verifySetupToken(token: string): { userId: string; email: string } | null {
+  try {
+    const payload = jwt.verify(token, JWT_SECRET) as any;
+    if (payload.type !== 'setup-2fa') return null;
+    return { userId: payload.userId, email: payload.email };
+  } catch {
+    return null;
+  }
 }

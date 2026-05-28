@@ -70,7 +70,15 @@ async function buildApp() {
   });
 
   // Plugins
-  await app.register(cors, { origin: true, credentials: true });
+  const isProduction = process.env.NODE_ENV === 'production';
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(s => s.trim()).filter(Boolean);
+
+  await app.register(cors, {
+    // Se CORS_ORIGINS estiver definido (recomendado em prod), usa whitelist.
+    // Caso contrário, permite todas origens (dev ou prod sem config).
+    origin: (corsOrigins && corsOrigins.length > 0) ? corsOrigins : true,
+    credentials: true,
+  });
   await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 

@@ -1,19 +1,13 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
-
-/** Maps Portuguese payment method labels (web PDV) to English keys (DB enum) */
-const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
-  Dinheiro: 'cash',
-  Pix: 'pix',
-  Debito: 'debit',
-  Credito: 'credit',
-  Fiado: 'credit_store',
-};
-
-function normalizePaymentMethod(method: string): string {
-  return PAYMENT_METHOD_NORMALIZE[method] || method;
-}
+import {
+  normalizePaymentMethod,
+  validatePaymentTotal,
+  hasFiadoPayment,
+  getWeightedTaxRate,
+  paymentEntrySchema,
+} from '../../lib/payment-utils.js';
 
 const orderItemSchema = z.object({
   productId: z.string().optional(),
@@ -33,7 +27,8 @@ const createOrderSchema = z.object({
   subtotal: z.number(),
   discount: z.number().default(0),
   total: z.number(),
-  paymentMethod: z.string(),
+  paymentMethod: z.string().optional(),
+  payments: z.array(paymentEntrySchema).optional(),
   paymentStatus: z.enum(['PAID', 'PENDING', 'PARTIAL', 'CREDIT_STORE']).default('PAID'),
   source: z.enum(['PDV', 'ONLINE', 'WHATSAPP', 'DELIVERY', 'COMAND']).default('PDV'),
   notes: z.string().optional(),
@@ -75,7 +70,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     if (customerId) where.customerId = customerId;
     if (paymentMethod) {
       const methods = paymentMethod.split(',').filter(Boolean);
-      where.paymentMethod = methods.length === 1 ? methods[0] : { in: methods };
+      where.OR = [
+        { paymentMethod: methods.length === 1 ? methods[0] : { in: methods } },
+        { payments: { some: { paymentMethod: { in: methods } } } },
+      ];
     }
     if (startDate || endDate) {
       where.createdAt = {};
@@ -91,6 +89,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           customer: { select: { id: true, name: true, phone: true } },
           user: { select: { id: true, name: true } },
           coupon: { select: { id: true, code: true } },
+          payments: { select: { id: true, paymentMethod: true, amount: true } },
         },
         orderBy: { createdAt: 'desc' },
         skip: (parseInt(page) - 1) * parseInt(limit),
@@ -111,6 +110,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         customer: true,
         user: { select: { id: true, name: true } },
         coupon: { select: { id: true, code: true } },
+        payments: { select: { id: true, paymentMethod: true, amount: true } },
         delivery: true,
       },
     });
@@ -125,7 +125,39 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { items, localId, createdAtDevice, ...orderData } = parsed.data;
+    const { items, localId, createdAtDevice, payments, ...orderData } = parsed.data;
+
+    // Build effective payments list (new multi-payment or legacy single)
+    let effectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payments && payments.length > 0) {
+      // Validate sum equals total
+      if (!validatePaymentTotal(payments, orderData.total)) {
+        return reply.status(400).send({
+          error: 'Soma dos pagamentos não corresponde ao total da venda',
+        });
+      }
+      effectivePayments = payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (orderData.paymentMethod) {
+      // Backward compatible: single payment
+      effectivePayments = [{
+        paymentMethod: normalizePaymentMethod(orderData.paymentMethod),
+        amount: orderData.total,
+      }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório' });
+    }
+
+    // Derive paymentStatus: PENDING if any payment is fiado
+    const isFiado = hasFiadoPayment(effectivePayments);
+    if (isFiado && orderData.paymentStatus === 'PAID') {
+      orderData.paymentStatus = 'PENDING';
+    }
+
+    // Primary method for legacy Order.paymentMethod column
+    const primaryMethod = effectivePayments[0].paymentMethod;
 
     // Generate order number
     const lastOrder = await prisma.order.findFirst({
@@ -205,19 +237,22 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         let totalCost: number | undefined;
 
         if (item.productId) {
-          // Tax rate from payment method config (product taxRate is for pricing reference only)
-          let taxRate: number | undefined;
-          const normalizedMethod = normalizePaymentMethod(orderData.paymentMethod);
-          const paymentConfig = await tx.paymentMethodConfig.findUnique({
-            where: {
-              tenantId_paymentMethod: {
-                tenantId: request.tenantId,
-                paymentMethod: normalizedMethod,
+          // Tax rate: weighted average from all payment methods
+          let taxRate = 0;
+          for (const payment of effectivePayments) {
+            const config = await tx.paymentMethodConfig.findUnique({
+              where: {
+                tenantId_paymentMethod: {
+                  tenantId: request.tenantId,
+                  paymentMethod: payment.paymentMethod,
+                },
               },
-            },
-            select: { taxRate: true },
-          });
-          taxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+              select: { taxRate: true },
+            });
+            const rate = config?.taxRate ? Number(config.taxRate) : 0;
+            taxRate += (rate * payment.amount) / orderData.total;
+          }
+          taxRate = Math.round(taxRate * 100) / 100;
 
           // FIFO: consume from oldest batches, optionally starting from a specific batch
           let remaining = item.quantity;
@@ -260,7 +295,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
             }
           }
 
-          // Remaining: consume from oldest batches (FIFO)
+          // Remaining: consume FEFO (nearest expiry first, nulls last), then FIFO by receivedAt
           const batches = await tx.inventoryBatch.findMany({
             where: {
               tenantId: request.tenantId,
@@ -268,7 +303,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               variationId: item.variationId || null,
               remainingQty: { gt: 0 },
             },
-            orderBy: { receivedAt: 'asc' },
+            orderBy: [
+              { expiryDate: { sort: 'asc', nulls: 'last' } },
+              { receivedAt: 'asc' },
+            ],
           });
 
           for (const batch of batches) {
@@ -346,6 +384,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       const o = await tx.order.create({
         data: {
           ...orderData,
+          paymentMethod: primaryMethod, // legacy: first payment method
           tenantId: request.tenantId,
           userId: request.userId,
           orderNumber,
@@ -355,8 +394,19 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
           syncStatus: 'SYNCED',
           items: { create: itemsData },
         },
-        include: { items: true, customer: true },
+        include: { items: true, customer: true, payments: true },
       });
+
+      // Create OrderPayment records
+      for (const payment of effectivePayments) {
+        await tx.orderPayment.create({
+          data: {
+            orderId: o.id,
+            paymentMethod: payment.paymentMethod,
+            amount: payment.amount,
+          },
+        });
+      }
 
       // Update inventory movements with orderId
       await tx.inventoryMovement.updateMany({
@@ -380,16 +430,19 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         });
 
         // Fiado/credit: increment creditBalance and create LOAN transaction
-        if (orderData.paymentStatus === 'PENDING' || orderData.paymentStatus === 'CREDIT_STORE') {
+        if (isFiado) {
+          const fiadoAmount = effectivePayments
+            .filter(p => p.paymentMethod === 'credit_store')
+            .reduce((sum, p) => sum + p.amount, 0);
           const updatedCustomer = await tx.customer.update({
             where: { id: orderData.customerId },
-            data: { creditBalance: { increment: orderData.total } },
+            data: { creditBalance: { increment: fiadoAmount } },
           });
           await tx.creditTransaction.create({
             data: {
               customerId: orderData.customerId,
               type: 'LOAN',
-              amount: orderData.total,
+              amount: fiadoAmount,
               balanceAfter: updatedCustomer.creditBalance,
               referenceId: o.id,
               notes: `Venda fiado #${orderNumber}`,
@@ -525,7 +578,12 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         createdAt: { gte: today },
         status: 'COMPLETED',
       },
-      select: { total: true, paymentMethod: true, paymentStatus: true },
+      select: {
+        total: true,
+        paymentMethod: true,
+        paymentStatus: true,
+        payments: { select: { paymentMethod: true, amount: true } },
+      },
     });
 
     const paidOrders = orders.filter(o => o.paymentStatus === 'PAID');
@@ -536,10 +594,23 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     const count = paidOrders.length;
     const pendingCount = pendingOrders.length;
     const byMethod = orders.reduce((acc: Record<string, { count: number; total: number }>, o) => {
-      const method = o.paymentMethod || 'outro';
-      if (!acc[method]) acc[method] = { count: 0, total: 0 };
-      acc[method].count++;
-      acc[method].total += Number(o.total);
+      if (o.payments && o.payments.length > 0) {
+        for (const p of o.payments) {
+          const method = p.paymentMethod || 'outro';
+          if (!acc[method]) acc[method] = { count: 0, total: 0 };
+          acc[method].total += Number(p.amount);
+        }
+        // Count the order once under its first payment method
+        const firstMethod = o.payments[0].paymentMethod || 'outro';
+        if (!acc[firstMethod]) acc[firstMethod] = { count: 0, total: 0 };
+        acc[firstMethod].count++;
+      } else {
+        // Fallback for old orders without OrderPayment records
+        const method = o.paymentMethod || 'outro';
+        if (!acc[method]) acc[method] = { count: 0, total: 0 };
+        acc[method].count++;
+        acc[method].total += Number(o.total);
+      }
       return acc;
     }, {});
 
@@ -549,7 +620,23 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
   // Confirm an ONLINE pending order (consume stock, mark as paid)
   app.post('/:id/confirm', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { itemBatchIds } = (request.body || {}) as { itemBatchIds?: Record<string, string> };
+    const body = (request.body || {}) as {
+      itemBatchIds?: Record<string, string>;
+      paymentMethod?: string;
+      payments?: Array<{ paymentMethod: string; amount: number }>;
+    };
+    const { itemBatchIds, paymentMethod: legacyPaymentMethod, payments } = body;
+
+    // Build effective payments for confirm
+    let confirmPayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payments && payments.length > 0) {
+      confirmPayments = payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (legacyPaymentMethod) {
+      confirmPayments = [{ paymentMethod: normalizePaymentMethod(legacyPaymentMethod), amount: 0 }];
+    }
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
@@ -617,7 +704,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
               variationId: (item as any).variationId || null,
               remainingQty: { gt: 0 },
             },
-            orderBy: { receivedAt: 'asc' },
+            orderBy: [
+              { expiryDate: { sort: 'asc', nulls: 'last' } },
+              { receivedAt: 'asc' },
+            ],
           });
 
           for (const batch of batches) {
@@ -673,32 +763,69 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       }
 
       // Update order status (and optionally payment method)
-      const { paymentMethod } = (request.body as Record<string, unknown>) || {};
+      const primaryConfirmMethod = confirmPayments.length > 0
+        ? confirmPayments[0].paymentMethod
+        : undefined;
       await tx.order.update({
         where: { id: order.id },
         data: {
           paymentStatus: 'PAID',
           status: 'COMPLETED',
-          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
+          ...(primaryConfirmMethod ? { paymentMethod: primaryConfirmMethod, paidWithMethod: primaryConfirmMethod } : {}),
         },
       });
 
-      // If payment method changed at confirmation, update item tax rates
-      if (paymentMethod) {
-        const normalizedMethod = normalizePaymentMethod(paymentMethod as string);
-        const paymentConfig = await tx.paymentMethodConfig.findUnique({
-          where: {
-            tenantId_paymentMethod: {
-              tenantId: request.tenantId,
-              paymentMethod: normalizedMethod,
+      // Create OrderPayment records if not already present (idempotent)
+      const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
+      if (existingPayments === 0) {
+        let effectiveConfirmPayments = confirmPayments;
+        // If no explicit payments provided, derive from legacy method and order total
+        if (effectiveConfirmPayments.length === 0) {
+          const method = legacyPaymentMethod || order.paymentMethod || 'cash';
+          effectiveConfirmPayments = [{ paymentMethod: normalizePaymentMethod(method), amount: Number(order.total) }];
+        } else {
+          // Resolve amounts: use provided amounts, or fall back to order total for first payment
+          const totalAmount = effectiveConfirmPayments.reduce((s, p) => s + p.amount, 0);
+          if (totalAmount === 0) {
+            effectiveConfirmPayments = effectiveConfirmPayments.map((p, i) => ({
+              ...p,
+              amount: i === 0 ? Number(order.total) : 0,
+            })).filter(p => p.amount > 0);
+          } else if (!validatePaymentTotal(effectiveConfirmPayments, Number(order.total))) {
+            throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+          }
+        }
+
+        for (const payment of effectiveConfirmPayments) {
+          await tx.orderPayment.create({
+            data: {
+              orderId: order.id,
+              paymentMethod: payment.paymentMethod,
+              amount: payment.amount,
             },
-          },
-          select: { taxRate: true },
-        });
-        const newTaxRate = paymentConfig?.taxRate ? Number(paymentConfig.taxRate) : 0;
+          });
+        }
+
+        // Weighted average tax rate across payment methods
+        const total = Number(order.total);
+        let weightedTax = 0;
+        for (const payment of effectiveConfirmPayments) {
+          const config = await tx.paymentMethodConfig.findUnique({
+            where: {
+              tenantId_paymentMethod: {
+                tenantId: request.tenantId,
+                paymentMethod: payment.paymentMethod,
+              },
+            },
+            select: { taxRate: true },
+          });
+          const rate = config?.taxRate ? Number(config.taxRate) : 0;
+          weightedTax += (rate * payment.amount) / total;
+        }
+        const taxRate = Math.round(weightedTax * 100) / 100;
         await tx.orderItem.updateMany({
           where: { orderId: order.id },
-          data: { taxRate: newTaxRate },
+          data: { taxRate },
         });
       }
 
@@ -751,12 +878,30 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const schema = z.object({
       paidAmount: z.number().optional(), // valor parcial (default: total)
-      paymentMethod: z.string().optional(), // novo metodo de pagamento ao quitar fiado
+      paymentMethod: z.string().optional(), // legacy: metodo de pagamento ao quitar fiado
+      payments: z.array(paymentEntrySchema).optional(), // multi-payment ao quitar
     });
     const parsed = schema.safeParse(request.body || {});
     const paidAmount = parsed.success && parsed.data.paidAmount ? parsed.data.paidAmount : Number(order.total);
     const paymentMethod = parsed.success ? parsed.data.paymentMethod : undefined;
+    const payPayments = parsed.success && parsed.data.payments ? parsed.data.payments : undefined;
     const newPaymentStatus = paidAmount >= Number(order.total) ? 'PAID' : 'PARTIAL';
+
+    // Build effective payments for this pay action
+    let effectivePayPayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (payPayments && payPayments.length > 0) {
+      effectivePayPayments = payPayments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (paymentMethod) {
+      effectivePayPayments = [{ paymentMethod: normalizePaymentMethod(paymentMethod), amount: paidAmount }];
+    }
+
+    // Primary payment method for legacy fields
+    const primaryPayMethod = effectivePayPayments.length > 0
+      ? effectivePayPayments[0].paymentMethod
+      : paymentMethod;
 
     await prisma.$transaction(async (tx) => {
       await tx.order.update({
@@ -764,12 +909,47 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         data: {
           paymentStatus: newPaymentStatus,
           paidAmount: { increment: paidAmount },
-          ...(paymentMethod ? { paidWithMethod: paymentMethod as string } : {}),
+          ...(primaryPayMethod ? { paidWithMethod: primaryPayMethod } : {}),
         },
       });
 
-      // If payment method changed, update item tax rates for card fee reporting
-      if (paymentMethod) {
+      // Create OrderPayment records for the pay action if not already present
+      if (effectivePayPayments.length > 0) {
+        const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
+        if (existingPayments === 0) {
+          for (const payment of effectivePayPayments) {
+            await tx.orderPayment.create({
+              data: {
+                orderId: order.id,
+                paymentMethod: payment.paymentMethod,
+                amount: payment.amount,
+              },
+            });
+          }
+        }
+
+        // Weighted average tax rate across pay methods
+        let weightedTax = 0;
+        for (const payment of effectivePayPayments) {
+          const config = await tx.paymentMethodConfig.findUnique({
+            where: {
+              tenantId_paymentMethod: {
+                tenantId: request.tenantId,
+                paymentMethod: payment.paymentMethod,
+              },
+            },
+            select: { taxRate: true },
+          });
+          const rate = config?.taxRate ? Number(config.taxRate) : 0;
+          weightedTax += (rate * payment.amount) / paidAmount;
+        }
+        const taxRate = Math.round(weightedTax * 100) / 100;
+        await tx.orderItem.updateMany({
+          where: { orderId: order.id },
+          data: { taxRate },
+        });
+      } else if (paymentMethod) {
+        // Legacy fallback: single payment method
         const normalizedMethod = normalizePaymentMethod(paymentMethod);
         const paymentConfig = await tx.paymentMethodConfig.findUnique({
           where: {

@@ -354,6 +354,17 @@ function AdminsTab() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  const disable2FA = async (userId: string, userName: string) => {
+    if (!confirm(`Desativar autenticação em 2 etapas para ${userName}?`)) return;
+    try {
+      await api.admin.users.disable2FA(userId);
+      showMsg('2FA desativado com sucesso!', 'success');
+      fetchUsers();
+    } catch (err: any) {
+      showMsg(err.message, 'error');
+    }
+  };
+
   const toggleRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === 'SUPER_ADMIN' ? 'USER' : 'SUPER_ADMIN';
     const label = newRole === 'SUPER_ADMIN' ? 'promover a' : 'remover de';
@@ -438,16 +449,27 @@ function AdminsTab() {
                     {new Date(u.createdAt).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-4 py-2.5 text-center">
-                    <button
-                      onClick={() => toggleRole(u.id, u.role)}
-                      className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
-                        u.role === 'SUPER_ADMIN'
-                          ? 'text-red-400 hover:text-red-300 hover:bg-red-400/10'
-                          : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-400/10'
-                      }`}
-                    >
-                      {u.role === 'SUPER_ADMIN' ? 'Remover' : 'Promover'}
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      {u.totpEnabled && (
+                        <button
+                          onClick={() => disable2FA(u.id, u.name)}
+                          className="text-xs px-2 py-1 rounded-lg font-medium text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 transition-colors"
+                          title="Desativar 2FA"
+                        >
+                          <Shield size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => toggleRole(u.id, u.role)}
+                        className={`text-xs px-2 py-1 rounded-lg font-medium transition-colors ${
+                          u.role === 'SUPER_ADMIN'
+                            ? 'text-red-400 hover:text-red-300 hover:bg-red-400/10'
+                            : 'text-indigo-400 hover:text-indigo-300 hover:bg-indigo-400/10'
+                        }`}
+                      >
+                        {u.role === 'SUPER_ADMIN' ? 'Remover' : 'Promover'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

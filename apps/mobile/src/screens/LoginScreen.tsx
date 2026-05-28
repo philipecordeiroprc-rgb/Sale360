@@ -14,7 +14,6 @@ export function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'password' | 'pin'>('password');
 
   const handleLogin = async () => {
     if (!email.trim()) {
@@ -24,16 +23,12 @@ export function LoginScreen() {
 
     setLoading(true);
     try {
-      const endpoint = mode === 'pin'
-        ? `${API_URL}/api/auth/login-pin`
-        : `${API_URL}/api/auth/login`;
-
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
-          [mode === 'pin' ? 'pin' : 'password']: password,
+          password,
           deviceId,
         }),
       });
@@ -42,6 +37,15 @@ export function LoginScreen() {
 
       if (!res.ok) {
         Alert.alert('Erro', data.error || 'Falha no login');
+        return;
+      }
+
+      if (data.mustChangePassword) {
+        Alert.alert(
+          'Senha redefinida',
+          'Sua senha foi redefinida por um administrador. Use o painel web para definir uma nova senha.',
+          [{ text: 'OK' }],
+        );
         return;
       }
 
@@ -68,9 +72,7 @@ export function LoginScreen() {
       </View>
 
       <View style={styles.form}>
-        <Text style={styles.title}>
-          {mode === 'pin' ? 'Login Rápido' : 'Entrar'}
-        </Text>
+        <Text style={styles.title}>Entrar</Text>
 
         <TextInput
           style={styles.input}
@@ -84,13 +86,11 @@ export function LoginScreen() {
 
         <TextInput
           style={styles.input}
-          placeholder={mode === 'pin' ? 'PIN (4 dígitos)' : 'Senha'}
+          placeholder="Senha"
           placeholderTextColor="#64748B"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          maxLength={mode === 'pin' ? 4 : undefined}
-          keyboardType={mode === 'pin' ? 'number-pad' : 'default'}
         />
 
         <TouchableOpacity
@@ -103,15 +103,6 @@ export function LoginScreen() {
           ) : (
             <Text style={styles.buttonText}>Entrar</Text>
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.toggle}
-          onPress={() => setMode(mode === 'pin' ? 'password' : 'pin')}
-        >
-          <Text style={styles.toggleText}>
-            {mode === 'pin' ? 'Usar senha' : 'Usar PIN rápido'}
-          </Text>
         </TouchableOpacity>
       </View>
 
@@ -178,14 +169,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-  },
-  toggle: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  toggleText: {
-    color: '#6366F1',
-    fontSize: 14,
   },
   version: {
     textAlign: 'center',

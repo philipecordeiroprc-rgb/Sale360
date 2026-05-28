@@ -1,11 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, ShoppingCart, Package, Users,
   DollarSign, Settings, LogOut,
   Truck, ShoppingBag, Layers, Tag, X, Store, BarChart3, Shield,
+  ChevronDown, FolderOpen, BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
@@ -17,12 +19,16 @@ const navItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
   { href: '/orders', label: 'Vendas', icon: ShoppingCart, roles: ['OWNER', 'CASHIER'] },
   { href: '/inventory', label: 'Estoque', icon: Layers, roles: ['OWNER'] },
   { href: '/products', label: 'Produtos', icon: Package, roles: ['OWNER', 'CASHIER'] },
-  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
   { href: '/purchases', label: 'Compras', icon: ShoppingBag, roles: ['OWNER'] },
-  { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
   { href: '/finance', label: 'Financeiro', icon: DollarSign, roles: ['OWNER'] },
   { href: '/indicadores', label: 'Indicadores', icon: BarChart3, roles: ['OWNER'] },
-  { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER'] },
+  { href: '/settings', label: 'Config', icon: Settings, roles: ['OWNER', 'CASHIER'] },
+];
+
+const cadastroItems: { href: string; label: string; icon: any; roles: Role[] }[] = [
+  { href: '/coupons', label: 'Cupons', icon: Tag, roles: ['OWNER'] },
+  { href: '/categories', label: 'Categorias', icon: FolderOpen, roles: ['OWNER'] },
+  { href: '/suppliers', label: 'Fornecedores', icon: Truck, roles: ['OWNER'] },
 ];
 
 function getInitials(name: string): string {
@@ -55,10 +61,13 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const storeRole = user?.storeRole || user?.role || '';
   // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
   const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
 
   if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
   const visibleItems = navItems.filter(item => item.roles.includes(userRole as Role));
+  const visibleCadastroItems = cadastroItems.filter(item => item.roles.includes(userRole as Role));
+  const isCadastroActive = visibleCadastroItems.some(item => pathname.startsWith(item.href));
 
   function handleNav() {
     onClose?.();
@@ -121,6 +130,63 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               </Link>
             );
           })}
+
+          {/* Cadastros (collapsible) */}
+          {visibleCadastroItems.length > 0 && (
+            <div className="pt-1">
+              <button
+                onClick={() => setCadastrosOpen(!cadastrosOpen)}
+                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-all duration-150
+                  ${isCadastroActive
+                    ? 'text-indigo-300'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  }`}
+              >
+                <FolderOpen size={16} />
+                <span className="font-medium text-xs flex-1 text-left">Cadastros</span>
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${cadastrosOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              {cadastrosOpen && (
+                <div className="ml-4 space-y-0.5 mt-0.5">
+                  {visibleCadastroItems.map((item) => {
+                    const isActive = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={handleNav}
+                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150
+                          ${isActive
+                            ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                          }`}
+                      >
+                        <item.icon size={15} />
+                        <span className="font-medium text-xs">{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tutoriais */}
+          <Link
+            href="/tutoriais"
+            onClick={handleNav}
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150
+              ${pathname.startsWith('/tutoriais')
+                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+          >
+            <BookOpen size={16} />
+            <span className="font-medium text-xs">Tutoriais</span>
+          </Link>
         </nav>
 
         {/* User */}

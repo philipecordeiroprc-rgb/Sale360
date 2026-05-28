@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Search, Package, ArrowUpDown, Layers, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import api from '@/lib/api';
 
@@ -242,7 +243,7 @@ export default function InventoryPage() {
           ? Number(b.variation?.stockQty || 0)
           : Number(b.product?.stockQty || 0);
         const lowStockAt = hasVariation
-          ? Number(b.variation?.lowStockAt || 0)
+          ? Number(b.variation?.lowStockAt || b.product?.lowStockAt || 0)
           : Number(b.product?.lowStockAt || 0);
         map.set(key, {
           key,
@@ -270,7 +271,11 @@ export default function InventoryPage() {
         else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
       }
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => {
+      const nameCmp = a.productName.localeCompare(b.productName, 'pt-BR');
+      if (nameCmp !== 0) return nameCmp;
+      return (a.variationName || '').localeCompare(b.variationName || '', 'pt-BR');
+    });
   };
 
   // Short batch ID for display
@@ -396,7 +401,7 @@ export default function InventoryPage() {
                     const productLabel = [
                       group.productName,
                       group.sku ? group.sku : null,
-                      group.unit ? group.unit : null,
+                      group.unit && group.unit !== 'UN' ? group.unit : null,
                     ].filter(Boolean).join(' · ');
                     const hasExpired = group.expiredCount > 0;
                     const hasExpiringSoon = group.expiringSoonCount > 0;
@@ -404,9 +409,9 @@ export default function InventoryPage() {
                     const hasMinStock = group.lowStockAt > 0 && group.stockQty === group.lowStockAt;
 
                     return (
-                      <>
+                      <React.Fragment key={group.key}>
                         {/* Summary row */}
-                        <tr key={group.key}
+                        <tr
                           onClick={() => toggleGroup(group.key)}
                           className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer">
                           <td className="px-3 py-3">
@@ -487,7 +492,7 @@ export default function InventoryPage() {
                             <td className="px-3 py-2"></td>
                           </tr>
                         ))}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>

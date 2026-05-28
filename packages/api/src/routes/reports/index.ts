@@ -28,6 +28,7 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         items: { include: { product: { select: { operationalCost: true } } } },
         customer: { select: { id: true, name: true } },
         user: { select: { id: true, name: true } },
+        payments: { select: { paymentMethod: true, amount: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -57,12 +58,37 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     }
 
     // ── Payment Methods (apenas vendas PAGAS) ──
+    // Fiado settled: use paidWithMethod (real settlement method), not credit_store
     const paymentMap: Record<string, { count: number; total: number }> = {};
+    let fiadoSettledTotal = 0;
+    let fiadoSettledCount = 0;
     for (const o of paidOrders) {
-      const method = o.paymentMethod || 'Outro';
-      if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
-      paymentMap[method].count++;
-      paymentMap[method].total += Number(o.total);
+      const hasCreditStore = o.payments?.some(p => p.paymentMethod === 'credit_store')
+        || o.paymentMethod === 'credit_store';
+
+      if (hasCreditStore && (o as any).paidWithMethod) {
+        // Fiado order that was settled — count under the actual settlement method
+        const method = (o as any).paidWithMethod;
+        if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+        paymentMap[method].count++;
+        paymentMap[method].total += Number(o.total);
+        fiadoSettledTotal += Number(o.total);
+        fiadoSettledCount++;
+      } else if (o.payments && o.payments.length > 0) {
+        for (const p of o.payments) {
+          const method = p.paymentMethod || 'Outro';
+          if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+          paymentMap[method].total += Number(p.amount);
+        }
+        const firstMethod = o.payments[0].paymentMethod || 'Outro';
+        if (!paymentMap[firstMethod]) paymentMap[firstMethod] = { count: 0, total: 0 };
+        paymentMap[firstMethod].count++;
+      } else {
+        const method = o.paymentMethod || 'Outro';
+        if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0 };
+        paymentMap[method].count++;
+        paymentMap[method].total += Number(o.total);
+      }
     }
     const paymentMethods = Object.entries(paymentMap)
       .map(([method, data]) => ({ method, ...data }))
@@ -137,7 +163,12 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     // ── Contas a Receber ──
     const pendingAmount = pendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
     const pendingCount = pendingOrders.length;
-    const fiadoPendingOrders = pendingOrders.filter(o => o.paymentMethod === 'credit_store');
+    const fiadoPendingOrders = pendingOrders.filter(o => {
+      if (o.payments && o.payments.length > 0) {
+        return o.payments.some(p => p.paymentMethod === 'credit_store');
+      }
+      return o.paymentMethod === 'credit_store';
+    });
     const fiadoCount = fiadoPendingOrders.length;
     const fiadoAmount = fiadoPendingOrders.reduce((sum, o) => sum + Number(o.total), 0);
 
@@ -157,6 +188,10 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         fiadoAmount: Math.round(fiadoAmount * 100) / 100,
       },
       paymentMethods,
+      fiadoSettled: {
+        count: fiadoSettledCount,
+        total: Math.round(fiadoSettledTotal * 100) / 100,
+      },
       topProducts,
       topCustomers,
       topSellers,

@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
+import { normalizePaymentMethod, hasFiadoPayment } from '../../lib/payment-utils.js';
 
 const publicOrderSchema = z.object({
   tenantSlug: z.string().min(1),
@@ -18,7 +19,11 @@ const publicOrderSchema = z.object({
   subtotal: z.number(),
   discount: z.number().default(0),
   total: z.number(),
-  paymentMethod: z.string(),
+  paymentMethod: z.string().optional(),
+  payments: z.array(z.object({
+    paymentMethod: z.string().min(1),
+    amount: z.number().positive(),
+  })).optional(),
   couponCode: z.string().optional(),
   couponDiscount: z.number().optional(),
   notes: z.string().optional(),
@@ -160,10 +165,25 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Esta loja não está aceitando pedidos online no momento.' });
     }
 
-    // Validate payment method is enabled
-    const pmEnabled = settings.paymentMethods.some((pm) => pm.paymentMethod === data.paymentMethod);
-    if (!pmEnabled) {
-      return reply.status(400).send({ error: 'Método de pagamento não disponível.' });
+    // Build effective payments (multi or legacy single) — normalize method names
+    let effectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
+    if (data.payments && data.payments.length > 0) {
+      effectivePayments = data.payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
+    } else if (data.paymentMethod) {
+      effectivePayments = [{ paymentMethod: normalizePaymentMethod(data.paymentMethod), amount: data.total }];
+    } else {
+      return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório.' });
+    }
+
+    // Validate all payment methods are enabled
+    for (const p of effectivePayments) {
+      const pmEnabled = settings.paymentMethods.some((pm) => pm.paymentMethod === p.paymentMethod);
+      if (!pmEnabled) {
+        return reply.status(400).send({ error: `Método de pagamento "${p.paymentMethod}" não disponível.` });
+      }
     }
 
     // Find or create customer (by phone if provided)
@@ -218,7 +238,8 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
 
     // Calculate due date for credit_store
     let dueDate: Date | undefined;
-    if (data.paymentMethod === 'credit_store') {
+    const isFiadoOrder = hasFiadoPayment(effectivePayments);
+    if (isFiadoOrder) {
       const pmSettings = settings.paymentMethods.find((pm) => pm.paymentMethod === 'credit_store');
       const days = pmSettings?.dueDays || 30;
       dueDate = new Date();
@@ -228,7 +249,219 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       dueDate = new Date(data.dueDate);
     }
 
-    // Create order
+    // Primary method for legacy column
+    const primaryMethod = effectivePayments[0].paymentMethod;
+
+    // Fiado orders: deduct stock immediately, set status COMPLETED (product left the store)
+    if (isFiadoOrder) {
+      // Pre-validate stock for all items (fail fast before transaction)
+      for (const item of data.items) {
+        const batches = await prisma.inventoryBatch.findMany({
+          where: {
+            tenantId: tenant.id,
+            productId: item.productId,
+            variationId: item.variationId || null,
+            remainingQty: { gt: 0 },
+          },
+        });
+        const totalAvailable = batches.reduce((sum, b) => sum + Number(b.remainingQty), 0);
+        if (totalAvailable < item.quantity) {
+          return reply.status(400).send({
+            error: `Estoque insuficiente para "${item.productName}". Disponível: ${totalAvailable}, Necessário: ${item.quantity}`,
+          });
+        }
+      }
+
+      const order = await prisma.$transaction(async (tx) => {
+        // FIFO/FEFO consumption + build order items with cost tracking
+        const itemsData = await Promise.all(data.items.map(async (item) => {
+          let remaining = item.quantity;
+          let totalCostAcc = 0;
+
+          // Consume from batches: FEFO (nearest expiry first), then FIFO by receivedAt
+          const batches = await tx.inventoryBatch.findMany({
+            where: {
+              tenantId: tenant.id,
+              productId: item.productId,
+              variationId: item.variationId || null,
+              remainingQty: { gt: 0 },
+            },
+            orderBy: [
+              { expiryDate: { sort: 'asc', nulls: 'last' } },
+              { receivedAt: 'asc' },
+            ],
+          });
+
+          for (const batch of batches) {
+            if (remaining <= 0) break;
+            const consume = Math.min(Number(batch.remainingQty), remaining);
+            const batchCost = Number(batch.unitCost);
+
+            await tx.inventoryBatch.update({
+              where: { id: batch.id },
+              data: { remainingQty: { decrement: consume } },
+            });
+
+            await tx.inventoryMovement.create({
+              data: {
+                tenantId: tenant.id,
+                productId: item.productId,
+                variationId: item.variationId || null,
+                type: 'SALE_OUT',
+                quantity: -consume,
+                unitCost: batchCost,
+                totalCost: -(consume * batchCost),
+                batchId: batch.id,
+                notes: `Pedido online #${orderNumber} - ${item.productName}`,
+              },
+            });
+
+            totalCostAcc += consume * batchCost;
+            remaining -= consume;
+          }
+
+          const costPrice = totalCostAcc / item.quantity;
+          const totalCost = totalCostAcc;
+
+          // Update product/variation denormalized stock
+          if (item.variationId) {
+            await tx.productVariation.update({
+              where: { id: item.variationId },
+              data: { stockQty: { decrement: item.quantity } },
+            });
+          }
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stockQty: { decrement: item.quantity },
+              costPrice: Math.round(costPrice * 100) / 100,
+            },
+          });
+
+          return {
+            productId: item.productId,
+            variationId: item.variationId || null,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.total,
+            costPrice: Math.round(costPrice * 100) / 100,
+            totalCost: Math.round(totalCost * 100) / 100,
+          };
+        }));
+
+        const o = await tx.order.create({
+          data: {
+            tenantId: tenant.id,
+            orderNumber,
+            customerId,
+            customerName: !customerId ? data.customerName : undefined,
+            source: 'ONLINE',
+            status: 'COMPLETED',
+            paymentMethod: primaryMethod,
+            paymentStatus: 'PENDING',
+            subtotal: data.subtotal,
+            discount: data.discount,
+            total: data.total,
+            couponId,
+            couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,
+            dueDate,
+            notes: data.notes || `Pedido via catálogo online`,
+            items: { create: itemsData },
+          },
+          include: { items: true },
+        });
+
+        // Link inventory movements to this order
+        await tx.inventoryMovement.updateMany({
+          where: {
+            tenantId: tenant.id,
+            notes: { startsWith: `Pedido online #${orderNumber}` },
+            orderId: undefined,
+          },
+          data: { orderId: o.id },
+        });
+
+        // Create OrderPayment records
+        for (const payment of effectivePayments) {
+          await tx.orderPayment.create({
+            data: {
+              orderId: o.id,
+              paymentMethod: payment.paymentMethod,
+              amount: payment.amount,
+            },
+          });
+        }
+
+        // Update customer stats + credit
+        if (customerId) {
+          await tx.customer.update({
+            where: { id: customerId },
+            data: {
+              totalPurchases: { increment: 1 },
+              totalSpent: { increment: data.total },
+              lastPurchaseAt: new Date(),
+            },
+          });
+
+          // Fiado: increment creditBalance + create LOAN transaction
+          const fiadoAmount = effectivePayments
+            .filter(p => p.paymentMethod === 'credit_store')
+            .reduce((sum, p) => sum + p.amount, 0);
+          const updatedCustomer = await tx.customer.update({
+            where: { id: customerId },
+            data: { creditBalance: { increment: fiadoAmount } },
+          });
+          await tx.creditTransaction.create({
+            data: {
+              customerId,
+              type: 'LOAN',
+              amount: fiadoAmount,
+              balanceAfter: updatedCustomer.creditBalance,
+              referenceId: o.id,
+              notes: `Venda fiado #${orderNumber} (catálogo)`,
+            },
+          });
+        }
+
+        // Register in cash flow (unpaid — paidAt is null)
+        await tx.cashFlow.create({
+          data: {
+            tenantId: tenant.id,
+            type: 'IN',
+            category: 'venda',
+            description: `Pedido online #${orderNumber} (fiado)`,
+            amount: data.total,
+            dueDate: dueDate || new Date(),
+            orderId: o.id,
+          },
+        });
+
+        return o;
+      });
+
+      // Increment coupon usage (outside transaction)
+      if (couponId) {
+        await prisma.coupon.update({
+          where: { id: couponId },
+          data: { usageCount: { increment: 1 } },
+        }).catch(() => {});
+      }
+
+      return reply.status(201).send({
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          total: Number(order.total),
+        },
+        storePhone: settings.whatsAppNumber || settings.storePhone,
+        storeName: settings.storeName || tenant.companyName,
+        postOrderMessage: settings.postOrderMessage,
+      });
+    }
+
+    // Non-fiado: keep existing behavior (no stock deduction, wait for admin confirm)
     const order = await prisma.order.create({
       data: {
         tenantId: tenant.id,
@@ -237,7 +470,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         customerName: !customerId ? data.customerName : undefined,
         source: 'ONLINE',
         status: 'PENDING',
-        paymentMethod: data.paymentMethod,
+        paymentMethod: primaryMethod,
         paymentStatus: 'PENDING',
         subtotal: data.subtotal,
         discount: data.discount,
@@ -258,6 +491,17 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         },
       },
     });
+
+    // Create OrderPayment records
+    for (const payment of effectivePayments) {
+      await prisma.orderPayment.create({
+        data: {
+          orderId: order.id,
+          paymentMethod: payment.paymentMethod,
+          amount: payment.amount,
+        },
+      });
+    }
 
     // Increment coupon usage
     if (couponId) {
