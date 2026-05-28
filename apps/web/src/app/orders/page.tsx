@@ -1226,7 +1226,7 @@ export default function OrdersPage() {
                 Confirmar Pedido Online (Baixar Estoque)
               </button>
             )}
-            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && detailOrder.source !== 'ONLINE' && (
+            {detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (detailOrder.source !== 'ONLINE' || orderHasFiado(detailOrder)) && (
               <button
                 onClick={() => handlePay(detailOrder.id)}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-medium transition-colors"
