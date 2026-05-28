@@ -227,7 +227,7 @@ function UsuariosTab() {
         await api.tenant.users.create({
           email: form.email,
           name: form.name,
-          password: form.password,
+          ...(existingUser ? {} : { password: form.password }),
           role: form.role,
         });
         show('Usuario adicionado!');
