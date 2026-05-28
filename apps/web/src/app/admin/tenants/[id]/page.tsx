@@ -616,12 +616,22 @@ export default function TenantDetailPage() {
                 <input
                   type="email"
                   value={userForm.email}
-                  onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                  onChange={(e) => { setUserForm({ ...userForm, email: e.target.value }); setExistingUser(null); }}
+                  onBlur={(e) => !editingUserId && lookupEmail(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-indigo-500"
                   required
+                  disabled={!!editingUserId}
                 />
+                {checkingEmail && (
+                  <p className="text-xs text-slate-500 mt-1">Verificando...</p>
+                )}
+                {!editingUserId && existingUser && (
+                  <p className="text-xs text-emerald-400 mt-1">
+                    Usuario ja possui conta no sistema. Nao e necessario definir senha.
+                  </p>
+                )}
               </div>
-              {!editingUserId && (
+              {!editingUserId && !existingUser && (
                 <div>
                   <label className="block text-slate-400 text-sm mb-1">Senha</label>
                   <input
