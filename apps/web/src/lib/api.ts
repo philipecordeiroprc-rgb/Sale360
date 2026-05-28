@@ -404,6 +404,9 @@ export const api = {
   // Tenant users (ADMIN)
   tenant: {
     users: {
+      lookup(email: string) {
+        return request<{ exists: boolean; user: { id: string; name: string; email: string } | null }>(`/api/tenant/users/lookup?email=${encodeURIComponent(email)}`);
+      },
       list() {
         return request<any[]>('/api/tenant/users');
       },
