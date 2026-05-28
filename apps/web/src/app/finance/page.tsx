@@ -190,11 +190,13 @@ export default function FinancePage() {
                 <p className="p-8 text-center text-slate-500">Nenhum dado no periodo</p>
               ) : (
                 <div className="divide-y divide-slate-800">
-                  {data.paymentMethods?.map((pm: any) => {
+                  {data.paymentMethods
+                    ?.filter((pm: any) => pm.method !== 'credit_store' && pm.method !== 'Fiado')
+                    .map((pm: any) => {
                     const pct = s.revenue > 0 ? (pm.total / s.revenue) * 100 : 0;
                     return (
                       <div key={pm.method} className="px-4 py-3 flex items-center gap-4">
-                        <span className="text-white text-sm font-medium w-24">{pm.method}</span>
+                        <span className="text-white text-sm font-medium w-24">{paymentLabel(pm.method)}</span>
                         <div className="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
                           <div className="h-full bg-indigo-500 rounded-full transition-all"
                             style={{ width: `${pct}%` }} />
@@ -205,6 +207,14 @@ export default function FinancePage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {data.fiadoSettled && data.fiadoSettled.count > 0 && (
+                <div className="px-4 py-3 border-t border-slate-800 flex items-center gap-4 bg-amber-500/5">
+                  <span className="text-amber-400 text-sm font-medium w-24">Fiado Recebido</span>
+                  <div className="flex-1" />
+                  <span className="text-amber-400 text-sm font-medium w-28 text-right">R$ {data.fiadoSettled.total.toFixed(2)}</span>
+                  <span className="text-amber-400/60 text-xs w-16 text-right">{data.fiadoSettled.count} quitados</span>
                 </div>
               )}
             </div>
