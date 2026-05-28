@@ -188,6 +188,10 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         fiadoAmount: Math.round(fiadoAmount * 100) / 100,
       },
       paymentMethods,
+      fiadoSettled: {
+        count: fiadoSettledCount,
+        total: Math.round(fiadoSettledTotal * 100) / 100,
+      },
       topProducts,
       topCustomers,
       topSellers,
