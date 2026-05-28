@@ -1,4 +1,4 @@
-Nº Pedido*;Fornecedor*;Produto*;Variação;Quantidade*;Custo Unitário*;Preço de Venda;Data Recebimento*;Status;Observação
+﻿Nº Pedido*;Fornecedor*;Produto*;Variação;Quantidade*;Custo Unitário*;Preço de Venda;Data Recebimento*;Status;Observação
 1;Distribuidora Alimentos ABC;Arroz Branco 5kg;;50;18,50;25,90;24/05/2026;RECEIVED;Compra inicial de inauguração
 1;Distribuidora Alimentos ABC;Feijão Carioca 1kg;;30;5,80;8,90;24/05/2026;RECEIVED;Compra inicial de inauguração
 1;Distribuidora Alimentos ABC;Refrigerante Cola 2L;;120;7,00;12,90;24/05/2026;RECEIVED;Compra inicial de inauguração
