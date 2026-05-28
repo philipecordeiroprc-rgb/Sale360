@@ -173,6 +173,20 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
               )}
             </div>
           )}
+
+          {/* Tutoriais */}
+          <Link
+            href="/tutoriais"
+            onClick={handleNav}
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150
+              ${pathname.startsWith('/tutoriais')
+                ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+          >
+            <BookOpen size={16} />
+            <span className="font-medium text-xs">Tutoriais</span>
+          </Link>
         </nav>
 
         {/* User */}
