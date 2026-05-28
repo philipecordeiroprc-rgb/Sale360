@@ -253,7 +253,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
     const primaryMethod = effectivePayments[0].paymentMethod;
 
     // Fiado orders: deduct stock immediately, set status COMPLETED (product left the store)
-    if (hasFiado) {
+    if (isFiadoOrder) {
       // Pre-validate stock for all items (fail fast before transaction)
       for (const item of data.items) {
         const batches = await prisma.inventoryBatch.findMany({
