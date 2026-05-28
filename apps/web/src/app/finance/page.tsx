@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, ShoppingCart, CreditCard, Package, Users, UserCheck, BarChart3, Clock, ArrowRight } from 'lucide-react';
 import api from '@/lib/api';
+import { paymentLabel } from '@/lib/payment-constants';
 
 function useToast() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
