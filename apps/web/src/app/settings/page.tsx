@@ -185,7 +185,24 @@ function UsuariosTab() {
   const openCreate = () => {
     setEditingId(null);
     setForm({ email: '', name: '', password: '', role: 'CASHIER' });
+    setExistingUser(null);
     setShowModal(true);
+  };
+
+  const lookupEmail = async (email: string) => {
+    if (!email || !email.includes('@')) { setExistingUser(null); return; }
+    setCheckingEmail(true);
+    try {
+      const result = await api.tenant.users.lookup(email);
+      setExistingUser(result.exists ? result.user : null);
+      if (result.exists && result.user) {
+        setForm(prev => ({ ...prev, name: result.user!.name, password: '' }));
+      }
+    } catch {
+      setExistingUser(null);
+    } finally {
+      setCheckingEmail(false);
+    }
   };
 
   const openEdit = (tu: any) => {
