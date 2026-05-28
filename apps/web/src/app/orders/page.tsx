@@ -785,7 +785,7 @@ export default function OrdersPage() {
                             <CheckCircle size={16} />
                           </button>
                         )}
-                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && o.source !== 'ONLINE' && (
+                        {o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (o.source !== 'ONLINE' || orderHasFiado(o)) && (
                           <button onClick={() => handlePay(o.id)}
                             className="p-1.5 text-amber-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Receber pagamento">
                             <Banknote size={16} />
