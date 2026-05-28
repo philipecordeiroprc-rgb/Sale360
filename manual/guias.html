@@ -506,77 +506,102 @@
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <section id="guia-fiado">
-<h1>4. Gerenciar Fiado</h1>
+<h1>4. Vender Fiado</h1>
 
 <div class="note" style="margin-bottom:24px">
-  <strong>Objetivo:</strong> Vender a prazo para clientes de confiança e gerenciar os recebimentos.<br>
-  <strong>Pré-requisito:</strong> Cliente cadastrado com CPF
+  <strong>Objetivo:</strong> Vender a prazo (fiado) para clientes, com baixa imediata do estoque e controle de recebimentos.<br>
+  <strong>Pré-requisito:</strong> Produtos com estoque cadastrado; para envio de lembrete, cliente precisa ter telefone cadastrado.
 </div>
 
-<h2>Habilitar Fiado para um Cliente</h2>
+<h2>Iniciar uma Venda Fiado</h2>
+<p>O fiado pode ser iniciado de duas formas:</p>
+
+<h3>Opção A — Pelo Catálogo Online</h3>
 <div class="step">
   <div class="num">1</div>
   <div class="body">
-    <strong>Acesse o cadastro do cliente</strong>
-    No menu <strong>"Clientes"</strong>, encontre o cliente e clique para editar.
+    <strong>Cliente acessa o catálogo da loja</strong>
+    O cliente navega pelo catálogo online, adiciona produtos ao carrinho e vai para o checkout.
   </div>
 </div>
 <div class="step">
   <div class="num">2</div>
   <div class="body">
-    <strong>Ative a opção de Fiado</strong>
-    Marque a opção <strong>"Permitir Fiado"</strong> e defina um <strong>Limite de Crédito (R$)</strong>. Salve as alterações.
-  </div>
-</div>
-
-<h2>Vender Fiado</h2>
-<div class="step">
-  <div class="num">1</div>
-  <div class="body">
-    <strong>No PDV, selecione o cliente</strong>
-    Antes de finalizar a venda, busque e selecione o cliente habilitado para fiado.
-  </div>
-</div>
-<div class="step">
-  <div class="num">2</div>
-  <div class="body">
-    <strong>Escolha "Fiado" como pagamento</strong>
-    Nas formas de pagamento, selecione <strong>"Fiado"</strong>. O sistema verificará se o valor da venda está dentro do limite disponível do cliente.
+    <strong>Cliente escolhe "Fiado" como pagamento</strong>
+    Na tela de finalização, o cliente seleciona <strong>"Fiado"</strong> entre as formas de pagamento disponíveis e informa nome e telefone.
   </div>
 </div>
 <div class="step">
   <div class="num">3</div>
   <div class="body">
-    <strong>Finalize a venda</strong>
-    A venda fica registrada como pendente no financeiro do cliente.
+    <strong>Estoque é baixado automaticamente</strong>
+    O sistema deduz os produtos do estoque (PEPS/FEFO — lote com vencimento mais próximo primeiro) e o pedido aparece para o administrador com status <strong>"Pendente"</strong>.
   </div>
 </div>
+
+<h3>Opção B — Pelo Menu Vendas (PDV)</h3>
+<div class="step">
+  <div class="num">1</div>
+  <div class="body">
+    <strong>Acesse Vendas → Nova Venda</strong>
+    No menu lateral, clique em <strong>"Vendas"</strong> e depois no botão <strong>"Nova Venda"</strong>.
+  </div>
+</div>
+<div class="step">
+  <div class="num">2</div>
+  <div class="body">
+    <strong>Selecione o cliente e os produtos</strong>
+    Busque um cliente cadastrado ou informe um nome avulso. Adicione os produtos ao carrinho normalmente.
+  </div>
+</div>
+<div class="step">
+  <div class="num">3</div>
+  <div class="body">
+    <strong>Escolha "Fiado" como forma de pagamento</strong>
+    Nas opções de pagamento, clique em <strong>"Fiado"</strong>. Se houver múltiplos lotes do mesmo produto com datas de validade diferentes, o sistema abrirá uma tela para você <strong>escolher qual lote</strong> dar baixa. O lote com vencimento mais próximo vem pré-selecionado.
+  </div>
+</div>
+<div class="step">
+  <div class="num">4</div>
+  <div class="body">
+    <strong>Finalize a venda</strong>
+    O estoque é baixado imediatamente e o valor fica registrado como <strong>pendente a receber</strong> no financeiro do cliente.
+  </div>
+</div>
+
+<h2>Venda Pendente — O que aparece</h2>
+<p>Após a venda fiado ser concluída (seja pelo catálogo ou PDV), na lista de vendas:</p>
+<ul style="margin:12px 0 12px 20px;color:#cbd5e1;line-height:2">
+  <li>O pedido aparece com selo <strong style="color:#f59e0b">Pendente</strong> (ou <strong style="color:#ef4444">Vencido</strong> se passou da data de vencimento)</li>
+  <li>Um <strong>ícone do WhatsApp 🟢</strong> fica disponível para enviar lembrete de pagamento ao cliente (<em>aparece somente se o cliente tiver número de telefone cadastrado</em>)</li>
+  <li>O botão <strong>"Receber Pagamento" 🏦</strong> permite registrar o pagamento quando o cliente pagar</li>
+</ul>
 
 <h2>Receber Pagamento de Fiado</h2>
 <div class="step">
   <div class="num">1</div>
   <div class="body">
-    <strong>Acesse o módulo Financeiro</strong>
-    No menu lateral, clique em <strong>"Financeiro"</strong>.
+    <strong>Na lista de Vendas, clique em "Receber Pagamento"</strong>
+    Identifique a venda pendente (selo amarelo "Pendente") e clique no ícone de <strong>💰 Receber Pagamento</strong>.
   </div>
 </div>
 <div class="step">
   <div class="num">2</div>
   <div class="body">
-    <strong>Localize as pendências do cliente</strong>
-    Filtre por <strong>"Fiado"</strong> para ver todas as vendas a receber. Os valores são agrupados por cliente.
+    <strong>Escolha a(s) forma(s) de pagamento</strong>
+    Selecione uma ou mais formas entre <strong>Dinheiro, Pix, Débito e Crédito</strong>. Você pode dividir o valor em múltiplos métodos (ex: parte no Pix, parte em dinheiro). A soma precisa bater com o total da venda.
   </div>
 </div>
 <div class="step">
   <div class="num">3</div>
   <div class="body">
-    <strong>Registre o pagamento</strong>
-    Clique na venda pendente e selecione a forma de pagamento recebida (Dinheiro, Pix, etc.). Confirme o recebimento. O limite do cliente é liberado automaticamente.
+    <strong>Confirme o recebimento</strong>
+    Clique em <strong>"Receber Pagamento"</strong>. O status muda para <strong>"Pago"</strong>, o saldo devedor do cliente é reduzido e o valor entra nos indicadores financeiros na forma de pagamento real utilizada (ex: se foi pago com Pix, aparece como Pix no faturamento).
   </div>
 </div>
 
 <div class="warn">
-  <strong>Atenção ao limite:</strong> O sistema bloqueia novas vendas fiado se o saldo devedor do cliente ultrapassar o limite configurado. Mantenha os limites atualizados conforme seu relacionamento com cada cliente.
+  <strong>Importante:</strong> O Fiado <strong>não</strong> é contabilizado como forma de pagamento nos indicadores de faturamento. Nos relatórios e indicadores, o valor aparece na forma de pagamento real usada para quitar (Pix, Dinheiro, etc.), com uma linha separada informando quanto desse total veio de fiados quitados.
 </div>
 </section>
 
