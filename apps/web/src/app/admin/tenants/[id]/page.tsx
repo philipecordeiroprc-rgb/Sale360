@@ -130,7 +130,25 @@ export default function TenantDetailPage() {
   const openUserCreate = () => {
     setEditingUserId(null);
     setUserForm({ email: '', name: '', password: '', role: 'CASHIER' });
+    setExistingUser(null);
     setShowUserModal(true);
+  };
+
+  const lookupEmail = async (email: string) => {
+    if (!email || !email.includes('@')) { setExistingUser(null); return; }
+    setCheckingEmail(true);
+    try {
+      const result = await api.admin.lookupUser(email);
+      setExistingUser(result.exists ? result.user : null);
+      // Auto-fill name if user exists
+      if (result.exists && result.user) {
+        setUserForm(prev => ({ ...prev, name: result.user!.name, password: '' }));
+      }
+    } catch {
+      setExistingUser(null);
+    } finally {
+      setCheckingEmail(false);
+    }
   };
 
   const openUserEdit = (tu: any) => {
