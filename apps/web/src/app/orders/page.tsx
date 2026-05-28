@@ -143,7 +143,7 @@ export default function OrdersPage() {
   const [confirmPaymentOpen, setConfirmPaymentOpen] = useState(false);
   const [confirmingOrderId, setConfirmingOrderId] = useState<string | null>(null);
   const [confirmingIsOnline, setConfirmingIsOnline] = useState(false);
-  const [selectedConfirmPayment, setSelectedConfirmPayment] = useState<(typeof CONFIRM_PAYMENT_METHODS)[number]>(CONFIRM_PAYMENT_METHODS[0]);
+  const [confirmTotal, setConfirmTotal] = useState(0);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
