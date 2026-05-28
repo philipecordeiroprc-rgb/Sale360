@@ -473,7 +473,7 @@ export const api = {
         list(tenantId: string) {
           return request<any[]>(`/api/admin/tenants/${tenantId}/users`);
         },
-        add(tenantId: string, data: { email: string; name: string; password: string; role: string }) {
+        add(tenantId: string, data: { email: string; name: string; password?: string; role: string }) {
           return request<any>(`/api/admin/tenants/${tenantId}/users`, { method: 'POST', body: JSON.stringify(data) });
         },
         update(tenantId: string, userId: string, data: { role?: string; forceTwoFactor?: boolean; name?: string; email?: string }) {
