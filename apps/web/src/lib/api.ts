@@ -407,7 +407,7 @@ export const api = {
       list() {
         return request<any[]>('/api/tenant/users');
       },
-      create(data: { email: string; name: string; password: string; role: string }) {
+      create(data: { email: string; name: string; password?: string; role: string }) {
         return request<any>('/api/tenant/users', { method: 'POST', body: JSON.stringify(data) });
       },
       update(userId: string, data: { role?: string }) {
