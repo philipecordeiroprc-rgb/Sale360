@@ -165,12 +165,15 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Esta loja não está aceitando pedidos online no momento.' });
     }
 
-    // Build effective payments (multi or legacy single)
+    // Build effective payments (multi or legacy single) — normalize method names
     let effectivePayments: Array<{ paymentMethod: string; amount: number }> = [];
     if (data.payments && data.payments.length > 0) {
-      effectivePayments = data.payments;
+      effectivePayments = data.payments.map(p => ({
+        paymentMethod: normalizePaymentMethod(p.paymentMethod),
+        amount: p.amount,
+      }));
     } else if (data.paymentMethod) {
-      effectivePayments = [{ paymentMethod: data.paymentMethod, amount: data.total }];
+      effectivePayments = [{ paymentMethod: normalizePaymentMethod(data.paymentMethod), amount: data.total }];
     } else {
       return reply.status(400).send({ error: 'paymentMethod ou payments é obrigatório.' });
     }
