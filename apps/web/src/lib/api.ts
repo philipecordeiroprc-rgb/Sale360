@@ -453,6 +453,9 @@ export const api = {
 
   // Admin (SUPER_ADMIN)
   admin: {
+    lookupUser(email: string) {
+      return request<{ exists: boolean; user: { id: string; name: string; email: string } | null }>(`/api/admin/users/lookup?email=${encodeURIComponent(email)}`);
+    },
     tenants: {
       list(params?: { search?: string }) {
         const sp = new URLSearchParams();
