@@ -1217,7 +1217,7 @@ export default function OrdersPage() {
               </tfoot>
             </table>
 
-            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && (
+            {detailOrder.source === 'ONLINE' && detailOrder.paymentStatus === 'PENDING' && detailOrder.status !== 'CANCELLED' && !orderHasFiado(detailOrder) && (
               <button
                 onClick={() => { handleConfirmOnline(detailOrder.id); }}
                 className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-medium transition-colors"
