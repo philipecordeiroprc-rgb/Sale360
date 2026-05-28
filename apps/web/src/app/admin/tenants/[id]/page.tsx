@@ -176,7 +176,7 @@ export default function TenantDetailPage() {
         await api.admin.tenants.users.add(id, {
           email: userForm.email,
           name: userForm.name,
-          password: userForm.password,
+          ...(existingUser ? {} : { password: userForm.password }),
           role: userForm.role,
         });
       }
