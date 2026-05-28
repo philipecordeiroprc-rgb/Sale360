@@ -5,6 +5,11 @@ export interface PaymentMethodBreakdown {
   percentage: number;
 }
 
+export interface FiadoSettled {
+  count: number;
+  total: number;
+}
+
 export interface FinancialIndicators {
   faturamentoBruto: number;
   faturamentoLiquido: number;
@@ -16,6 +21,7 @@ export interface FinancialIndicators {
   lucroLiquidoEstimado: number;
   ticketMedio: number;
   faturamentoPorFormaPagamento: PaymentMethodBreakdown[];
+  fiadoSettled: FiadoSettled;
 }
 
 export interface TopProduct {
