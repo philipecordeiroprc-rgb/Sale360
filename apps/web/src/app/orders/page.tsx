@@ -64,6 +64,10 @@ function getWhatsAppUrl(phone: string, message: string): string {
   return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
+function orderHasFiado(order: any): boolean {
+  return order.payments?.some((p: any) => p.paymentMethod === 'credit_store') || isFiado(order.paymentMethod);
+}
+
 
 interface CartItem {
   productId?: string;
