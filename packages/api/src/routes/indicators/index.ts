@@ -126,9 +126,24 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
     const ticketMedio = paidOrders.length > 0 ? faturamentoBruto / paidOrders.length : 0;
 
     // Faturamento por forma de pagamento
+    // Fiado settled: use paidWithMethod (real settlement method), not credit_store
     const paymentMap = new Map<string, { count: number; total: number }>();
+    let fiadoSettledTotal = 0;
+    let fiadoSettledCount = 0;
     for (const o of paidOrders) {
-      if (o.payments && o.payments.length > 0) {
+      const hasCreditStore = o.payments?.some(p => p.paymentMethod === 'credit_store')
+        || o.paymentMethod === 'credit_store';
+
+      if (hasCreditStore && (o as any).paidWithMethod) {
+        // Fiado order that was settled — count under the actual settlement method
+        const method = (o as any).paidWithMethod;
+        const entry = paymentMap.get(method) || { count: 0, total: 0 };
+        entry.count++;
+        entry.total += Number(o.total);
+        paymentMap.set(method, entry);
+        fiadoSettledTotal += Number(o.total);
+        fiadoSettledCount++;
+      } else if (o.payments && o.payments.length > 0) {
         for (const p of o.payments) {
           const method = p.paymentMethod || 'outro';
           const entry = paymentMap.get(method) || { count: 0, total: 0 };
