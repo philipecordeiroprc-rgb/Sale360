@@ -184,6 +184,10 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       lucroLiquidoEstimado: r2(lucroLiquidoEstimado),
       ticketMedio: r2(ticketMedio),
       faturamentoPorFormaPagamento,
+      fiadoSettled: {
+        count: fiadoSettledCount,
+        total: r2(fiadoSettledTotal),
+      },
     };
 
     // ═══════════════════════════════════════════
