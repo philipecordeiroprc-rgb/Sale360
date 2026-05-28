@@ -470,7 +470,11 @@ export default function OrdersPage() {
     const id = confirmingOrderId;
     if (!id) return;
     try {
-      const result = await api.orders.pay(id, { paymentMethod: selectedConfirmPayment.id });
+      const body: any = {};
+      if (paymentLines.length > 0) {
+        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
+      }
+      const result = await api.orders.pay(id, body);
       show(result.message || 'Pagamento recebido!');
       setConfirmPaymentOpen(false);
       setConfirmingOrderId(null);
