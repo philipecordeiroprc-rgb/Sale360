@@ -238,8 +238,8 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
 
     // Calculate due date for credit_store
     let dueDate: Date | undefined;
-    const hasFiado = effectivePayments.some(p => p.paymentMethod === 'credit_store');
-    if (hasFiado) {
+    const isFiadoOrder = hasFiadoPayment(effectivePayments);
+    if (isFiadoOrder) {
       const pmSettings = settings.paymentMethods.find((pm) => pm.paymentMethod === 'credit_store');
       const days = pmSettings?.dueDays || 30;
       dueDate = new Date();
