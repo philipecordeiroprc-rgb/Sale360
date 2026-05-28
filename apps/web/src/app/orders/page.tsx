@@ -455,10 +455,14 @@ export default function OrdersPage() {
     }
   };
 
-  const handlePay = (id: string) => {
+  const handlePay = async (id: string) => {
     setConfirmingOrderId(id);
     setConfirmingIsOnline(false);
-    setSelectedConfirmPayment(CONFIRM_PAYMENT_METHODS[0]);
+    setPaymentLines([]);
+    try {
+      const order = await api.orders.get(id);
+      setConfirmTotal(Number(order.total) || 0);
+    } catch { /* ignore */ }
     setConfirmPaymentOpen(true);
   };
 
