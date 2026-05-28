@@ -1234,36 +1234,82 @@ export default function OrdersPage() {
         )}
       </Modal>
 
-      {/* Confirm Payment Sub-Modal (choose final payment method for Fiado) */}
-      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="sm" closeOnOverlayClick={false}>
+      {/* Confirm Payment Sub-Modal (split payment for Fiado receipt / online confirm) */}
+      <Modal open={confirmPaymentOpen} onClose={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} title={confirmingIsOnline ? 'Confirmar Pedido Online' : 'Receber Pagamento'} size="md" closeOnOverlayClick={false}>
         <div className="space-y-4">
-          <p className="text-slate-400 text-sm">
-            {confirmingIsOnline
-              ? 'Escolha a forma de pagamento para confirmar este pedido:'
-              : 'Escolha a forma de pagamento recebida:'}
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {CONFIRM_PAYMENT_METHODS.map((pm) => {
-              const Icon = pm.icon;
-              const isSelected = selectedConfirmPayment.id === pm.id;
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <h3 className="text-sm font-semibold text-white mb-1">Pagamento</h3>
+            {(() => {
+              const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+              const remaining = confirmTotal - paidSoFar;
               return (
-                <button key={pm.id} onClick={() => setSelectedConfirmPayment(pm)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all ${
-                    isSelected
-                      ? 'bg-indigo-500 text-white ring-2 ring-indigo-400'
-                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                  }`}>
-                  <Icon size={20} />
-                  <span className="text-xs font-medium">{pm.label}</span>
-                </button>
+                <p className="text-xs text-slate-400 mb-3">
+                  Total: <span className="text-emerald-400 font-semibold">R$ {confirmTotal.toFixed(2)}</span>
+                  {paymentLines.length > 0 && (
+                    <> &middot; Faltam: <span className={remaining > 0.01 ? 'text-amber-400' : 'text-emerald-400'}>{remaining > 0.01 ? `R$ ${remaining.toFixed(2)}` : 'R$ 0,00'}</span></>
+                  )}
+                </p>
               );
-            })}
+            })()}
+            <div className="grid grid-cols-4 gap-2">
+              {CONFIRM_PAYMENT_METHODS.map((pm) => {
+                const Icon = pm.icon;
+                const handleClick = () => {
+                  const remaining = confirmTotal - paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                  if (remaining <= 0.01) return;
+                  setPaymentLines(prev => [...prev, { methodId: pm.id, amount: remaining }]);
+                };
+                return (
+                  <button key={pm.id} onClick={handleClick}
+                    className="flex flex-col items-center gap-1 p-3 rounded-xl text-center transition-all bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white">
+                    <Icon size={20} />
+                    <span className="text-xs font-medium">{pm.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Payment lines */}
+            {paymentLines.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {paymentLines.map((pl, idx) => {
+                  const method = CONFIRM_PAYMENT_METHODS.find(m => m.id === pl.methodId as any);
+                  return (
+                    <div key={idx} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2">
+                      <span className={`w-2 h-2 rounded-full ${(method as any)?.color || 'bg-slate-500'}`} />
+                      <span className="text-sm text-white flex-1">{(method as any)?.label || pl.methodId}</span>
+                      <input
+                        type="number"
+                        value={pl.amount || ''}
+                        onChange={(e) => {
+                          setPaymentLines(prev => prev.map((l, i) => i === idx ? { ...l, amount: parseFloat(e.target.value) || 0 } : l));
+                        }}
+                        className="w-24 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-white text-sm text-right focus:border-indigo-500 outline-none"
+                        placeholder="0,00"
+                        step="0.01"
+                      />
+                      <button
+                        onClick={() => setPaymentLines(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-slate-500 hover:text-red-400 p-1"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button
               onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(); else handlePayExecute(); }}
-              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+              disabled={(() => {
+                const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
+                return paymentLines.length === 0 || Math.abs(paidSoFar - confirmTotal) > 0.01;
+              })()}
+              className="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
             >
               {confirmingIsOnline ? 'Confirmar Pedido' : 'Receber Pagamento'}
             </button>
