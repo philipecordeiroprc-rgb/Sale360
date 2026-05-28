@@ -377,22 +377,33 @@ function UsuariosTab() {
                     <input
                       type="email"
                       value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      onChange={(e) => { setForm({ ...form, email: e.target.value }); setExistingUser(null); }}
+                      onBlur={(e) => lookupEmail(e.target.value)}
                       className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
                       required
                     />
+                    {checkingEmail && (
+                      <p className="text-xs text-slate-500 mt-1">Verificando...</p>
+                    )}
+                    {existingUser && (
+                      <p className="text-xs text-emerald-400 mt-1">
+                        Usuario ja possui conta no sistema. Nao e necessario definir senha.
+                      </p>
+                    )}
                   </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-1">Senha</label>
-                    <input
-                      type="password"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-                      required
-                      minLength={8}
-                    />
-                  </div>
+                  {!existingUser && (
+                    <div>
+                      <label className="block text-slate-400 text-sm mb-1">Senha</label>
+                      <input
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
