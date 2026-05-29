@@ -640,7 +640,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
-      include: { items: true, customer: true },
+      include: { items: true, customer: true, payments: true },
     });
     if (!order) return reply.status(404).send({ error: 'Venda não encontrada' });
 
