@@ -9,6 +9,8 @@ const METHODS = [
   { id: 'credit', label: 'Crédito', icon: '💳', color: '#6366F1' },
   { id: 'debit', label: 'Débito', icon: '🏧', color: '#F59E0B' },
   { id: 'cash', label: 'Dinheiro', icon: '💵', color: '#34D399' },
+  { id: 'meal_voucher', label: 'Voucher Refeição', icon: '🍽️', color: '#F97316' },
+  { id: 'food_voucher', label: 'Voucher Alimentação', icon: '🛒', color: '#F43F5E' },
   { id: 'credit_store', label: 'Fiado', icon: '📒', color: '#EC4899' },
 ];
 
