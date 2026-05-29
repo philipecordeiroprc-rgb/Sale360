@@ -681,7 +681,6 @@ export default function OrdersPage() {
             className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition-colors">
             Filtrar
           </button>
-          )}
         </div>
       </div>
 
