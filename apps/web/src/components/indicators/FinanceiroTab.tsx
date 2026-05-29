@@ -159,6 +159,8 @@ export function FinanceiroTab({ data, loading }: { data: FinancialIndicators | n
                   total={pm.total}
                   percentage={pm.percentage}
                   maxPct={f.faturamentoPorFormaPagamento[0]?.percentage || 0}
+                  fiadoCount={pm.fiadoCount}
+                  fiadoTotal={pm.fiadoTotal}
                 />
               ))}
           </div>
