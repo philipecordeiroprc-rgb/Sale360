@@ -217,6 +217,10 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setRowExpiryDate('');
+    setNewVarName('');
+    setNewVarQty(0);
+    setNewVarExpiryDate('');
 
     // Map purchase items to PurchaseItemData
     const items: PurchaseItemData[] = (purchase.items || []).map((item: any) => {
@@ -246,6 +250,8 @@ export default function PurchasesPage() {
           stockQty: Number(item.quantity),
           lowStockAt: undefined,
         }] : [],
+        expiryDates: {},
+        simpleExpiryDate: '',
       };
     });
     setPurchaseItems(items);
