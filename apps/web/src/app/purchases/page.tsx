@@ -300,6 +300,10 @@ export default function PurchasesPage() {
       setRowDims({});
       setRowCustom({});
       setRowQty(0);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -317,6 +321,8 @@ export default function PurchasesPage() {
           stockQty: 0,
           lowStockAt: undefined,
         })),
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     } else if (hasTemplate) {
       // Template-based: user builds variation rows manually with dropdowns
