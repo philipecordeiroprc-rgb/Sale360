@@ -47,6 +47,14 @@ const DEFAULT_PAYMENT_METHODS = [
   { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
 ];
 
+const PAYMENT_SORT_ORDER = DEFAULT_PAYMENT_METHODS.map((pm) => pm.paymentMethod);
+
+function sortPaymentMethods(methods: Array<{ paymentMethod: string; [key: string]: any }>) {
+  return [...methods].sort(
+    (a, b) => PAYMENT_SORT_ORDER.indexOf(a.paymentMethod) - PAYMENT_SORT_ORDER.indexOf(b.paymentMethod)
+  );
+}
+
 export function CatalogoTab() {
   const [data, setData] = useState<CatalogData | null>(null);
   const [loading, setLoading] = useState(true);
