@@ -10,6 +10,7 @@ import {
   ChevronDown, FolderOpen, BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 type Role = 'SUPER_ADMIN' | 'OWNER' | 'CASHIER';
 
