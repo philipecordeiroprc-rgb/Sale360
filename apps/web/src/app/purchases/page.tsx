@@ -958,11 +958,12 @@ export default function PurchasesPage() {
                     {currentItem.variations.length > 0 && (
                       <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
                         <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
-                          style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 55px 110px 40px` }}>
                           {templateDims.map((d: any) => (
                             <span key={d.id || d.label}>{d.label}</span>
                           ))}
                           <span className="text-center">Qtd</span>
+                          <span className="text-center">Validade</span>
                           <span />
                         </div>
                         {currentItem.variations.map((v, vi) => {
@@ -970,11 +971,21 @@ export default function PurchasesPage() {
                           return (
                             <div key={vi}
                               className="grid gap-2 px-3 py-1.5 items-center text-sm"
-                              style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 55px 110px 40px` }}>
                               {parts.map((part: string, pi: number) => (
                                 <span key={pi} className="text-white truncate">{part}</span>
                               ))}
-                              <span className="text-white text-center font-medium">{v.stockQty || 0}</span>
+                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                const updated = [...currentItem.variations];
+                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                setCurrentItem({ ...currentItem, variations: updated });
+                              }}
+                                min="0" step="1" placeholder="0"
+                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                              }}
+                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
                               <button
                                 onClick={() => {
                                   const updated = currentItem.variations.filter((_, i) => i !== vi);
