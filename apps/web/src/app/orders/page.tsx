@@ -542,8 +542,7 @@ export default function OrdersPage() {
     }
   };
 
-  const handleCheckBatchesAndConfirm = async () => {
-    const id = confirmingOrderId;
+  const handleCheckBatchesAndConfirm = async (id: string) => {
     if (!id) return;
 
     // Fetch the order with items to check for batches
