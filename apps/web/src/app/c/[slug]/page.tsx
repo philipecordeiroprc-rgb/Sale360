@@ -55,6 +55,8 @@ function paymentLabel(method: string): string {
     credit: 'Crédito',
     debit: 'Débito',
     credit_store: 'Fiado',
+    meal_voucher: 'Voucher Refeição',
+    food_voucher: 'Voucher Alimentação',
   };
   return labels[method] || method;
 }

@@ -26,7 +26,7 @@ import {
 } from '@/lib/payment-constants';
 const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 
-function getWhatsAppMessage(order: any): string {
+function getWhatsAppMessage(order: any, pixInstructions?: string | null): string {
   const customerName = order.customer?.name || order.customerName || 'Cliente';
   const orderNumber = order.orderNumber;
   const total = Number(order.total).toFixed(2).replace('.', ',');
@@ -42,6 +42,12 @@ function getWhatsAppMessage(order: any): string {
   }
   const productsBlock = itemLines.join('\n');
 
+  const pixBlock = pixInstructions ? [
+    ``,
+    `💳 *Pague via Pix:*`,
+    pixInstructions,
+  ] : [];
+
   const blocks = [
     `🤖 *Lembrete automático de pagamento*`,
     ``,
@@ -50,6 +56,7 @@ function getWhatsAppMessage(order: any): string {
     productsBlock,
     `💰 *Total:* R$ ${total}`,
     `📅 *Data:* ${date}`,
+    ...pixBlock,
     ``,
     `Se já pagou, desconsidere esta mensagem 🙂`,
     ``,
@@ -93,6 +100,7 @@ export default function OrdersPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pixInstructions, setPixInstructions] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -102,6 +110,11 @@ export default function OrdersPage() {
   });
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const dateFromRef = useRef(dateFrom);
+  const dateToRef = useRef(dateTo);
+  dateFromRef.current = dateFrom;
+  dateToRef.current = dateTo;
+  const [filterTick, setFilterTick] = useState(0);
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [pendingRevenue, setPendingRevenue] = useState(0);
   const { toast, show } = useToast();
@@ -160,8 +173,8 @@ export default function OrdersPage() {
         params.status = statusFilter;
       }
       if (search) params.search = search;
-      if (dateFrom) params.startDate = new Date(dateFrom + 'T00:00:00').toISOString();
-      if (dateTo) params.endDate = new Date(dateTo + 'T23:59:59').toISOString();
+      if (dateFromRef.current) params.startDate = new Date(dateFromRef.current + 'T00:00:00').toISOString();
+      if (dateToRef.current) params.endDate = new Date(dateToRef.current + 'T23:59:59').toISOString();
       const data = await api.orders.list(params);
       setOrders(data.orders);
       setTotal(data.total);
@@ -188,7 +201,8 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, [statusFilter, page, search, dateFrom, dateTo]);
+  }, [statusFilter, page, search, filterTick]);
+
 
   const loadTodayRevenue = async () => {
     try {
@@ -198,7 +212,17 @@ export default function OrdersPage() {
     } catch { /* ignore */ }
   };
 
-  useEffect(() => { loadOrders(); loadTodayRevenue(); }, [loadOrders]);
+  const loadPixInstructions = async () => {
+    try {
+      const catalog = await api.catalogSettings.get();
+      const pix = catalog?.paymentMethods?.find((pm: any) => pm.paymentMethod === 'pix');
+      if (pix?.instructions) {
+        setPixInstructions(pix.instructions);
+      }
+    } catch { /* silencioso — instruções Pix são opcionais */ }
+  };
+
+  useEffect(() => { loadOrders(); loadTodayRevenue(); loadPixInstructions(); }, [loadOrders]);
 
   const searchCustomers = async (q: string) => {
     setCustomerSearch(q);
@@ -637,22 +661,26 @@ export default function OrdersPage() {
           <input
             type="date"
             value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+            onChange={(e) => setDateFrom(e.target.value)}
             className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
           />
           <span className="text-slate-500 text-xs">até</span>
           <input
             type="date"
             value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+            onChange={(e) => setDateTo(e.target.value)}
             className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
           />
           {(dateFrom || dateTo) && (
-            <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
-              className="text-slate-400 hover:text-white p-1" title="Limpar datas">
-              <X size={14} />
-            </button>
+              <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); setFilterTick(t => t + 1); }}
+                className="text-slate-400 hover:text-white p-1" title="Limpar datas">
+                <X size={14} />
+              </button>
           )}
+          <button onClick={() => { setPage(1); setFilterTick(t => t + 1); }}
+            className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition-colors">
+            Filtrar
+          </button>
         </div>
       </div>
 
@@ -772,14 +800,14 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
                         {orderHasFiado(o) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED' && o.customer?.phone && (
-                          <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o))}
+                          <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o, pixInstructions))}
                             target="_blank" rel="noopener noreferrer"
                             className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors"
                             title="Cobrar via WhatsApp">
                             <WhatsAppIcon size={16} />
                           </a>
                         )}
-                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && !orderHasFiado(o) && (
+                        {o.source === 'ONLINE' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && (
                           <button onClick={() => handleConfirmOnline(o.id)}
                             className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
                             <CheckCircle size={16} />
@@ -1131,9 +1159,9 @@ export default function OrdersPage() {
                   {detailOrder.payments && detailOrder.payments.length > 0 ? (
                     <div className="space-y-1">
                       {detailOrder.payments.map((p: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-1.5">
-                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1 whitespace-nowrap">{paymentLabel(p.paymentMethod)}</span>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">R$ {Number(p.amount).toFixed(2)}</span>
+                        <div key={idx} className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1">{paymentLabel(p.paymentMethod)}</span>
+                          <span className="text-xs text-slate-400">R$ {Number(p.amount).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>

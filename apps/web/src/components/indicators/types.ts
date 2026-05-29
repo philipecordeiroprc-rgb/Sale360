@@ -3,6 +3,8 @@ export interface PaymentMethodBreakdown {
   count: number;
   total: number;
   percentage: number;
+  fiadoCount: number;
+  fiadoTotal: number;
 }
 
 export interface FiadoSettled {

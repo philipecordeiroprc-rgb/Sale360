@@ -640,7 +640,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
 
     const order = await prisma.order.findFirst({
       where: { OR: [{ id }, { localId: id }], tenantId: request.tenantId },
-      include: { items: true, customer: true },
+      include: { items: true, customer: true, payments: true },
     });
     if (!order) return reply.status(404).send({ error: 'Venda não encontrada' });
 
@@ -653,6 +653,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
     if (order.paymentStatus !== 'PENDING') {
       return reply.status(400).send({ error: 'Pedido já foi confirmado' });
     }
+
+    // Fiado orders: keep payment PENDING so seller can receive payment separately
+    const isFiadoOrder = order.payments?.some((p) => p.paymentMethod === 'credit_store')
+      || order.paymentMethod === 'credit_store';
 
     await prisma.$transaction(async (tx) => {
       for (const item of order.items) {
@@ -766,93 +770,97 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       const primaryConfirmMethod = confirmPayments.length > 0
         ? confirmPayments[0].paymentMethod
         : undefined;
+
       await tx.order.update({
         where: { id: order.id },
         data: {
-          paymentStatus: 'PAID',
+          paymentStatus: isFiadoOrder ? 'PENDING' : 'PAID',
           status: 'COMPLETED',
           ...(primaryConfirmMethod ? { paymentMethod: primaryConfirmMethod, paidWithMethod: primaryConfirmMethod } : {}),
         },
       });
 
-      // Create OrderPayment records if not already present (idempotent)
-      const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
-      if (existingPayments === 0) {
-        let effectiveConfirmPayments = confirmPayments;
-        // If no explicit payments provided, derive from legacy method and order total
-        if (effectiveConfirmPayments.length === 0) {
-          const method = legacyPaymentMethod || order.paymentMethod || 'cash';
-          effectiveConfirmPayments = [{ paymentMethod: normalizePaymentMethod(method), amount: Number(order.total) }];
-        } else {
-          // Resolve amounts: use provided amounts, or fall back to order total for first payment
-          const totalAmount = effectiveConfirmPayments.reduce((s, p) => s + p.amount, 0);
-          if (totalAmount === 0) {
-            effectiveConfirmPayments = effectiveConfirmPayments.map((p, i) => ({
-              ...p,
-              amount: i === 0 ? Number(order.total) : 0,
-            })).filter(p => p.amount > 0);
-          } else if (!validatePaymentTotal(effectiveConfirmPayments, Number(order.total))) {
-            throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+      // Non-fiado: create OrderPayment records + cash flow + customer stats
+      if (!isFiadoOrder) {
+        // Create OrderPayment records if not already present (idempotent)
+        const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
+        if (existingPayments === 0) {
+          let effectiveConfirmPayments = confirmPayments;
+          // If no explicit payments provided, derive from legacy method and order total
+          if (effectiveConfirmPayments.length === 0) {
+            const method = legacyPaymentMethod || order.paymentMethod || 'cash';
+            effectiveConfirmPayments = [{ paymentMethod: normalizePaymentMethod(method), amount: Number(order.total) }];
+          } else {
+            // Resolve amounts: use provided amounts, or fall back to order total for first payment
+            const totalAmount = effectiveConfirmPayments.reduce((s, p) => s + p.amount, 0);
+            if (totalAmount === 0) {
+              effectiveConfirmPayments = effectiveConfirmPayments.map((p, i) => ({
+                ...p,
+                amount: i === 0 ? Number(order.total) : 0,
+              })).filter(p => p.amount > 0);
+            } else if (!validatePaymentTotal(effectiveConfirmPayments, Number(order.total))) {
+              throw new Error('Soma dos pagamentos não corresponde ao total do pedido');
+            }
           }
-        }
 
-        for (const payment of effectiveConfirmPayments) {
-          await tx.orderPayment.create({
-            data: {
-              orderId: order.id,
-              paymentMethod: payment.paymentMethod,
-              amount: payment.amount,
-            },
-          });
-        }
-
-        // Weighted average tax rate across payment methods
-        const total = Number(order.total);
-        let weightedTax = 0;
-        for (const payment of effectiveConfirmPayments) {
-          const config = await tx.paymentMethodConfig.findUnique({
-            where: {
-              tenantId_paymentMethod: {
-                tenantId: request.tenantId,
+          for (const payment of effectiveConfirmPayments) {
+            await tx.orderPayment.create({
+              data: {
+                orderId: order.id,
                 paymentMethod: payment.paymentMethod,
+                amount: payment.amount,
               },
-            },
-            select: { taxRate: true },
+            });
+          }
+
+          // Weighted average tax rate across payment methods
+          const total = Number(order.total);
+          let weightedTax = 0;
+          for (const payment of effectiveConfirmPayments) {
+            const config = await tx.paymentMethodConfig.findUnique({
+              where: {
+                tenantId_paymentMethod: {
+                  tenantId: request.tenantId,
+                  paymentMethod: payment.paymentMethod,
+                },
+              },
+              select: { taxRate: true },
+            });
+            const rate = config?.taxRate ? Number(config.taxRate) : 0;
+            weightedTax += (rate * payment.amount) / total;
+          }
+          const taxRate = Math.round(weightedTax * 100) / 100;
+          await tx.orderItem.updateMany({
+            where: { orderId: order.id },
+            data: { taxRate },
           });
-          const rate = config?.taxRate ? Number(config.taxRate) : 0;
-          weightedTax += (rate * payment.amount) / total;
         }
-        const taxRate = Math.round(weightedTax * 100) / 100;
-        await tx.orderItem.updateMany({
-          where: { orderId: order.id },
-          data: { taxRate },
-        });
-      }
 
-      // Register in cash flow
-      await tx.cashFlow.create({
-        data: {
-          tenantId: request.tenantId,
-          type: 'IN',
-          category: 'venda',
-          description: `Pedido online #${order.orderNumber}`,
-          amount: order.total,
-          dueDate: new Date(),
-          paidAt: new Date(),
-          orderId: order.id,
-        },
-      });
-
-      // Update customer stats
-      if (order.customerId) {
-        await tx.customer.update({
-          where: { id: order.customerId },
+        // Register in cash flow
+        await tx.cashFlow.create({
           data: {
-            totalPurchases: { increment: 1 },
-            totalSpent: { increment: order.total },
-            lastPurchaseAt: new Date(),
+            tenantId: request.tenantId,
+            type: 'IN',
+            category: 'venda',
+            description: `Pedido online #${order.orderNumber}`,
+            amount: order.total,
+            dueDate: new Date(),
+            paidAt: new Date(),
+            orderId: order.id,
           },
         });
+
+        // Update customer stats
+        if (order.customerId) {
+          await tx.customer.update({
+            where: { id: order.customerId },
+            data: {
+              totalPurchases: { increment: 1 },
+              totalSpent: { increment: order.total },
+              lastPurchaseAt: new Date(),
+            },
+          });
+        }
       }
     });
 

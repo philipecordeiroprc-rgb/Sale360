@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -10,6 +10,7 @@ import {
   ChevronDown, FolderOpen, BookOpen,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { api } from '@/lib/api';
 
 type Role = 'SUPER_ADMIN' | 'OWNER' | 'CASHIER';
 
@@ -62,6 +63,31 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
   const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [stockAlertLevel, setStockAlertLevel] = useState<'critical' | 'warning' | 'ok'>('ok');
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    api.catalogSettings.get()
+      .then((data: any) => {
+        if (data?.logoPath) setLogoPath(data.logoPath);
+      })
+      .catch(() => {
+        // fallback silencioso: sem logo, mantém layout textual
+      });
+  }, [tenant?.id]);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    api.inventory.alerts()
+      .then((data) => {
+        setStockAlertLevel(data.level);
+      })
+      .catch(() => {
+        setStockAlertLevel('ok');
+      });
+  }, [tenant?.id]);
 
   if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
@@ -100,14 +126,25 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         {/* Logo + Store Name */}
         <div className="p-4 border-b border-slate-800">
-          <h1 className="text-lg font-black text-indigo-400 tracking-tight">SALE360</h1>
-          {tenant?.companyName ? (
-            <p className="text-xs text-white font-medium mt-0.5 truncate" title={tenant.companyName}>
-              {tenant.companyName}
-            </p>
-          ) : (
-            <p className="text-[10px] text-slate-400 mt-0.5">PDV Inteligente</p>
-          )}
+          <div className="flex items-center gap-2.5">
+            {logoPath && (
+              <img
+                src={`${API_URL}/api/public/uploads/${logoPath}`}
+                alt={tenant?.companyName || 'Logo'}
+                className="w-8 h-8 rounded-md object-cover shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <h1 className="text-lg font-black text-indigo-400 tracking-tight">SALE360</h1>
+              {tenant?.companyName ? (
+                <p className="text-xs text-white font-medium mt-0.5 truncate" title={tenant.companyName}>
+                  {tenant.companyName}
+                </p>
+              ) : (
+                <p className="text-[10px] text-slate-400 mt-0.5">PDV Inteligente</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Nav */}
@@ -126,7 +163,14 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                   }`}
               >
                 <item.icon size={16} />
-                <span className="font-medium text-xs">{item.label}</span>
+                <span className="font-medium text-xs flex items-center gap-1.5">
+                  {item.label}
+                  {item.href === '/inventory' && stockAlertLevel !== 'ok' && (
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      stockAlertLevel === 'critical' ? 'bg-red-500' : 'bg-amber-500'
+                    }`} />
+                  )}
+                </span>
               </Link>
             );
           })}

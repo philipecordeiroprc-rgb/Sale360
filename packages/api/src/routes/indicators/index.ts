@@ -127,7 +127,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
 
     // Faturamento por forma de pagamento
     // Fiado settled: use paidWithMethod (real settlement method), not credit_store
-    const paymentMap = new Map<string, { count: number; total: number }>();
+    const paymentMap = new Map<string, { count: number; total: number; fiadoCount: number; fiadoTotal: number }>();
     let fiadoSettledTotal = 0;
     let fiadoSettledCount = 0;
     for (const o of paidOrders) {
@@ -137,28 +137,30 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       if (hasCreditStore && (o as any).paidWithMethod) {
         // Fiado order that was settled — count under the actual settlement method
         const method = (o as any).paidWithMethod;
-        const entry = paymentMap.get(method) || { count: 0, total: 0 };
+        const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
+        entry.fiadoCount++;
+        entry.fiadoTotal += Number(o.total);
         paymentMap.set(method, entry);
         fiadoSettledTotal += Number(o.total);
         fiadoSettledCount++;
       } else if (o.payments && o.payments.length > 0) {
         for (const p of o.payments) {
           const method = p.paymentMethod || 'outro';
-          const entry = paymentMap.get(method) || { count: 0, total: 0 };
+          const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
           entry.total += Number(p.amount);
           paymentMap.set(method, entry);
         }
         // Count the order once under its first payment method
         const firstMethod = o.payments[0].paymentMethod || 'outro';
-        const firstEntry = paymentMap.get(firstMethod) || { count: 0, total: 0 };
+        const firstEntry = paymentMap.get(firstMethod) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         firstEntry.count++;
         paymentMap.set(firstMethod, firstEntry);
       } else {
         // Fallback for old orders without OrderPayment records
         const method = o.paymentMethod || 'outro';
-        const entry = paymentMap.get(method) || { count: 0, total: 0 };
+        const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
         paymentMap.set(method, entry);
@@ -170,6 +172,8 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
         count: v.count,
         total: r2(v.total),
         percentage: faturamentoBruto > 0 ? r2((v.total / faturamentoBruto) * 100) : 0,
+        fiadoCount: v.fiadoCount,
+        fiadoTotal: r2(v.fiadoTotal),
       }))
       .sort((a, b) => b.total - a.total);
 

@@ -34,12 +34,14 @@ export const DEFAULT_TEMPLATES: {
     name: 'Volume (Líquidos)',
     dimensions: [
       { type: 'VOLUME', label: 'Volume', options: ['100ml', '200ml', '250ml', '300ml', '350ml', '500ml', '600ml', '750ml', '1L', '1.5L', '2L', '5L', '10L', '20L'], orderIndex: 0 },
+      { type: 'SABOR', label: 'Sabor', options: ['Morango', 'Chocolate', 'Baunilha', 'Coco', 'Limão', 'Maracujá', 'Uva', 'Laranja', 'Abacaxi', 'Framboesa', 'Menta', 'Caramelo', 'Café', 'Avelã', 'Doce de Leite'], orderIndex: 1 },
     ],
   },
   {
     name: 'Peso (Granel/Alimentos)',
     dimensions: [
       { type: 'PESO', label: 'Peso', options: ['50g', '100g', '200g', '250g', '500g', '750g', '1kg', '2kg', '5kg', '10kg', '20kg', '50kg'], orderIndex: 0 },
+      { type: 'SABOR', label: 'Sabor', options: ['Morango', 'Chocolate', 'Baunilha', 'Coco', 'Limão', 'Maracujá', 'Uva', 'Laranja', 'Abacaxi', 'Framboesa', 'Menta', 'Caramelo', 'Café', 'Avelã', 'Doce de Leite'], orderIndex: 1 },
     ],
   },
   {
@@ -51,7 +53,7 @@ export const DEFAULT_TEMPLATES: {
 ];
 
 const dimensionSchema = z.object({
-  type: z.enum(['TAMANHO_LETRA', 'TAMANHO_NUMERO', 'COR', 'VOLUME', 'PESO', 'PERSONALIZADO']),
+  type: z.enum(['TAMANHO_LETRA', 'TAMANHO_NUMERO', 'COR', 'VOLUME', 'PESO', 'SABOR', 'PERSONALIZADO']),
   label: z.string().min(1),
   options: z.array(z.string()).min(1),
   orderIndex: z.number().int().default(0),
@@ -68,7 +70,11 @@ export const variationTemplateRoutes: FastifyPluginAsync = async (app) => {
   // Seed global templates if none exist
   async function ensureGlobalDefaults() {
     const existing = await prisma.variationTemplate.count({ where: { tenantId: null } });
-    if (existing > 0) return;
+    if (existing > 0) {
+      // Templates already exist — ensure Volume/Peso have Sabor dimension (added 2026-05-28)
+      await ensureSaborDimension();
+      return;
+    }
 
     for (const t of DEFAULT_TEMPLATES) {
       await prisma.variationTemplate.create({
@@ -85,6 +91,33 @@ export const variationTemplateRoutes: FastifyPluginAsync = async (app) => {
           },
         },
       });
+    }
+  }
+
+  // Idempotent: add Sabor dimension to Volume and Peso global templates if missing
+  async function ensureSaborDimension() {
+    const saborOptions = ['Morango', 'Chocolate', 'Baunilha', 'Coco', 'Limão', 'Maracujá', 'Uva', 'Laranja', 'Abacaxi', 'Framboesa', 'Menta', 'Caramelo', 'Café', 'Avelã', 'Doce de Leite'];
+
+    const templatesToUpdate = await prisma.variationTemplate.findMany({
+      where: {
+        tenantId: null,
+        name: { in: ['Volume (Líquidos)', 'Peso (Granel/Alimentos)'] },
+      },
+      include: { dimensions: true },
+    });
+
+    for (const t of templatesToUpdate) {
+      if (!t.dimensions.some((d) => d.type === 'SABOR')) {
+        await prisma.variationDimension.create({
+          data: {
+            templateId: t.id,
+            type: 'SABOR' as DimensionType,
+            label: 'Sabor',
+            options: JSON.stringify(saborOptions),
+            orderIndex: 1,
+          },
+        });
+      }
     }
   }
 

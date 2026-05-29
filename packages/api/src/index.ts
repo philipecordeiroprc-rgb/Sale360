@@ -62,6 +62,7 @@ process.on('SIGINT', async () => {
 
 async function buildApp() {
   const app = Fastify({
+    trustProxy: true,
     logger: {
       transport: process.env.NODE_ENV === 'development'
         ? { target: 'pino-pretty', options: { colorize: true } }
@@ -79,7 +80,7 @@ async function buildApp() {
     origin: (corsOrigins && corsOrigins.length > 0) ? corsOrigins : true,
     credentials: true,
   });
-  await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
+  await app.register(rateLimit, { max: 500, timeWindow: '1 minute' });
   await app.register(multipart, { limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 
   // Health check (no auth — for uptime monitoring)

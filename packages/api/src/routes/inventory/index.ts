@@ -13,6 +13,62 @@ const adjustSchema = z.object({
 });
 
 export const inventoryRoutes: FastifyPluginAsync = async (app) => {
+  // Alerts summary: low stock + expiry warnings
+  app.get('/alerts', async (request) => {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const [expiredCount, expiringSoonCount, productsWithLowStock] = await Promise.all([
+      prisma.inventoryBatch.count({
+        where: {
+          tenantId: request.tenantId,
+          remainingQty: { gt: 0 },
+          expiryDate: { lt: now },
+        },
+      }),
+      prisma.inventoryBatch.count({
+        where: {
+          tenantId: request.tenantId,
+          remainingQty: { gt: 0 },
+          expiryDate: { gte: now, lte: sevenDaysFromNow },
+        },
+      }),
+      prisma.product.findMany({
+        where: {
+          tenantId: request.tenantId,
+          active: true,
+          lowStockAt: { not: null, gt: 0 },
+        },
+        select: { stockQty: true, lowStockAt: true },
+      }),
+    ]);
+
+    let lowStockCount = 0;
+    let atMinStockCount = 0;
+    for (const p of productsWithLowStock) {
+      const stock = Number(p.stockQty);
+      const min = Number(p.lowStockAt!);
+      if (stock < min) lowStockCount++;
+      else if (stock === min) atMinStockCount++;
+    }
+
+    const hasCritical = expiredCount > 0 || lowStockCount > 0;
+    const hasWarning = expiringSoonCount > 0 || atMinStockCount > 0;
+
+    let level: 'critical' | 'warning' | 'ok';
+    if (hasCritical) level = 'critical';
+    else if (hasWarning) level = 'warning';
+    else level = 'ok';
+
+    return {
+      level,
+      expiredCount,
+      expiringSoonCount,
+      lowStockCount,
+      atMinStockCount,
+    };
+  });
+
   // List batches (all products with remaining stock, or filter by product)
   app.get('/batches', async (request) => {
     const { productId, variationId, page = '1', limit = '50' } = request.query as Record<string, string>;

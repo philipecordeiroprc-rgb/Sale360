@@ -201,12 +201,14 @@ export const api = {
 
   // Orders
   orders: {
-    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number }) {
+    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number; startDate?: string; endDate?: string }) {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set('search', params.search);
       if (params?.status) searchParams.set('status', params.status);
       if (params?.paymentMethod) searchParams.set('paymentMethod', params.paymentMethod);
       if (params?.page) searchParams.set('page', String(params.page));
+      if (params?.startDate) searchParams.set('startDate', params.startDate);
+      if (params?.endDate) searchParams.set('endDate', params.endDate);
       const qs = searchParams.toString();
       return request<any>(`/api/orders${qs ? `?${qs}` : ''}`);
     },
@@ -328,6 +330,9 @@ export const api = {
       if (params?.page) sp.set('page', String(params.page));
       const qs = sp.toString();
       return request<any>(`/api/inventory/movements${qs ? `?${qs}` : ''}`);
+    },
+    alerts() {
+      return request<{ level: 'critical' | 'warning' | 'ok'; expiredCount: number; expiringSoonCount: number; lowStockCount: number; atMinStockCount: number }>('/api/inventory/alerts');
     },
     adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; reason?: string; notes?: string }) {
       return request<any>('/api/inventory/adjust', { method: 'POST', body: JSON.stringify(data) });
@@ -671,7 +676,7 @@ export interface CategoryWithCount {
 }
 
 // Variation Template types
-export type DimensionType = 'TAMANHO_LETRA' | 'TAMANHO_NUMERO' | 'COR' | 'VOLUME' | 'PESO' | 'PERSONALIZADO';
+export type DimensionType = 'TAMANHO_LETRA' | 'TAMANHO_NUMERO' | 'COR' | 'VOLUME' | 'PESO' | 'SABOR' | 'PERSONALIZADO';
 
 export interface VariationDimension {
   id: string;

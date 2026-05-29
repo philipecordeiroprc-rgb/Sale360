@@ -7,6 +7,8 @@ export const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
   Debito: 'debit',
   Credito: 'credit',
   Fiado: 'credit_store',
+  'Voucher Refeição': 'meal_voucher',
+  'Voucher Alimentação': 'food_voucher',
 };
 
 // English DB codes → Portuguese labels
@@ -16,6 +18,8 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   debit: 'Débito',
   credit: 'Crédito',
   credit_store: 'Fiado',
+  meal_voucher: 'Voucher Refeição',
+  food_voucher: 'Voucher Alimentação',
 };
 
 export function normalizePaymentMethod(method: string): string {

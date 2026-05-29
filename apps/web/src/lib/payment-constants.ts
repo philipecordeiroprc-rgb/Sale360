@@ -1,4 +1,4 @@
-import { Banknote, CreditCard, User } from 'lucide-react';
+import { Banknote, CreditCard, User, Utensils, ShoppingCart } from 'lucide-react';
 
 // Portuguese UI labels → English DB codes
 export const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
@@ -7,6 +7,8 @@ export const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
   Debito: 'debit',
   Credito: 'credit',
   Fiado: 'credit_store',
+  'Voucher Refeição': 'meal_voucher',
+  'Voucher Alimentação': 'food_voucher',
 };
 
 // English DB codes → Portuguese labels
@@ -16,11 +18,15 @@ const LABEL_MAP: Record<string, string> = {
   pix: 'Pix',
   credit: 'Crédito',
   debit: 'Débito',
+  meal_voucher: 'Voucher Refeição',
+  food_voucher: 'Voucher Alimentação',
   Dinheiro: 'Dinheiro',
   Pix: 'Pix',
   Debito: 'Débito',
   Credito: 'Crédito',
   Fiado: 'Fiado',
+  'Voucher Refeição': 'Voucher Refeição',
+  'Voucher Alimentação': 'Voucher Alimentação',
 };
 
 export function paymentLabel(method: string | null | undefined): string {
@@ -37,6 +43,8 @@ export const PAYMENT_METHODS = [
   { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
   { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
   { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
+  { id: 'Voucher Refeição', label: 'Voucher Refeição', icon: Utensils, color: 'bg-orange-500' },
+  { id: 'Voucher Alimentação', label: 'Voucher Alimentação', icon: ShoppingCart, color: 'bg-rose-500' },
   { id: 'Fiado', label: 'Fiado', icon: User, color: 'bg-amber-500', paymentStatus: 'PENDING' },
 ] as const;
 
@@ -46,6 +54,8 @@ export const CONFIRM_PAYMENT_METHODS = [
   { id: 'Pix', label: 'Pix', icon: CreditCard, color: 'bg-cyan-500' },
   { id: 'Debito', label: 'Débito', icon: CreditCard, color: 'bg-blue-500' },
   { id: 'Credito', label: 'Crédito', icon: CreditCard, color: 'bg-purple-500' },
+  { id: 'Voucher Refeição', label: 'Voucher Refeição', icon: Utensils, color: 'bg-orange-500' },
+  { id: 'Voucher Alimentação', label: 'Voucher Alimentação', icon: ShoppingCart, color: 'bg-rose-500' },
 ] as const;
 
 export interface PaymentLine {
