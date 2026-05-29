@@ -21,6 +21,7 @@ const TYPE_LABEL: Record<DimensionType, string> = {
   COR: 'Cor',
   VOLUME: 'Volume',
   PESO: 'Peso',
+  SABOR: 'Sabor',
   PERSONALIZADO: 'Livre',
 };
 
