@@ -56,11 +56,13 @@ function PaymentBar({ method, count, total, percentage, maxPct }: {
 }) {
   const labels: Record<string, string> = {
     pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro',
-    credit_store: 'Fiado', other: 'Outro',
+    credit_store: 'Fiado', meal_voucher: 'Voucher Refeição', food_voucher: 'Voucher Alimentação',
+    other: 'Outro',
   };
   const colors: Record<string, string> = {
     pix: 'bg-emerald-500', credit: 'bg-indigo-500', debit: 'bg-blue-500',
     cash: 'bg-amber-500', credit_store: 'bg-red-400',
+    meal_voucher: 'bg-orange-500', food_voucher: 'bg-rose-500',
   };
   const barWidth = maxPct > 0 ? (percentage / maxPct) * 100 : 0;
 
