@@ -201,12 +201,14 @@ export const api = {
 
   // Orders
   orders: {
-    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number }) {
+    list(params?: { search?: string; status?: string; paymentMethod?: string; page?: number; startDate?: string; endDate?: string }) {
       const searchParams = new URLSearchParams();
       if (params?.search) searchParams.set('search', params.search);
       if (params?.status) searchParams.set('status', params.status);
       if (params?.paymentMethod) searchParams.set('paymentMethod', params.paymentMethod);
       if (params?.page) searchParams.set('page', String(params.page));
+      if (params?.startDate) searchParams.set('startDate', params.startDate);
+      if (params?.endDate) searchParams.set('endDate', params.endDate);
       const qs = searchParams.toString();
       return request<any>(`/api/orders${qs ? `?${qs}` : ''}`);
     },
