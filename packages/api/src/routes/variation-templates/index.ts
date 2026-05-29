@@ -51,7 +51,7 @@ export const DEFAULT_TEMPLATES: {
 ];
 
 const dimensionSchema = z.object({
-  type: z.enum(['TAMANHO_LETRA', 'TAMANHO_NUMERO', 'COR', 'VOLUME', 'PESO', 'PERSONALIZADO']),
+  type: z.enum(['TAMANHO_LETRA', 'TAMANHO_NUMERO', 'COR', 'VOLUME', 'PESO', 'SABOR', 'PERSONALIZADO']),
   label: z.string().min(1),
   options: z.array(z.string()).min(1),
   orderIndex: z.number().int().default(0),
