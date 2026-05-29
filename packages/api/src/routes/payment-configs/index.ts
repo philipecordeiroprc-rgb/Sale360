@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 const batchUpdateSchema = z.object({
   configs: z.array(z.object({
-    paymentMethod: z.enum(['cash', 'pix', 'debit', 'credit', 'credit_store']),
+    paymentMethod: z.enum(['cash', 'pix', 'debit', 'credit', 'credit_store', 'meal_voucher', 'food_voucher']),
     taxRate: z.number().min(0).max(100),
   })),
 });
