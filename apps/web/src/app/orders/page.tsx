@@ -26,7 +26,7 @@ import {
 } from '@/lib/payment-constants';
 const BarcodeScanner = dynamic(() => import('@/components/products/BarcodeScanner').then(m => ({ default: m.BarcodeScanner })), { ssr: false });
 
-function getWhatsAppMessage(order: any): string {
+function getWhatsAppMessage(order: any, pixInstructions?: string | null): string {
   const customerName = order.customer?.name || order.customerName || 'Cliente';
   const orderNumber = order.orderNumber;
   const total = Number(order.total).toFixed(2).replace('.', ',');
@@ -42,6 +42,12 @@ function getWhatsAppMessage(order: any): string {
   }
   const productsBlock = itemLines.join('\n');
 
+  const pixBlock = pixInstructions ? [
+    ``,
+    `💳 *Pague via Pix:*`,
+    pixInstructions,
+  ] : [];
+
   const blocks = [
     `🤖 *Lembrete automático de pagamento*`,
     ``,
@@ -50,6 +56,7 @@ function getWhatsAppMessage(order: any): string {
     productsBlock,
     `💰 *Total:* R$ ${total}`,
     `📅 *Data:* ${date}`,
+    ...pixBlock,
     ``,
     `Se já pagou, desconsidere esta mensagem 🙂`,
     ``,
