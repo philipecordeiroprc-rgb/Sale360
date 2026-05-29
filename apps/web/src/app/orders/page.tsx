@@ -206,7 +206,17 @@ export default function OrdersPage() {
     } catch { /* ignore */ }
   };
 
-  useEffect(() => { loadOrders(); loadTodayRevenue(); }, [loadOrders]);
+  const loadPixInstructions = async () => {
+    try {
+      const catalog = await api.catalogSettings.get();
+      const pix = catalog?.paymentMethods?.find((pm: any) => pm.paymentMethod === 'pix');
+      if (pix?.instructions) {
+        setPixInstructions(pix.instructions);
+      }
+    } catch { /* silencioso — instruções Pix são opcionais */ }
+  };
+
+  useEffect(() => { loadOrders(); loadTodayRevenue(); loadPixInstructions(); }, [loadOrders]);
 
   const searchCustomers = async (q: string) => {
     setCustomerSearch(q);
