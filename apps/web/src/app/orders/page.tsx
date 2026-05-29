@@ -655,21 +655,27 @@ export default function OrdersPage() {
           <input
             type="date"
             value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+            onChange={(e) => setDateFrom(e.target.value)}
             className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
           />
           <span className="text-slate-500 text-xs">até</span>
           <input
             type="date"
             value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+            onChange={(e) => setDateTo(e.target.value)}
             className="w-32 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-2 text-white text-xs focus:border-indigo-500 outline-none"
           />
           {(dateFrom || dateTo) && (
-            <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
-              className="text-slate-400 hover:text-white p-1" title="Limpar datas">
-              <X size={14} />
-            </button>
+            <>
+              <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+                className="text-slate-400 hover:text-white p-1" title="Limpar datas">
+                <X size={14} />
+              </button>
+              <button onClick={() => { setPage(1); }}
+                className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition-colors">
+                Filtrar
+              </button>
+            </>
           )}
         </div>
       </div>
