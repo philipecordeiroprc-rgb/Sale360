@@ -18,11 +18,15 @@ const LABEL_MAP: Record<string, string> = {
   pix: 'Pix',
   credit: 'Crédito',
   debit: 'Débito',
+  meal_voucher: 'Voucher Refeição',
+  food_voucher: 'Voucher Alimentação',
   Dinheiro: 'Dinheiro',
   Pix: 'Pix',
   Debito: 'Débito',
   Credito: 'Crédito',
   Fiado: 'Fiado',
+  'Voucher Refeição': 'Voucher Refeição',
+  'Voucher Alimentação': 'Voucher Alimentação',
 };
 
 export function paymentLabel(method: string | null | undefined): string {
