@@ -797,7 +797,7 @@ export default function OrdersPage() {
                             <WhatsAppIcon size={16} />
                           </a>
                         )}
-                        {o.source === 'ONLINE' && o.paymentStatus === 'PENDING' && o.status !== 'CANCELLED' && (
+                        {o.source === 'ONLINE' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && (
                           <button onClick={() => handleConfirmOnline(o.id)}
                             className="p-1.5 text-blue-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors" title="Confirmar pedido online (baixar estoque)">
                             <CheckCircle size={16} />
