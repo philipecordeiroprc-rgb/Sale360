@@ -114,6 +114,7 @@ export default function OrdersPage() {
   const dateToRef = useRef(dateTo);
   dateFromRef.current = dateFrom;
   dateToRef.current = dateTo;
+  const [filterTick, setFilterTick] = useState(0);
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [pendingRevenue, setPendingRevenue] = useState(0);
   const { toast, show } = useToast();
