@@ -1105,7 +1105,7 @@ export default function PurchasesPage() {
                               const val = rowDims[d.label];
                               if (!val) return '';
                               return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).filter(Boolean).join(' ');
+                            }).filter(Boolean).join(' / ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
