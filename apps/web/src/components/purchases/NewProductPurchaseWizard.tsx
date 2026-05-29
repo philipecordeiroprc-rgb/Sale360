@@ -751,7 +751,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                             const val = rowDims[d.label];
                             if (!val) return '';
                             return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                          }).filter(Boolean).join(' ');
+                          }).filter(Boolean).join(' / ');
                           // Check if variation already exists
                           const existingIdx = variations.findIndex(
                             (v: any) => v.name.toLowerCase() === name.toLowerCase()
