@@ -1205,10 +1205,19 @@ export default function PurchasesPage() {
                 ) : (
                   /* ── Simple product: single quantity ── */
                   <div className="mb-3">
-                    <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
-                    <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
-                      min="0.001" step="any" placeholder="1"
-                      className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
+                        <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                          min="0.001" step="any" placeholder="1"
+                          className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Data de Validade</label>
+                        <input type="date" value={currentItem.simpleExpiryDate} onChange={(e) => setCurrentItem({ ...currentItem, simpleExpiryDate: e.target.value })}
+                          className="w-40 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                      </div>
+                    </div>
                   </div>
                 )}
 
