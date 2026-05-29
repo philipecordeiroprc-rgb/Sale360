@@ -790,7 +790,7 @@ export default function OrdersPage() {
                     <td className="px-3 py-2 text-center">
                       <div className="flex items-center justify-end gap-1">
                         {orderHasFiado(o) && o.paymentStatus !== 'PAID' && o.status !== 'CANCELLED' && o.customer?.phone && (
-                          <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o))}
+                          <a href={getWhatsAppUrl(o.customer.phone, getWhatsAppMessage(o, pixInstructions))}
                             target="_blank" rel="noopener noreferrer"
                             className="p-1.5 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-colors"
                             title="Cobrar via WhatsApp">
