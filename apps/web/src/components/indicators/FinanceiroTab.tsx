@@ -51,8 +51,9 @@ function Skeleton() {
   );
 }
 
-function PaymentBar({ method, count, total, percentage, maxPct }: {
+function PaymentBar({ method, count, total, percentage, maxPct, fiadoCount, fiadoTotal }: {
   method: string; count: number; total: number; percentage: number; maxPct: number;
+  fiadoCount?: number; fiadoTotal?: number;
 }) {
   const labels: Record<string, string> = {
     pix: 'Pix', credit: 'Crédito', debit: 'Débito', cash: 'Dinheiro',
@@ -65,19 +66,40 @@ function PaymentBar({ method, count, total, percentage, maxPct }: {
     meal_voucher: 'bg-orange-500', food_voucher: 'bg-rose-500',
   };
   const barWidth = maxPct > 0 ? (percentage / maxPct) * 100 : 0;
+  const hasFiado = fiadoCount && fiadoTotal && fiadoTotal > 0;
+  const fiadoPctOfBar = hasFiado && total > 0 ? (fiadoTotal! / total) * 100 : 0;
+  const nonFiadoPctOfBar = 100 - fiadoPctOfBar;
 
   return (
     <div className="flex items-center gap-3 py-2">
       <span className="text-sm text-slate-300 w-20 shrink-0">{labels[method] || method}</span>
       <div className="flex-1 h-6 bg-slate-800 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${colors[method] || 'bg-slate-500'} transition-all`}
-          style={{ width: `${Math.max(barWidth, 2)}%` }}
-        />
+        {hasFiado ? (
+          <div className="flex h-full rounded-full overflow-hidden" style={{ width: `${Math.max(barWidth, 2)}%` }}>
+            <div
+              className={`h-full ${colors[method] || 'bg-slate-500'} transition-all`}
+              style={{ width: `${nonFiadoPctOfBar}%` }}
+            />
+            <div
+              className="h-full bg-amber-500 transition-all"
+              style={{ width: `${fiadoPctOfBar}%` }}
+            />
+          </div>
+        ) : (
+          <div
+            className={`h-full rounded-full ${colors[method] || 'bg-slate-500'} transition-all`}
+            style={{ width: `${Math.max(barWidth, 2)}%` }}
+          />
+        )}
       </div>
       <div className="text-right shrink-0 w-36">
         <p className="text-sm text-white font-medium">R$ {fmt(total)}</p>
         <p className="text-[10px] text-slate-500">{count} vendas · {fmt(percentage)}%</p>
+        {hasFiado && (
+          <p className="text-[10px] text-amber-400">
+            R$ {fmt(fiadoTotal!)} em fiado ({fiadoCount} quit.)
+          </p>
+        )}
       </div>
     </div>
   );
