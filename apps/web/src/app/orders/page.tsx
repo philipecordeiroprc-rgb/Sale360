@@ -1131,9 +1131,9 @@ export default function OrdersPage() {
                   {detailOrder.payments && detailOrder.payments.length > 0 ? (
                     <div className="space-y-1">
                       {detailOrder.payments.map((p: any, idx: number) => (
-                        <div key={idx} className="flex items-center gap-1.5">
-                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1 whitespace-nowrap">{paymentLabel(p.paymentMethod)}</span>
-                          <span className="text-xs text-slate-400 whitespace-nowrap">R$ {Number(p.amount).toFixed(2)}</span>
+                        <div key={idx} className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-xs bg-slate-800 rounded-md px-2 py-1">{paymentLabel(p.paymentMethod)}</span>
+                          <span className="text-xs text-slate-400">R$ {Number(p.amount).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
