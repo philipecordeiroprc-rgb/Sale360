@@ -654,6 +654,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Pedido já foi confirmado' });
     }
 
+    // Fiado orders: keep payment PENDING so seller can receive payment separately
+    const isFiadoOrder = order.payments?.some((p) => p.paymentMethod === 'credit_store')
+      || order.paymentMethod === 'credit_store';
+
     await prisma.$transaction(async (tx) => {
       for (const item of order.items) {
         if (item.productId) {
