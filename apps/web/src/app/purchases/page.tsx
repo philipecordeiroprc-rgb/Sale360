@@ -22,14 +22,16 @@ const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
 interface PurchaseItemData {
   productId: string;
   productName: string;
-  costPrice: number;       // custo unitário
-  operationalCost: number; // custo operacional (embalagem, frete)
-  taxRatePct: number;      // taxa cartão (%)
-  marginPct: number;       // margem de lucro (%)
-  salePrice: number;       // preço de venda (calculado ou manual)
+  costPrice: number;
+  operationalCost: number;
+  taxRatePct: number;
+  marginPct: number;
+  salePrice: number;
   quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
+  expiryDates: Record<string, string>; // variation name → date
+  simpleExpiryDate: string;            // for simple products without variations
 }
 
 const emptyItem: PurchaseItemData = {
