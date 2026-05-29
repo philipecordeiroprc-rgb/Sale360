@@ -33,6 +33,8 @@ const PAYMENT_LABELS: Record<string, string> = {
   credit: 'Cartão de Crédito',
   debit: 'Cartão de Débito',
   credit_store: 'Fiado',
+  meal_voucher: 'Voucher Refeição',
+  food_voucher: 'Voucher Alimentação',
 };
 
 const DEFAULT_PAYMENT_METHODS = [
