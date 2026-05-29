@@ -480,8 +480,48 @@ export default function PurchasesPage() {
         await api.purchases.update(editingId, payload);
         show('Compra atualizada!');
       } else {
-        await api.purchases.create(payload);
-        show('Compra criada! Ao receber, o estoque será atualizado.');
+        const createdPurchase = await api.purchases.create(payload);
+
+        // Auto-receive: collect expiry dates from purchase items
+        const itemExpiryDates: Record<string, string> = {};
+        for (const item of purchaseItems) {
+          if (item.hasVariations && item.variations.length > 0) {
+            for (const v of item.variations) {
+              const varQty = v.stockQty || 0;
+              if (varQty <= 0) continue;
+              const expiryDate = item.expiryDates[v.name];
+              if (expiryDate) {
+                const varProductName = `${item.productName} - ${v.name}`;
+                const matchingItem = createdPurchase.items?.find((pi: any) =>
+                  pi.productName === varProductName
+                );
+                if (matchingItem) {
+                  itemExpiryDates[matchingItem.id] = expiryDate;
+                }
+              }
+            }
+          } else if (item.simpleExpiryDate) {
+            const matchingItem = createdPurchase.items?.find((pi: any) =>
+              pi.productName === item.productName
+            );
+            if (matchingItem) {
+              itemExpiryDates[matchingItem.id] = item.simpleExpiryDate;
+            }
+          }
+        }
+
+        const receivePayload: any = {};
+        if (Object.keys(itemExpiryDates).length > 0) {
+          receivePayload.itemExpiryDates = itemExpiryDates;
+        }
+
+        try {
+          await api.purchases.receive(createdPurchase.id, receivePayload);
+          show('Compra criada e recebida! Estoque atualizado.');
+        } catch {
+          // Non-critical: purchase created, user can receive manually
+          show('Compra criada! Use o botão Receber para atualizar o estoque.');
+        }
       }
       setFormOpen(false);
       setEditingId(null);
