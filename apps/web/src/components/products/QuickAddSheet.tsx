@@ -133,12 +133,19 @@ function VariationSelector({
   const dim1Values = sortValues([...new Set(parsed.map((p: any) => p.dims[0]))]);
   const dim2Values = sortValues([...new Set(parsed.map((p: any) => p.dims[1]))]);
 
-  // Smart label: detect numeric dims
-  const dim1IsNumeric = dim1Values.every((v) => /^\d/.test(v));
-  const dim2IsNumeric = dim2Values.every((v) => /^\d/.test(v));
-  const swappedLabels = dim1IsNumeric && !dim2IsNumeric;
-  const dim1Label = swappedLabels ? 'Tamanho' : 'Cor';
-  const dim2Label = swappedLabels ? 'Cor' : 'Tamanho';
+  // Detect dimension type from value patterns
+  const detectLabel = (values: string[]): string => {
+    if (values.every(v => /^\d+(\.\d+)?\s*(g|kg|mg)$/i.test(v.trim()))) return 'Peso';
+    if (values.every(v => /^\d+(\.\d+)?\s*(ml|cl|l)$/i.test(v.trim()))) return 'Volume';
+    if (values.every(v => /^\d+$/.test(v.trim()))) return 'Tamanho';
+    if (values.every(v => /^(PP|P|M|G|GG|XG|XGG|Único|ÚNICO)$/i.test(v.trim()))) return 'Tamanho';
+    const cores = ['vermelho','azul','verde','preto','branco','amarelo','rosa','cinza','marrom','laranja','roxo','bege','bordô','turquesa','dourado','prateado'];
+    if (values.every(v => cores.includes(v.toLowerCase().trim()))) return 'Cor';
+    if (values.every(v => !/^\d/.test(v.trim()))) return 'Sabor';
+    return 'Opção';
+  };
+  const dim1Label = detectLabel(dim1Values);
+  const dim2Label = detectLabel(dim2Values);
 
   const selectedVar = selectedId ? parsed.find((p: any) => p.id === selectedId) : null;
   const selectedDims = selectedVar ? selectedVar.dims : null;
