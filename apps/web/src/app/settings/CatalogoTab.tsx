@@ -38,13 +38,13 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 
 const DEFAULT_PAYMENT_METHODS = [
-  { paymentMethod: 'pix', enabled: true, dueDays: undefined as number | undefined, instructions: '' },
-  { paymentMethod: 'cash', enabled: true, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'debit', enabled: true, dueDays: undefined as number | undefined, instructions: '' },
   { paymentMethod: 'credit', enabled: true, dueDays: undefined, instructions: '' },
-  { paymentMethod: 'debit', enabled: true, dueDays: undefined, instructions: '' },
-  { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
-  { paymentMethod: 'meal_voucher', enabled: false, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'pix', enabled: true, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'cash', enabled: true, dueDays: undefined, instructions: '' },
   { paymentMethod: 'food_voucher', enabled: false, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'meal_voucher', enabled: false, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
 ];
 
 export function CatalogoTab() {
