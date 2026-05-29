@@ -114,14 +114,25 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
 
         {/* Logo + Store Name */}
         <div className="p-4 border-b border-slate-800">
-          <h1 className="text-lg font-black text-indigo-400 tracking-tight">SALE360</h1>
-          {tenant?.companyName ? (
-            <p className="text-xs text-white font-medium mt-0.5 truncate" title={tenant.companyName}>
-              {tenant.companyName}
-            </p>
-          ) : (
-            <p className="text-[10px] text-slate-400 mt-0.5">PDV Inteligente</p>
-          )}
+          <div className="flex items-center gap-2.5">
+            {logoPath && (
+              <img
+                src={`${API_URL}/api/public/uploads/${logoPath}`}
+                alt={tenant?.companyName || 'Logo'}
+                className="w-8 h-8 rounded-md object-cover shrink-0"
+              />
+            )}
+            <div className="min-w-0">
+              <h1 className="text-lg font-black text-indigo-400 tracking-tight">SALE360</h1>
+              {tenant?.companyName ? (
+                <p className="text-xs text-white font-medium mt-0.5 truncate" title={tenant.companyName}>
+                  {tenant.companyName}
+                </p>
+              ) : (
+                <p className="text-[10px] text-slate-400 mt-0.5">PDV Inteligente</p>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Nav */}
