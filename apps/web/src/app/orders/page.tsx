@@ -1398,7 +1398,7 @@ export default function OrdersPage() {
             <button
               onClick={() => {
                 if (batchModalMode === 'online') {
-                  handleConfirmOnlineExecute(batchSelections);
+                  handleConfirmOnlineExecute(confirmingOrderId!, batchSelections);
                 } else {
                   executeSale(batchSelections);
                 }
