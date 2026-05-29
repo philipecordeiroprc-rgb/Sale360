@@ -586,7 +586,7 @@ export default function OrdersPage() {
     }
 
     // No batch selection needed
-    await handleConfirmOnlineExecute();
+    await handleConfirmOnlineExecute(id);
   };
 
   const openDetail = async (id: string) => {
