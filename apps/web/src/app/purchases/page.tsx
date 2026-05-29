@@ -1148,6 +1148,12 @@ export default function PurchasesPage() {
                         min="0" step="1" placeholder="0"
                         className="w-16 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
                       />
+                      <input
+                        type="date"
+                        value={newVarExpiryDate}
+                        onChange={(e) => setNewVarExpiryDate(e.target.value)}
+                        className="w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                      />
                       <button
                         onClick={() => {
                           const name = newVarName.trim();
@@ -1161,6 +1167,13 @@ export default function PurchasesPage() {
                             const updated = [...currentItem.variations];
                             updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
                             setCurrentItem({ ...currentItem, variations: updated });
+                            if (newVarExpiryDate) {
+                              setCurrentItem({
+                                ...currentItem,
+                                variations: updated,
+                                expiryDates: { ...currentItem.expiryDates, [name]: newVarExpiryDate },
+                              });
+                            }
                           } else {
                             setCurrentItem({
                               ...currentItem,
@@ -1168,10 +1181,14 @@ export default function PurchasesPage() {
                                 ...currentItem.variations,
                                 { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
                               ],
+                              expiryDates: newVarExpiryDate
+                                ? { ...currentItem.expiryDates, [name]: newVarExpiryDate }
+                                : currentItem.expiryDates,
                             });
                           }
                           setNewVarName('');
                           setNewVarQty(0);
+                          setNewVarExpiryDate('');
                         }}
                         disabled={!newVarName.trim() || newVarQty <= 0}
                         className="px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
