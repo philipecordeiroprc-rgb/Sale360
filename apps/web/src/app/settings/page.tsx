@@ -13,6 +13,8 @@ const DEFAULT_CONFIGS = [
   { paymentMethod: 'debit', label: 'Debito', taxRate: 1.5 },
   { paymentMethod: 'credit', label: 'Credito', taxRate: 4.5 },
   { paymentMethod: 'credit_store', label: 'Fiado', taxRate: 4.5 },
+  { paymentMethod: 'meal_voucher', label: 'Voucher Refeição', taxRate: 0 },
+  { paymentMethod: 'food_voucher', label: 'Voucher Alimentação', taxRate: 0 },
 ];
 
 function useToast() {
