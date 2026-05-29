@@ -63,6 +63,19 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   // SUPER_ADMIN in store mode uses tenant.role (or OWNER as fallback) so nav items appear
   const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [logoPath, setLogoPath] = useState<string | null>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    api.catalogSettings.get()
+      .then((data: any) => {
+        if (data?.logoPath) setLogoPath(data.logoPath);
+      })
+      .catch(() => {
+        // fallback silencioso: sem logo, mantém layout textual
+      });
+  }, [tenant?.id]);
 
   if (isSuperAdmin && !tenant) return null; // Admin mode: no sidebar
 
