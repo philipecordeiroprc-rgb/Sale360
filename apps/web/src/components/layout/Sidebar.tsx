@@ -64,6 +64,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
   const userRole = isSuperAdmin ? (tenant?.role || 'OWNER') : (storeRole || '');
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [logoPath, setLogoPath] = useState<string | null>(null);
+  const [stockAlertLevel, setStockAlertLevel] = useState<'critical' | 'warning' | 'ok'>('ok');
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
@@ -74,6 +75,17 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
       })
       .catch(() => {
         // fallback silencioso: sem logo, mantém layout textual
+      });
+  }, [tenant?.id]);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    api.inventory.alerts()
+      .then((data) => {
+        setStockAlertLevel(data.level);
+      })
+      .catch(() => {
+        setStockAlertLevel('ok');
       });
   }, [tenant?.id]);
 
