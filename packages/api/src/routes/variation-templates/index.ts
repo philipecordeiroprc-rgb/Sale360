@@ -34,12 +34,14 @@ export const DEFAULT_TEMPLATES: {
     name: 'Volume (Líquidos)',
     dimensions: [
       { type: 'VOLUME', label: 'Volume', options: ['100ml', '200ml', '250ml', '300ml', '350ml', '500ml', '600ml', '750ml', '1L', '1.5L', '2L', '5L', '10L', '20L'], orderIndex: 0 },
+      { type: 'SABOR', label: 'Sabor', options: ['Morango', 'Chocolate', 'Baunilha', 'Coco', 'Limão', 'Maracujá', 'Uva', 'Laranja', 'Abacaxi', 'Framboesa', 'Menta', 'Caramelo', 'Café', 'Avelã', 'Doce de Leite'], orderIndex: 1 },
     ],
   },
   {
     name: 'Peso (Granel/Alimentos)',
     dimensions: [
       { type: 'PESO', label: 'Peso', options: ['50g', '100g', '200g', '250g', '500g', '750g', '1kg', '2kg', '5kg', '10kg', '20kg', '50kg'], orderIndex: 0 },
+      { type: 'SABOR', label: 'Sabor', options: ['Morango', 'Chocolate', 'Baunilha', 'Coco', 'Limão', 'Maracujá', 'Uva', 'Laranja', 'Abacaxi', 'Framboesa', 'Menta', 'Caramelo', 'Café', 'Avelã', 'Doce de Leite'], orderIndex: 1 },
     ],
   },
   {
