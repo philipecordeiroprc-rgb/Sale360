@@ -119,9 +119,12 @@ export default function PurchasesPage() {
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
   const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
   const [rowQty, setRowQty] = useState<number>(0);
+  // Expiry date for new variation row
+  const [rowExpiryDate, setRowExpiryDate] = useState('');
   // Manual variation input (when no template)
   const [newVarName, setNewVarName] = useState('');
   const [newVarQty, setNewVarQty] = useState<number>(0);
+  const [newVarExpiryDate, setNewVarExpiryDate] = useState('');
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
