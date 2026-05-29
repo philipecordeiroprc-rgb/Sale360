@@ -188,8 +188,10 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setRowExpiryDate('');
     setNewVarName('');
     setNewVarQty(0);
+    setNewVarExpiryDate('');
     setNotes('');
     setDiscount('0');
     setProductSearch('');
