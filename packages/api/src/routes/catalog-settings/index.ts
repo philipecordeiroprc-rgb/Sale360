@@ -32,7 +32,7 @@ function stripNulls(obj: Record<string, unknown>): Record<string, unknown> {
 
 const paymentMethodsSchema = z.object({
   methods: z.array(z.object({
-    paymentMethod: z.enum(['pix', 'cash', 'credit', 'debit', 'credit_store']),
+    paymentMethod: z.enum(['pix', 'cash', 'credit', 'debit', 'credit_store', 'meal_voucher', 'food_voucher']),
     enabled: z.boolean(),
     dueDays: z.number().int().positive().optional(),
     instructions: z.string().optional(),
