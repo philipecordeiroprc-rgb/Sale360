@@ -1003,7 +1003,7 @@ export default function PurchasesPage() {
                     {/* Linha para adicionar nova variação */}
                     <div className="bg-slate-800 rounded-lg p-2">
                       <div className="grid gap-2 items-end"
-                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 100px 40px` }}>
+                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 65px 110px 40px` }}>
                         {templateDims.map((d: any) => {
                           const isCustom = rowDims[d.label] === '__custom__';
                           return (
@@ -1046,6 +1046,12 @@ export default function PurchasesPage() {
                             min="0" step="1" placeholder="0"
                             className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
                         </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
+                          <input type="date" value={rowExpiryDate}
+                            onChange={(e) => setRowExpiryDate(e.target.value)}
+                            className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                        </div>
                         <button
                           onClick={() => {
                             const hasAtLeastOne = templateDims.some((d: any) => {
@@ -1066,10 +1072,14 @@ export default function PurchasesPage() {
                                 ...currentItem.variations,
                                 { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
                               ],
+                              expiryDates: rowExpiryDate
+                                ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
+                                : currentItem.expiryDates,
                             });
                             setRowDims({});
                             setRowCustom({});
                             setRowQty(0);
+                            setRowExpiryDate('');
                           }}
                           disabled={!templateDims.some((d: any) => {
                             const val = rowDims[d.label];
