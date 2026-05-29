@@ -62,6 +62,7 @@ process.on('SIGINT', async () => {
 
 async function buildApp() {
   const app = Fastify({
+    trustProxy: true,
     logger: {
       transport: process.env.NODE_ENV === 'development'
         ? { target: 'pino-pretty', options: { colorize: true } }
