@@ -1,4 +1,4 @@
-import { Banknote, CreditCard, User } from 'lucide-react';
+import { Banknote, CreditCard, User, Utensils, ShoppingCart } from 'lucide-react';
 
 // Portuguese UI labels → English DB codes
 export const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
