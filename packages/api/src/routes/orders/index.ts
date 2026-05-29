@@ -771,14 +771,10 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
         ? confirmPayments[0].paymentMethod
         : undefined;
 
-      // Fiado orders: keep payment PENDING so seller can receive payment separately
-      const isFiado = order.payments?.some((p) => p.paymentMethod === 'credit_store')
-        || order.paymentMethod === 'credit_store';
-
       await tx.order.update({
         where: { id: order.id },
         data: {
-          paymentStatus: isFiado ? 'PENDING' : 'PAID',
+          paymentStatus: isFiadoOrder ? 'PENDING' : 'PAID',
           status: 'COMPLETED',
           ...(primaryConfirmMethod ? { paymentMethod: primaryConfirmMethod, paidWithMethod: primaryConfirmMethod } : {}),
         },
