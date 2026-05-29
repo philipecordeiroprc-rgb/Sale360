@@ -51,6 +51,16 @@ async function ensureDirs() {
 export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
   await ensureDirs();
 
+  const DEFAULT_PAYMENT_METHODS = [
+    { paymentMethod: 'pix', enabled: true, dueDays: null as number | null, instructions: '' },
+    { paymentMethod: 'cash', enabled: true, dueDays: null, instructions: '' },
+    { paymentMethod: 'credit', enabled: true, dueDays: null, instructions: '' },
+    { paymentMethod: 'debit', enabled: true, dueDays: null, instructions: '' },
+    { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
+    { paymentMethod: 'meal_voucher', enabled: false, dueDays: null, instructions: '' },
+    { paymentMethod: 'food_voucher', enabled: false, dueDays: null, instructions: '' },
+  ] as const;
+
   // GET settings (lazy create)
   app.get('/', async (request) => {
     let settings = await prisma.catalogSettings.findUnique({
@@ -69,6 +79,35 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
           paymentMethods: true,
         },
       });
+    }
+
+    // Garante que todos os meios de pagamento existam (novos métodos adicionados em updates)
+    if (settings.paymentMethods.length < DEFAULT_PAYMENT_METHODS.length) {
+      const existingMethods = new Set(settings.paymentMethods.map((pm) => pm.paymentMethod));
+      const missing = DEFAULT_PAYMENT_METHODS.filter((d) => !existingMethods.has(d.paymentMethod));
+      if (missing.length > 0) {
+        await Promise.all(
+          missing.map((m) =>
+            prisma.catalogPaymentMethod.create({
+              data: {
+                catalogId: settings!.id,
+                paymentMethod: m.paymentMethod,
+                enabled: m.enabled,
+                dueDays: m.dueDays ?? undefined,
+                instructions: m.instructions,
+              },
+            })
+          )
+        );
+        // Reload to include the new methods
+        settings = await prisma.catalogSettings.findUnique({
+          where: { tenantId: request.tenantId },
+          include: {
+            banners: { where: { active: true }, orderBy: { sortOrder: 'asc' } },
+            paymentMethods: true,
+          },
+        })!;
+      }
     }
 
     return settings;
