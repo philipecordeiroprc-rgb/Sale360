@@ -61,9 +61,16 @@ export function CatalogoTab() {
   const loadSettings = useCallback(async () => {
     try {
       const res = await api.catalogSettings.get();
-      // Ensure payment methods exist
+      // Garante que novos métodos de pagamento apareçam em tenants existentes
       if (!res.paymentMethods || res.paymentMethods.length === 0) {
         res.paymentMethods = DEFAULT_PAYMENT_METHODS;
+      } else {
+        const existingMethods = new Set(res.paymentMethods.map((pm: any) => pm.paymentMethod));
+        for (const d of DEFAULT_PAYMENT_METHODS) {
+          if (!existingMethods.has(d.paymentMethod)) {
+            res.paymentMethods.push({ ...d });
+          }
+        }
       }
       setData(res);
     } catch (err: any) {
