@@ -45,6 +45,8 @@ const emptyItem: PurchaseItemData = {
   quantity: 1,
   hasVariations: false,
   variations: [],
+  expiryDates: {},
+  simpleExpiryDate: '',
 };
 
 // Custo total (unitário + operacional, sem taxa)
