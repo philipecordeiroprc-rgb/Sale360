@@ -85,7 +85,7 @@ export function ComprasTab({ data, loading }: { data: PurchasesIndicators | null
             </div>
           </div>
           <Link href="/purchases" className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300">
-            Ir para Compras →
+            Ir para Abastecimento →
           </Link>
         </div>
       )}
