@@ -15,7 +15,7 @@ type Tab = 'financeiro' | 'estoque' | 'compras' | 'clientes' | 'operacional';
 const tabs: { key: Tab; label: string }[] = [
   { key: 'financeiro', label: 'Financeiro' },
   { key: 'estoque', label: 'Estoque' },
-  { key: 'compras', label: 'Compras' },
+  { key: 'compras', label: 'Abastecimento' },
   { key: 'clientes', label: 'Clientes' },
   { key: 'operacional', label: 'Operacional' },
 ];
