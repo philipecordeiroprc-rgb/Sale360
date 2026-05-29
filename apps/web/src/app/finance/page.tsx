@@ -194,16 +194,32 @@ export default function FinancePage() {
                     ?.filter((pm: any) => pm.method !== 'credit_store' && pm.method !== 'Fiado')
                     .map((pm: any) => {
                     const pct = s.revenue > 0 ? (pm.total / s.revenue) * 100 : 0;
+                    const hasFiado = pm.fiadoCount > 0 && pm.fiadoTotal > 0;
+                    const fiadoPctOfBar = hasFiado && pm.total > 0 ? (pm.fiadoTotal / pm.total) * 100 : 0;
                     return (
                       <div key={pm.method} className="px-4 py-3 flex items-center gap-4">
                         <span className="text-white text-sm font-medium w-24">{paymentLabel(pm.method)}</span>
                         <div className="flex-1 bg-slate-800 rounded-full h-3 overflow-hidden">
-                          <div className="h-full bg-indigo-500 rounded-full transition-all"
-                            style={{ width: `${pct}%` }} />
+                          {hasFiado ? (
+                            <div className="flex h-full rounded-full overflow-hidden" style={{ width: `${pct}%` }}>
+                              <div className="h-full bg-indigo-500 transition-all"
+                                style={{ width: `${100 - fiadoPctOfBar}%` }} />
+                              <div className="h-full bg-amber-500 transition-all"
+                                style={{ width: `${fiadoPctOfBar}%` }} />
+                            </div>
+                          ) : (
+                            <div className="h-full bg-indigo-500 rounded-full transition-all"
+                              style={{ width: `${pct}%` }} />
+                          )}
                         </div>
                         <span className="text-slate-400 text-sm w-20 text-right">{pct.toFixed(1)}%</span>
                         <span className="text-white text-sm font-medium w-28 text-right">R$ {pm.total.toFixed(2)}</span>
-                        <span className="text-slate-500 text-xs w-16 text-right">{pm.count} vendas</span>
+                        <span className="text-slate-500 text-xs w-16 text-right">
+                          {pm.count} vendas
+                          {hasFiado && (
+                            <span className="block text-amber-400">R$ {pm.fiadoTotal.toFixed(2)} fiado</span>
+                          )}
+                        </span>
                       </div>
                     );
                   })}
