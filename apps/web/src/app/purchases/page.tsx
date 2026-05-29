@@ -1043,7 +1043,7 @@ export default function PurchasesPage() {
                     {/* Linha para adicionar nova variação */}
                     <div className="bg-slate-800 rounded-lg p-2">
                       <div className="grid gap-2 items-end"
-                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 65px 110px 40px` }}>
+                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 48px 128px 36px` }}>
                         {templateDims.map((d: any) => {
                           const isCustom = rowDims[d.label] === '__custom__';
                           return (
