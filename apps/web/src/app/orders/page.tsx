@@ -673,11 +673,11 @@ export default function OrdersPage() {
           />
           {(dateFrom || dateTo) && (
             <>
-              <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); }}
+              <button onClick={() => { setDateFrom(''); setDateTo(''); setPage(1); setFilterTick(t => t + 1); }}
                 className="text-slate-400 hover:text-white p-1" title="Limpar datas">
                 <X size={14} />
               </button>
-              <button onClick={() => { setPage(1); }}
+              <button onClick={() => { setPage(1); setFilterTick(t => t + 1); }}
                 className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-medium transition-colors">
                 Filtrar
               </button>
