@@ -43,6 +43,8 @@ const DEFAULT_PAYMENT_METHODS = [
   { paymentMethod: 'credit', enabled: true, dueDays: undefined, instructions: '' },
   { paymentMethod: 'debit', enabled: true, dueDays: undefined, instructions: '' },
   { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
+  { paymentMethod: 'meal_voucher', enabled: false, dueDays: undefined, instructions: '' },
+  { paymentMethod: 'food_voucher', enabled: false, dueDays: undefined, instructions: '' },
 ];
 
 export function CatalogoTab() {
