@@ -998,7 +998,7 @@ export default function PurchasesPage() {
                     {currentItem.variations.length > 0 && (
                       <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
                         <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
-                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 55px 110px 40px` }}>
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
                           {templateDims.map((d: any) => (
                             <span key={d.id || d.label}>{d.label}</span>
                           ))}
@@ -1007,11 +1007,11 @@ export default function PurchasesPage() {
                           <span />
                         </div>
                         {currentItem.variations.map((v, vi) => {
-                          const parts = v.name.split(' ');
+                          const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
                           return (
                             <div key={vi}
                               className="grid gap-2 px-3 py-1.5 items-center text-sm"
-                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 55px 110px 40px` }}>
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
                               {parts.map((part: string, pi: number) => (
                                 <span key={pi} className="text-white truncate">{part}</span>
                               ))}
