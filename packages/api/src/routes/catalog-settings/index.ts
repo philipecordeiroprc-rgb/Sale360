@@ -52,13 +52,13 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
   await ensureDirs();
 
   const DEFAULT_PAYMENT_METHODS = [
-    { paymentMethod: 'pix', enabled: true, dueDays: null as number | null, instructions: '' },
-    { paymentMethod: 'cash', enabled: true, dueDays: null, instructions: '' },
+    { paymentMethod: 'debit', enabled: true, dueDays: null as number | null, instructions: '' },
     { paymentMethod: 'credit', enabled: true, dueDays: null, instructions: '' },
-    { paymentMethod: 'debit', enabled: true, dueDays: null, instructions: '' },
-    { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
-    { paymentMethod: 'meal_voucher', enabled: false, dueDays: null, instructions: '' },
+    { paymentMethod: 'pix', enabled: true, dueDays: null, instructions: '' },
+    { paymentMethod: 'cash', enabled: true, dueDays: null, instructions: '' },
     { paymentMethod: 'food_voucher', enabled: false, dueDays: null, instructions: '' },
+    { paymentMethod: 'meal_voucher', enabled: false, dueDays: null, instructions: '' },
+    { paymentMethod: 'credit_store', enabled: false, dueDays: 30, instructions: '' },
   ] as const;
 
   // GET settings (lazy create)
