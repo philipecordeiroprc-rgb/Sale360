@@ -110,6 +110,12 @@ export const catalogSettingsRoutes: FastifyPluginAsync = async (app) => {
       }
     }
 
+    // Ordena métodos de pagamento na ordem esperada pelo frontend
+    const order = DEFAULT_PAYMENT_METHODS.map((d) => d.paymentMethod);
+    settings.paymentMethods.sort(
+      (a, b) => order.indexOf(a.paymentMethod) - order.indexOf(b.paymentMethod)
+    );
+
     return settings;
   });
 
