@@ -674,7 +674,7 @@ export interface CategoryWithCount {
 }
 
 // Variation Template types
-export type DimensionType = 'TAMANHO_LETRA' | 'TAMANHO_NUMERO' | 'COR' | 'VOLUME' | 'PESO' | 'PERSONALIZADO';
+export type DimensionType = 'TAMANHO_LETRA' | 'TAMANHO_NUMERO' | 'COR' | 'VOLUME' | 'PESO' | 'SABOR' | 'PERSONALIZADO';
 
 export interface VariationDimension {
   id: string;
