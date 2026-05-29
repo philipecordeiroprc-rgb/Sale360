@@ -781,7 +781,7 @@ export const orderRoutes: FastifyPluginAsync = async (app) => {
       });
 
       // Non-fiado: create OrderPayment records + cash flow + customer stats
-      if (!isFiado) {
+      if (!isFiadoOrder) {
         // Create OrderPayment records if not already present (idempotent)
         const existingPayments = await tx.orderPayment.count({ where: { orderId: order.id } });
         if (existingPayments === 0) {
