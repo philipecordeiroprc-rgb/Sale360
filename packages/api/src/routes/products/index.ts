@@ -468,7 +468,7 @@ export const productRoutes: FastifyPluginAsync = async (app) => {
             const r = groupRows[vi].row;
             const dim1Val = (r[dim1] || '').trim();
             const dim2Val = dim2 ? (r[dim2] || '').trim() : '';
-            const variationName = dim2Val ? `${dim1Val} ${dim2Val}` : dim1Val;
+            const variationName = dim2Val ? `${dim1Val} / ${dim2Val}` : dim1Val;
             const qtd = parseDecimal(r['Qtd']);
             const priceModifier = parseDecimal(r['Preço Extra']);
             const sku = (r['SKU'] || '').trim() || undefined;
