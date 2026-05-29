@@ -163,7 +163,14 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
                   }`}
               >
                 <item.icon size={16} />
-                <span className="font-medium text-xs">{item.label}</span>
+                <span className="font-medium text-xs flex items-center gap-1.5">
+                  {item.label}
+                  {item.href === '/inventory' && stockAlertLevel !== 'ok' && (
+                    <span className={`inline-block w-2 h-2 rounded-full ${
+                      stockAlertLevel === 'critical' ? 'bg-red-500' : 'bg-amber-500'
+                    }`} />
+                  )}
+                </span>
               </Link>
             );
           })}
