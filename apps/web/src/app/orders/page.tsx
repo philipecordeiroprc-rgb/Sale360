@@ -518,11 +518,8 @@ export default function OrdersPage() {
     setConfirmingOrderId(id);
     setConfirmingIsOnline(true);
     setPaymentLines([]);
-    try {
-      const order = await api.orders.get(id);
-      setConfirmTotal(Number(order.total) || 0);
-    } catch { /* ignore */ }
-    setConfirmPaymentOpen(true);
+    // Pula modal de pagamento — pedido online já tem paymentMethod definido no checkout
+    await handleCheckBatchesAndConfirm(id);
   };
 
   const handleConfirmOnlineExecute = async (itemBatchIds?: Record<string, string>) => {
