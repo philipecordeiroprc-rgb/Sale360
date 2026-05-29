@@ -1206,14 +1206,10 @@ export default function PurchasesPage() {
                             // Update quantity of existing variation
                             const updated = [...currentItem.variations];
                             updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
-                            setCurrentItem({ ...currentItem, variations: updated });
-                            if (newVarExpiryDate) {
-                              setCurrentItem({
-                                ...currentItem,
-                                variations: updated,
-                                expiryDates: { ...currentItem.expiryDates, [name]: newVarExpiryDate },
-                              });
-                            }
+                            const expiryUpdate = newVarExpiryDate
+                              ? { expiryDates: { ...currentItem.expiryDates, [name]: newVarExpiryDate } }
+                              : {};
+                            setCurrentItem({ ...currentItem, variations: updated, ...expiryUpdate });
                           } else {
                             setCurrentItem({
                               ...currentItem,
