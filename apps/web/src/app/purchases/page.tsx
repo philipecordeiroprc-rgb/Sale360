@@ -334,6 +334,10 @@ export default function PurchasesPage() {
       setRowDims({});
       setRowCustom({});
       setRowQty(0);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -345,6 +349,8 @@ export default function PurchasesPage() {
         quantity: 0,
         hasVariations: true,
         variations: [], // starts empty, rows added manually
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     } else {
       // Simple product, no variations
