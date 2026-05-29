@@ -1331,7 +1331,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button
-              onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(); else handlePayExecute(); }}
+              onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(confirmingOrderId!); else handlePayExecute(); }}
               disabled={(() => {
                 const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
                 return paymentLines.length === 0 || Math.abs(paidSoFar - confirmTotal) > 0.01;
