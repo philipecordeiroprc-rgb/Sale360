@@ -355,6 +355,10 @@ export default function PurchasesPage() {
     } else {
       // Simple product, no variations
       setTemplateDims([]);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -366,6 +370,8 @@ export default function PurchasesPage() {
         quantity: 1,
         hasVariations: false,
         variations: [],
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     }
     setProductSearch('');
