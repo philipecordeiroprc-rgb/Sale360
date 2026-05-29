@@ -110,6 +110,10 @@ export default function OrdersPage() {
   });
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const dateFromRef = useRef(dateFrom);
+  const dateToRef = useRef(dateTo);
+  dateFromRef.current = dateFrom;
+  dateToRef.current = dateTo;
   const [todayRevenue, setTodayRevenue] = useState(0);
   const [pendingRevenue, setPendingRevenue] = useState(0);
   const { toast, show } = useToast();
