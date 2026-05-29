@@ -172,8 +172,8 @@ export default function OrdersPage() {
         params.status = statusFilter;
       }
       if (search) params.search = search;
-      if (dateFrom) params.startDate = new Date(dateFrom + 'T00:00:00').toISOString();
-      if (dateTo) params.endDate = new Date(dateTo + 'T23:59:59').toISOString();
+      if (dateFromRef.current) params.startDate = new Date(dateFromRef.current + 'T00:00:00').toISOString();
+      if (dateToRef.current) params.endDate = new Date(dateToRef.current + 'T23:59:59').toISOString();
       const data = await api.orders.list(params);
       setOrders(data.orders);
       setTotal(data.total);
