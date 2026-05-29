@@ -1117,6 +1117,10 @@ export default function PurchasesPage() {
                           }}
                             min="0" step="1" placeholder="0"
                             className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                          <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                            setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                          }}
+                            className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none" />
                           <button
                             onClick={() => {
                               const updated = currentItem.variations.filter((_, i) => i !== vi);
