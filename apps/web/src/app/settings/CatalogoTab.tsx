@@ -79,6 +79,7 @@ export function CatalogoTab() {
             res.paymentMethods.push({ ...d });
           }
         }
+        res.paymentMethods = sortPaymentMethods(res.paymentMethods);
       }
       setData(res);
     } catch (err: any) {
