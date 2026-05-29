@@ -522,14 +522,10 @@ export default function OrdersPage() {
     await handleCheckBatchesAndConfirm(id);
   };
 
-  const handleConfirmOnlineExecute = async (itemBatchIds?: Record<string, string>) => {
-    const id = confirmingOrderId;
+  const handleConfirmOnlineExecute = async (id: string, itemBatchIds?: Record<string, string>) => {
     if (!id) return;
     try {
       const body: any = {};
-      if (paymentLines.length > 0) {
-        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
-      }
       if (itemBatchIds && Object.keys(itemBatchIds).length > 0) {
         body.itemBatchIds = itemBatchIds;
       }
