@@ -931,29 +931,33 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     {/* Header row */}
                     <div className="flex items-center gap-2 px-3 py-1 text-[10px] text-slate-500">
                       <span className="flex-1">Variação</span>
-                      <span className="w-16 text-center">Qtd</span>
-                      <span className="w-28 text-center">Validade</span>
+                      <span className="w-14 sm:w-16 text-center">Qtd</span>
+                      <span className="w-24 sm:w-28 text-center">Validade</span>
                     </div>
                     {variations.map((v, vi) => (
-                      <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
-                        <span className="text-sm text-white flex-1 truncate">{v.name}</span>
-                        <input
-                          type="number"
-                          value={v.stockQty || ''}
-                          onChange={(e) => {
-                            const updated = [...variations];
-                            updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                            setVariations(updated);
-                          }}
-                          min="0" step="1" placeholder="0"
-                          className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none"
-                        />
-                        <input
-                          type="date"
-                          value={variationExpiryDates[v.name] || ''}
-                          onChange={(e) => setVariationExpiryDates(prev => ({ ...prev, [v.name]: e.target.value }))}
-                          className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
-                        />
+                      <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 sm:px-3 py-1.5">
+                        <span className="text-xs sm:text-sm text-white flex-1 truncate min-w-0">{v.name}</span>
+                        <div className="shrink-0 w-14 sm:w-16">
+                          <input
+                            type="number"
+                            value={v.stockQty || ''}
+                            onChange={(e) => {
+                              const updated = [...variations];
+                              updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                              setVariations(updated);
+                            }}
+                            min="0" step="1" placeholder="0"
+                            className="w-full px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
+                          />
+                        </div>
+                        <div className="shrink-0 w-24 sm:w-28">
+                          <input
+                            type="date"
+                            value={variationExpiryDates[v.name] || ''}
+                            onChange={(e) => setVariationExpiryDates(prev => ({ ...prev, [v.name]: e.target.value }))}
+                            className="w-full px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
