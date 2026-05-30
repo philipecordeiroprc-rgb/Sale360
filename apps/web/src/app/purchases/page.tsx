@@ -997,46 +997,50 @@ export default function PurchasesPage() {
                     {/* Tabela de linhas já adicionadas */}
                     {currentItem.variations.length > 0 && (
                       <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
-                        <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
-                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
-                          {templateDims.map((d: any) => (
-                            <span key={d.id || d.label}>{d.label}</span>
-                          ))}
-                          <span className="text-center">Qtd</span>
-                          <span className="text-center">Validade</span>
-                          <span />
-                        </div>
-                        {currentItem.variations.map((v, vi) => {
-                          const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
-                          return (
-                            <div key={vi}
-                              className="grid gap-2 px-3 py-1.5 items-center text-sm"
-                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
-                              {parts.map((part: string, pi: number) => (
-                                <span key={pi} className="text-white truncate">{part}</span>
+                        <div className="overflow-x-auto -mx-1">
+                          <div className="min-w-[320px]">
+                            <div className="grid gap-1.5 sm:gap-2 px-3 py-1.5 text-[10px] sm:text-xs text-slate-500 bg-slate-800/50"
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 44px 96px 28px` }}>
+                              {templateDims.map((d: any) => (
+                                <span key={d.id || d.label} className="truncate">{d.label}</span>
                               ))}
-                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
-                                const updated = [...currentItem.variations];
-                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                                setCurrentItem({ ...currentItem, variations: updated });
-                              }}
-                                min="0" step="1" placeholder="0"
-                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
-                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
-                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
-                              }}
-                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
-                              <button
-                                onClick={() => {
-                                  const updated = currentItem.variations.filter((_, i) => i !== vi);
-                                  setCurrentItem({ ...currentItem, variations: updated });
-                                }}
-                                className="text-slate-500 hover:text-red-400 justify-self-center">
-                                <X size={14} />
-                              </button>
+                              <span className="text-center">Qtd</span>
+                              <span className="text-center">Validade</span>
+                              <span />
                             </div>
-                          );
-                        })}
+                            {currentItem.variations.map((v, vi) => {
+                              const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
+                              return (
+                                <div key={vi}
+                                  className="grid gap-1.5 sm:gap-2 px-3 py-1.5 items-center text-xs sm:text-sm"
+                                  style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 44px 96px 28px` }}>
+                                  {parts.map((part: string, pi: number) => (
+                                    <span key={pi} className="text-white truncate">{part}</span>
+                                  ))}
+                                  <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                    const updated = [...currentItem.variations];
+                                    updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                    setCurrentItem({ ...currentItem, variations: updated });
+                                  }}
+                                    min="0" step="1" placeholder="0"
+                                    className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] text-center focus:border-indigo-500 outline-none" />
+                                  <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                    setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                                  }}
+                                    className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                                  <button
+                                    onClick={() => {
+                                      const updated = currentItem.variations.filter((_, i) => i !== vi);
+                                      setCurrentItem({ ...currentItem, variations: updated });
+                                    }}
+                                    className="text-slate-500 hover:text-red-400 justify-self-center">
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
 
