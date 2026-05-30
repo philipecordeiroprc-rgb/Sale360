@@ -860,7 +860,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                       className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Taxa %</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Taxa %</label>
                     <input type="number"
                       value={taxRatePct || ''}
                       onChange={(e) => {
@@ -869,7 +869,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setSalePrice(calcSalePrice(costPrice, operationalCost, tax, marginPct));
                       }}
                       min="0" max="100" step="0.1" placeholder="0"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
                     <label className="block text-xs text-slate-400 mb-1">Margem %</label>
