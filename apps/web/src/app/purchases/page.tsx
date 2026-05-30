@@ -588,27 +588,27 @@ export default function PurchasesPage() {
   return (
     <div className="animate-slide-up">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Abastecimento</h1>
-          <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Abastecimento</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{total} compras registradas</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setImportOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors"
           >
-            <Upload size={16} /> Importar
+            <Upload size={14} className="sm:w-4 sm:h-4" /> Importar
           </button>
           {tab === 'restock' ? (
             <button onClick={openForm}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-              <Plus size={18} /> Nova Compra
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors shrink-0">
+              <Plus size={14} className="sm:w-[18px] sm:h-[18px]" /> Nova Compra
             </button>
           ) : (
             <button onClick={() => setWizardOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-sm transition-colors">
-              <Sparkles size={18} /> Novo Produto + Compra
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors shrink-0">
+              <Sparkles size={14} className="sm:w-[18px] sm:h-[18px]" /> Novo Produto + Compra
             </button>
           )}
         </div>
