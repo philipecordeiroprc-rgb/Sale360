@@ -872,6 +872,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                 selectedId={selectedVariation}
                 onSelect={setSelectedVariation}
                 basePrice={quickViewProduct.price}
+                dimensionLabels={quickViewProduct.category?.variationTemplate?.dimensions?.map((d: any) => d.label)}
               />
             )}
 
