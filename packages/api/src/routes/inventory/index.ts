@@ -54,7 +54,6 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
         lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
       } else if (stock === min) {
         atMinStockCount++;
-        lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
       }
     }
 
