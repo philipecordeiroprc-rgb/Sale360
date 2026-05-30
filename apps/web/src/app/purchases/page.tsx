@@ -22,14 +22,16 @@ const PURCHASE_STATUS: Record<string, { label: string; color: string }> = {
 interface PurchaseItemData {
   productId: string;
   productName: string;
-  costPrice: number;       // custo unitário
-  operationalCost: number; // custo operacional (embalagem, frete)
-  taxRatePct: number;      // taxa cartão (%)
-  marginPct: number;       // margem de lucro (%)
-  salePrice: number;       // preço de venda (calculado ou manual)
+  costPrice: number;
+  operationalCost: number;
+  taxRatePct: number;
+  marginPct: number;
+  salePrice: number;
   quantity: number;
   hasVariations: boolean;
   variations: VariationData[];
+  expiryDates: Record<string, string>; // variation name → date
+  simpleExpiryDate: string;            // for simple products without variations
 }
 
 const emptyItem: PurchaseItemData = {
@@ -43,6 +45,8 @@ const emptyItem: PurchaseItemData = {
   quantity: 1,
   hasVariations: false,
   variations: [],
+  expiryDates: {},
+  simpleExpiryDate: '',
 };
 
 // Custo total (unitário + operacional, sem taxa)
@@ -119,9 +123,12 @@ export default function PurchasesPage() {
   const [rowDims, setRowDims] = useState<Record<string, string>>({});
   const [rowCustom, setRowCustom] = useState<Record<string, string>>({});
   const [rowQty, setRowQty] = useState<number>(0);
+  // Expiry date for new variation row
+  const [rowExpiryDate, setRowExpiryDate] = useState('');
   // Manual variation input (when no template)
   const [newVarName, setNewVarName] = useState('');
   const [newVarQty, setNewVarQty] = useState<number>(0);
+  const [newVarExpiryDate, setNewVarExpiryDate] = useState('');
 
   const loadPurchases = useCallback(async () => {
     setLoading(true);
@@ -181,8 +188,10 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setRowExpiryDate('');
     setNewVarName('');
     setNewVarQty(0);
+    setNewVarExpiryDate('');
     setNotes('');
     setDiscount('0');
     setProductSearch('');
@@ -208,6 +217,10 @@ export default function PurchasesPage() {
     setRowDims({});
     setRowCustom({});
     setRowQty(0);
+    setRowExpiryDate('');
+    setNewVarName('');
+    setNewVarQty(0);
+    setNewVarExpiryDate('');
 
     // Map purchase items to PurchaseItemData
     const items: PurchaseItemData[] = (purchase.items || []).map((item: any) => {
@@ -237,6 +250,8 @@ export default function PurchasesPage() {
           stockQty: Number(item.quantity),
           lowStockAt: undefined,
         }] : [],
+        expiryDates: {},
+        simpleExpiryDate: '',
       };
     });
     setPurchaseItems(items);
@@ -285,6 +300,10 @@ export default function PurchasesPage() {
       setRowDims({});
       setRowCustom({});
       setRowQty(0);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -302,6 +321,8 @@ export default function PurchasesPage() {
           stockQty: 0,
           lowStockAt: undefined,
         })),
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     } else if (hasTemplate) {
       // Template-based: user builds variation rows manually with dropdowns
@@ -313,6 +334,10 @@ export default function PurchasesPage() {
       setRowDims({});
       setRowCustom({});
       setRowQty(0);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -324,10 +349,16 @@ export default function PurchasesPage() {
         quantity: 0,
         hasVariations: true,
         variations: [], // starts empty, rows added manually
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     } else {
       // Simple product, no variations
       setTemplateDims([]);
+      setRowExpiryDate('');
+      setNewVarName('');
+      setNewVarQty(0);
+      setNewVarExpiryDate('');
       setCurrentItem({
         productId: p.id,
         productName: p.name,
@@ -339,6 +370,8 @@ export default function PurchasesPage() {
         quantity: 1,
         hasVariations: false,
         variations: [],
+        expiryDates: {},
+        simpleExpiryDate: '',
       });
     }
     setProductSearch('');
@@ -447,8 +480,48 @@ export default function PurchasesPage() {
         await api.purchases.update(editingId, payload);
         show('Compra atualizada!');
       } else {
-        await api.purchases.create(payload);
-        show('Compra criada! Ao receber, o estoque será atualizado.');
+        const createdPurchase = await api.purchases.create(payload);
+
+        // Auto-receive: collect expiry dates from purchase items
+        const itemExpiryDates: Record<string, string> = {};
+        for (const item of purchaseItems) {
+          if (item.hasVariations && item.variations.length > 0) {
+            for (const v of item.variations) {
+              const varQty = v.stockQty || 0;
+              if (varQty <= 0) continue;
+              const expiryDate = item.expiryDates[v.name];
+              if (expiryDate) {
+                const varProductName = `${item.productName} - ${v.name}`;
+                const matchingItem = createdPurchase.items?.find((pi: any) =>
+                  pi.productName === varProductName
+                );
+                if (matchingItem) {
+                  itemExpiryDates[matchingItem.id] = expiryDate;
+                }
+              }
+            }
+          } else if (item.simpleExpiryDate) {
+            const matchingItem = createdPurchase.items?.find((pi: any) =>
+              pi.productName === item.productName
+            );
+            if (matchingItem) {
+              itemExpiryDates[matchingItem.id] = item.simpleExpiryDate;
+            }
+          }
+        }
+
+        const receivePayload: any = {};
+        if (Object.keys(itemExpiryDates).length > 0) {
+          receivePayload.itemExpiryDates = itemExpiryDates;
+        }
+
+        try {
+          await api.purchases.receive(createdPurchase.id, receivePayload);
+          show('Compra criada e recebida! Estoque atualizado.');
+        } catch {
+          // Non-critical: purchase created, user can receive manually
+          show('Compra criada! Use o botão Receber para atualizar o estoque.');
+        }
       }
       setFormOpen(false);
       setEditingId(null);
@@ -517,7 +590,7 @@ export default function PurchasesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Compras</h1>
+          <h1 className="text-2xl font-bold text-white">Abastecimento</h1>
           <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
         </div>
         <div className="flex items-center gap-2">
@@ -925,23 +998,34 @@ export default function PurchasesPage() {
                     {currentItem.variations.length > 0 && (
                       <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
                         <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
-                          style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
                           {templateDims.map((d: any) => (
                             <span key={d.id || d.label}>{d.label}</span>
                           ))}
                           <span className="text-center">Qtd</span>
+                          <span className="text-center">Validade</span>
                           <span />
                         </div>
                         {currentItem.variations.map((v, vi) => {
-                          const parts = v.name.split(' ');
+                          const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
                           return (
                             <div key={vi}
                               className="grid gap-2 px-3 py-1.5 items-center text-sm"
-                              style={{ gridTemplateColumns: `repeat(${templateDims.length + 1}, 1fr) 40px` }}>
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
                               {parts.map((part: string, pi: number) => (
                                 <span key={pi} className="text-white truncate">{part}</span>
                               ))}
-                              <span className="text-white text-center font-medium">{v.stockQty || 0}</span>
+                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                const updated = [...currentItem.variations];
+                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                setCurrentItem({ ...currentItem, variations: updated });
+                              }}
+                                min="0" step="1" placeholder="0"
+                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                              }}
+                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
                               <button
                                 onClick={() => {
                                   const updated = currentItem.variations.filter((_, i) => i !== vi);
@@ -959,7 +1043,7 @@ export default function PurchasesPage() {
                     {/* Linha para adicionar nova variação */}
                     <div className="bg-slate-800 rounded-lg p-2">
                       <div className="grid gap-2 items-end"
-                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 100px 40px` }}>
+                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 48px 128px 36px` }}>
                         {templateDims.map((d: any) => {
                           const isCustom = rowDims[d.label] === '__custom__';
                           return (
@@ -1002,6 +1086,12 @@ export default function PurchasesPage() {
                             min="0" step="1" placeholder="0"
                             className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
                         </div>
+                        <div>
+                          <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
+                          <input type="date" value={rowExpiryDate}
+                            onChange={(e) => setRowExpiryDate(e.target.value)}
+                            className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                        </div>
                         <button
                           onClick={() => {
                             const hasAtLeastOne = templateDims.some((d: any) => {
@@ -1015,17 +1105,21 @@ export default function PurchasesPage() {
                               const val = rowDims[d.label];
                               if (!val) return '';
                               return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).filter(Boolean).join(' ');
+                            }).filter(Boolean).join(' / ');
                             setCurrentItem({
                               ...currentItem,
                               variations: [
                                 ...currentItem.variations,
                                 { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
                               ],
+                              expiryDates: rowExpiryDate
+                                ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
+                                : currentItem.expiryDates,
                             });
                             setRowDims({});
                             setRowCustom({});
                             setRowQty(0);
+                            setRowExpiryDate('');
                           }}
                           disabled={!templateDims.some((d: any) => {
                             const val = rowDims[d.label];
@@ -1063,6 +1157,10 @@ export default function PurchasesPage() {
                           }}
                             min="0" step="1" placeholder="0"
                             className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                          <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                            setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                          }}
+                            className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none" />
                           <button
                             onClick={() => {
                               const updated = currentItem.variations.filter((_, i) => i !== vi);
@@ -1090,6 +1188,12 @@ export default function PurchasesPage() {
                         min="0" step="1" placeholder="0"
                         className="w-16 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
                       />
+                      <input
+                        type="date"
+                        value={newVarExpiryDate}
+                        onChange={(e) => setNewVarExpiryDate(e.target.value)}
+                        className="w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                      />
                       <button
                         onClick={() => {
                           const name = newVarName.trim();
@@ -1102,7 +1206,10 @@ export default function PurchasesPage() {
                             // Update quantity of existing variation
                             const updated = [...currentItem.variations];
                             updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
-                            setCurrentItem({ ...currentItem, variations: updated });
+                            const expiryUpdate = newVarExpiryDate
+                              ? { expiryDates: { ...currentItem.expiryDates, [name]: newVarExpiryDate } }
+                              : {};
+                            setCurrentItem({ ...currentItem, variations: updated, ...expiryUpdate });
                           } else {
                             setCurrentItem({
                               ...currentItem,
@@ -1110,10 +1217,14 @@ export default function PurchasesPage() {
                                 ...currentItem.variations,
                                 { id: undefined, name, priceModifier: 0, stockQty: newVarQty, lowStockAt: undefined },
                               ],
+                              expiryDates: newVarExpiryDate
+                                ? { ...currentItem.expiryDates, [name]: newVarExpiryDate }
+                                : currentItem.expiryDates,
                             });
                           }
                           setNewVarName('');
                           setNewVarQty(0);
+                          setNewVarExpiryDate('');
                         }}
                         disabled={!newVarName.trim() || newVarQty <= 0}
                         className="px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
@@ -1130,10 +1241,19 @@ export default function PurchasesPage() {
                 ) : (
                   /* ── Simple product: single quantity ── */
                   <div className="mb-3">
-                    <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
-                    <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
-                      min="0.001" step="any" placeholder="1"
-                      className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                    <div className="flex items-center gap-4">
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
+                        <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
+                          min="0.001" step="any" placeholder="1"
+                          className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-slate-400 mb-1">Data de Validade</label>
+                        <input type="date" value={currentItem.simpleExpiryDate} onChange={(e) => setCurrentItem({ ...currentItem, simpleExpiryDate: e.target.value })}
+                          className="w-40 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                      </div>
+                    </div>
                   </div>
                 )}
 

@@ -518,21 +518,14 @@ export default function OrdersPage() {
     setConfirmingOrderId(id);
     setConfirmingIsOnline(true);
     setPaymentLines([]);
-    try {
-      const order = await api.orders.get(id);
-      setConfirmTotal(Number(order.total) || 0);
-    } catch { /* ignore */ }
-    setConfirmPaymentOpen(true);
+    // Pula modal de pagamento — pedido online já tem paymentMethod definido no checkout
+    await handleCheckBatchesAndConfirm(id);
   };
 
-  const handleConfirmOnlineExecute = async (itemBatchIds?: Record<string, string>) => {
-    const id = confirmingOrderId;
+  const handleConfirmOnlineExecute = async (id: string, itemBatchIds?: Record<string, string>) => {
     if (!id) return;
     try {
       const body: any = {};
-      if (paymentLines.length > 0) {
-        body.payments = paymentLines.map(pl => ({ paymentMethod: pl.methodId, amount: pl.amount }));
-      }
       if (itemBatchIds && Object.keys(itemBatchIds).length > 0) {
         body.itemBatchIds = itemBatchIds;
       }
@@ -549,8 +542,7 @@ export default function OrdersPage() {
     }
   };
 
-  const handleCheckBatchesAndConfirm = async () => {
-    const id = confirmingOrderId;
+  const handleCheckBatchesAndConfirm = async (id: string) => {
     if (!id) return;
 
     // Fetch the order with items to check for batches
@@ -594,7 +586,7 @@ export default function OrdersPage() {
     }
 
     // No batch selection needed
-    await handleConfirmOnlineExecute();
+    await handleConfirmOnlineExecute(id);
   };
 
   const openDetail = async (id: string) => {
@@ -1339,7 +1331,7 @@ export default function OrdersPage() {
           <div className="flex justify-end gap-3 pt-2 border-t border-slate-800">
             <button onClick={() => { setConfirmPaymentOpen(false); setConfirmingOrderId(null); }} className="px-4 py-2 text-slate-400 text-sm hover:text-white">Cancelar</button>
             <button
-              onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(); else handlePayExecute(); }}
+              onClick={() => { if (confirmingIsOnline) handleCheckBatchesAndConfirm(confirmingOrderId!); else handlePayExecute(); }}
               disabled={(() => {
                 const paidSoFar = paymentLines.reduce((s, pl) => s + pl.amount, 0);
                 return paymentLines.length === 0 || Math.abs(paidSoFar - confirmTotal) > 0.01;
@@ -1406,7 +1398,7 @@ export default function OrdersPage() {
             <button
               onClick={() => {
                 if (batchModalMode === 'online') {
-                  handleConfirmOnlineExecute(batchSelections);
+                  handleConfirmOnlineExecute(confirmingOrderId!, batchSelections);
                 } else {
                   executeSale(batchSelections);
                 }

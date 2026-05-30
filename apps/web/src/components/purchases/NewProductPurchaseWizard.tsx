@@ -669,7 +669,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         <span />
                       </div>
                       {variations.map((v, vi) => {
-                        const parts = v.name.split(' ');
+                        const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
                         return (
                           <div key={vi}
                             className="grid gap-2 px-3 py-1.5 items-center text-sm"
@@ -751,7 +751,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                             const val = rowDims[d.label];
                             if (!val) return '';
                             return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                          }).filter(Boolean).join(' ');
+                          }).filter(Boolean).join(' / ');
                           // Check if variation already exists
                           const existingIdx = variations.findIndex(
                             (v: any) => v.name.toLowerCase() === name.toLowerCase()

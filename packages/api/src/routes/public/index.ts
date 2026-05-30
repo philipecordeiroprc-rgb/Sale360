@@ -114,7 +114,10 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
         imagePath: b.imagePath,
         linkUrl: b.linkUrl,
       })),
-      paymentMethods: settings.paymentMethods,
+      paymentMethods: settings.paymentMethods.sort((a, b) => {
+        const order = ['pix', 'debit', 'credit', 'cash', 'food_voucher', 'meal_voucher', 'credit_store'];
+        return order.indexOf(a.paymentMethod) - order.indexOf(b.paymentMethod);
+      }),
       categories,
       products: filteredProducts,
     };

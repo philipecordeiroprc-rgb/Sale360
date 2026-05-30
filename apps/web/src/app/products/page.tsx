@@ -561,7 +561,7 @@ export default function ProductsPage() {
           <p className="text-slate-400 mb-6">
             {search || selectedCategory !== 'all' || variationName
               ? 'Tente ajustar os filtros de busca.'
-              : 'Use o menu Compras para cadastrar produtos.'}
+              : 'Use o menu Abastecimento para cadastrar produtos.'}
           </p>
         </div>
       )}
