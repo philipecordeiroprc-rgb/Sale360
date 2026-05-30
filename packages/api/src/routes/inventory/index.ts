@@ -39,21 +39,28 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           active: true,
           lowStockAt: { not: null, gt: 0 },
         },
-        select: { stockQty: true, lowStockAt: true },
+        select: { id: true, name: true, stockQty: true, lowStockAt: true },
       }),
     ]);
 
     let lowStockCount = 0;
     let atMinStockCount = 0;
+    const lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[] = [];
     for (const p of productsWithLowStock) {
       const stock = Number(p.stockQty);
       const min = Number(p.lowStockAt!);
-      if (stock < min) lowStockCount++;
-      else if (stock === min) atMinStockCount++;
+      if (stock < min) {
+        lowStockCount++;
+        lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
+      } else if (stock === min) {
+        atMinStockCount++;
+        lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
+      }
     }
 
-    const hasCritical = expiredCount > 0 || lowStockCount > 0;
-    const hasWarning = expiringSoonCount > 0 || atMinStockCount > 0;
+    // Level based only on batch expiry (not low stock)
+    const hasCritical = expiredCount > 0;
+    const hasWarning = expiringSoonCount > 0;
 
     let level: 'critical' | 'warning' | 'ok';
     if (hasCritical) level = 'critical';
@@ -66,6 +73,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       expiringSoonCount,
       lowStockCount,
       atMinStockCount,
+      lowStockProducts,
     };
   });
 
