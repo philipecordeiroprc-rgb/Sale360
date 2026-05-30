@@ -898,7 +898,7 @@ export default function PurchasesPage() {
 
                 {/* Precificacao: 5 campos — custo un, custo oper, taxa, margem, preco venda */}
                 <div className="bg-slate-900 rounded-lg p-3 mb-3">
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     <div>
                       <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$)</label>
                       <input type="number"
