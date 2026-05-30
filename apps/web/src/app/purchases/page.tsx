@@ -900,7 +900,7 @@ export default function PurchasesPage() {
                 <div className="bg-slate-900 rounded-lg p-3 mb-3">
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Un. (R$)</label>
                       <input type="number"
                         value={currentItem.costPrice || ''}
                         onChange={(e) => {
@@ -909,10 +909,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" step="0.01" placeholder="0,00"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Custo Oper. (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Oper. (R$)</label>
                       <input type="number"
                         value={currentItem.operationalCost || ''}
                         onChange={(e) => {
@@ -921,10 +921,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" step="0.01" placeholder="0,00"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Taxa %</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Taxa %</label>
                       <input type="number"
                         value={currentItem.taxRatePct || ''}
                         onChange={(e) => {
@@ -933,10 +933,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Margem %</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Margem %</label>
                       <input type="number"
                         value={currentItem.marginPct || ''}
                         onChange={(e) => {
@@ -945,10 +945,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Pr. Venda (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Pr. Venda (R$)</label>
                       <input type="number"
                         value={currentItem.salePrice || ''}
                         onChange={(e) => {
@@ -958,7 +958,7 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, marginPct: calcMarginFromSale(updated) });
                         }}
                         min="0" step="0.01" placeholder="Auto"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                   </div>
                   {/* Linha de resumo */}
