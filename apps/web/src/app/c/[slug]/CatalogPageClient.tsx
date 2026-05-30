@@ -29,7 +29,7 @@ type Store = {
 };
 
 type Banner = { id: string; imagePath: string; linkUrl: string | null };
-type Category = { id: string; name: string; color: string | null };
+type Category = { id: string; name: string; color: string | null; variationTemplate?: { dimensions?: Array<{ label: string; type: string; orderIndex: number }> } | null };
 type PaymentMethod = {
   value: string;
   label: string;
