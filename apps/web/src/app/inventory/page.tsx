@@ -104,6 +104,22 @@ export default function InventoryPage() {
   const [adjustNotes, setAdjustNotes] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Low stock alerts
+  const [stockAlerts, setStockAlerts] = useState<{
+    lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[];
+  } | null>(null);
+
+  const loadAlerts = useCallback(async () => {
+    try {
+      const data = await api.inventory.alerts();
+      setStockAlerts(data);
+    } catch {
+      setStockAlerts(null);
+    }
+  }, []);
+
+  useEffect(() => { loadAlerts(); }, [loadAlerts]);
+
   const loadBatches = useCallback(async () => {
     setLoading(true);
     setError('');
