@@ -95,7 +95,11 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           product: { select: { id: true, name: true, unit: true, sku: true, stockQty: true, lowStockAt: true } },
           variation: { select: { id: true, name: true, stockQty: true, lowStockAt: true } },
         },
-        orderBy: { receivedAt: 'asc' },
+        orderBy: [
+          { product: { name: 'asc' } },
+          { variation: { name: 'asc' } },
+          { receivedAt: 'asc' },
+        ],
         skip: (parseInt(page) - 1) * parseInt(limit),
         take: parseInt(limit),
       }),
