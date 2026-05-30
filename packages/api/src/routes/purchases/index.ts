@@ -273,9 +273,21 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
         if (!variationId && item.productId && item.productName.includes(' - ')) {
           const varName = item.productName.split(' - ').slice(1).join(' - ');
           // Try existing variation first to avoid duplicates
-          const existingVar = await tx.productVariation.findFirst({
+          let existingVar = await tx.productVariation.findFirst({
             where: { productId: item.productId, name: varName },
           });
+          // Fallback: try alternative dimension separator (space ↔ " / ")
+          // Handles purchases created before variation name normalization
+          if (!existingVar) {
+            const altName = varName.includes(' / ')
+              ? varName.replace(' / ', ' ')
+              : varName.replace(' ', ' / ');
+            if (altName !== varName) {
+              existingVar = await tx.productVariation.findFirst({
+                where: { productId: item.productId, name: altName },
+              });
+            }
+          }
           if (existingVar) {
             variationId = existingVar.id;
             await tx.purchaseItem.update({
