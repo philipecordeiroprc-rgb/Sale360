@@ -37,12 +37,14 @@ function VariationSelector({
   onSelect,
   cartItems,
   productId,
+  dimensionLabels,
 }: {
   variations: any[];
   selectedId: string | null;
   onSelect: (v: any) => void;
   cartItems: any[];
   productId: string;
+  dimensionLabels?: string[];
 }) {
   // Parse variation name into dimensions (supports "Cor / Tamanho" and legacy "Tamanho Cor")
   const parseDims = (name: string): string[] => {
