@@ -321,39 +321,34 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Low stock alerts */}
+      {/* Low stock alerts — only critical (stock < min) */}
       {stockAlerts && stockAlerts.lowStockProducts.length > 0 && (
-        <div className="mb-4 bg-slate-900 border border-slate-800 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle size={18} className={
-              stockAlerts.lowStockProducts.some(p => p.stockQty < p.lowStockAt)
-                ? 'text-red-400'
-                : 'text-amber-400'
-            } />
-            <h4 className="text-sm font-semibold text-white">
-              Estoque Baixo ({stockAlerts.lowStockProducts.length} produto{stockAlerts.lowStockProducts.length > 1 ? 's' : ''})
+        <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-2xl p-3 sm:p-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <AlertTriangle size={18} className="text-red-400 shrink-0" />
+            <h4 className="text-sm font-semibold text-red-300">
+              Abaixo do Mínimo ({stockAlerts.lowStockProducts.length})
             </h4>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto -mx-1">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400">
-                  <th className="py-2 pr-3 font-medium">Produto</th>
-                  <th className="py-2 pr-3 font-medium text-right">Estoque Atual</th>
-                  <th className="py-2 font-medium text-right">Mínimo</th>
+                <tr className="border-b border-red-500/20 text-red-400/60">
+                  <th className="py-1.5 pr-2 font-medium">Produto</th>
+                  <th className="py-1.5 pr-2 font-medium text-right w-16">Estoque</th>
+                  <th className="py-1.5 font-medium text-right w-12">Mín</th>
                 </tr>
               </thead>
               <tbody>
                 {stockAlerts.lowStockProducts.map(p => {
                   const ratio = p.lowStockAt > 0 ? p.stockQty / p.lowStockAt : 0;
-                  const isCritical = p.stockQty < p.lowStockAt;
                   return (
-                    <tr key={p.id} className="border-b border-slate-800/50">
-                      <td className="py-2 pr-3 text-white">{p.name}</td>
-                      <td className={`py-2 pr-3 text-right font-medium ${ratio <= 0.5 ? 'text-red-400' : isCritical ? 'text-amber-300' : 'text-amber-300'}`}>
+                    <tr key={p.id} className="border-b border-red-500/10">
+                      <td className="py-1.5 pr-2 text-white truncate max-w-[180px] sm:max-w-none">{p.name}</td>
+                      <td className={`py-1.5 pr-2 text-right font-semibold w-16 ${ratio === 0 ? 'text-red-400' : 'text-red-300'}`}>
                         {p.stockQty}
                       </td>
-                      <td className="py-2 text-right text-slate-400">{p.lowStockAt}</td>
+                      <td className="py-1.5 text-right text-red-400/50 w-12">{p.lowStockAt}</td>
                     </tr>
                   );
                 })}
