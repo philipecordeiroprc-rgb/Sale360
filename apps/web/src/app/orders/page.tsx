@@ -951,7 +951,21 @@ export default function OrdersPage() {
                 {cart.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{item.productName}</p>
+                      {(() => {
+                        const name = item.productName as string;
+                        const sepIdx = name.includes(' - ') ? name.indexOf(' - ') : -1;
+                        const baseName = sepIdx >= 0 ? name.slice(0, sepIdx) : name;
+                        const varName = sepIdx >= 0 ? name.slice(sepIdx + 3) : '';
+                        const dims = varName.includes(' / ') ? varName.split(' / ').map((s: string) => s.trim()) : (varName ? [varName] : []);
+                        return (
+                          <div className="flex items-center gap-1 flex-wrap min-w-0">
+                            <span className="text-xs text-white truncate">{baseName}</span>
+                            {dims.map((dim: string, di: number) => (
+                              <span key={di} className="text-[10px] px-1 py-0.5 rounded bg-slate-700 text-slate-300 shrink-0">{dim}</span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <p className="text-xs text-slate-500">R$ {item.unitPrice.toFixed(2)} x {item.quantity}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
