@@ -321,6 +321,48 @@ export default function InventoryPage() {
         </button>
       </div>
 
+      {/* Low stock alerts */}
+      {stockAlerts && stockAlerts.lowStockProducts.length > 0 && (
+        <div className="mb-4 bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle size={18} className={
+              stockAlerts.lowStockProducts.some(p => p.stockQty < p.lowStockAt)
+                ? 'text-red-400'
+                : 'text-amber-400'
+            } />
+            <h4 className="text-sm font-semibold text-white">
+              Estoque Baixo ({stockAlerts.lowStockProducts.length} produto{stockAlerts.lowStockProducts.length > 1 ? 's' : ''})
+            </h4>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-800 text-slate-400">
+                  <th className="py-2 pr-3 font-medium">Produto</th>
+                  <th className="py-2 pr-3 font-medium text-right">Estoque Atual</th>
+                  <th className="py-2 font-medium text-right">Mínimo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stockAlerts.lowStockProducts.map(p => {
+                  const ratio = p.lowStockAt > 0 ? p.stockQty / p.lowStockAt : 0;
+                  const isCritical = p.stockQty < p.lowStockAt;
+                  return (
+                    <tr key={p.id} className="border-b border-slate-800/50">
+                      <td className="py-2 pr-3 text-white">{p.name}</td>
+                      <td className={`py-2 pr-3 text-right font-medium ${ratio <= 0.5 ? 'text-red-400' : isCritical ? 'text-amber-300' : 'text-amber-300'}`}>
+                        {p.stockQty}
+                      </td>
+                      <td className="py-2 text-right text-slate-400">{p.lowStockAt}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-lg p-1 mb-4 w-fit">
         <button onClick={() => { setTab('batches'); setPage(1); }}
