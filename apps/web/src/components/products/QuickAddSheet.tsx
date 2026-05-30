@@ -204,7 +204,35 @@ function VariationSelector({
             }
 
             const v = relevant[0];
-            return renderChip(v);
+            const vStock = Number(v.stockQty || 0);
+            const vInCart = getCartCount(v.id);
+            const vAvailable = vStock - vInCart;
+            const outOfStock = vAvailable <= 0;
+            const selected = selectedId === v.id;
+            const hasSelectedDim1 = selectedDims !== null && selectedDims[0] !== undefined;
+
+            return (
+              <button
+                key={d2}
+                onClick={() => !outOfStock && onSelect(selected ? null : v)}
+                disabled={outOfStock}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  selected
+                    ? 'bg-indigo-500 text-white'
+                    : outOfStock
+                      ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
+                      : hasSelectedDim1
+                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                        : 'bg-slate-800/50 text-slate-500'
+                }`}
+              >
+                {d2}
+                {Number(v.priceModifier || 0) > 0 && (
+                  <span className="ml-1 opacity-70">(+R$ {Number(v.priceModifier).toFixed(2)})</span>
+                )}
+                <span className="ml-1 text-[10px] opacity-50">({vStock})</span>
+              </button>
+            );
           })}
         </div>
       </div>
