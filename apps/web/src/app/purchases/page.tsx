@@ -618,19 +618,19 @@ export default function PurchasesPage() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setTab('restock')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all
             ${tab === 'restock'
               ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-          <RefreshCw size={16} /> Reposição de Estoque
+          <RefreshCw size={14} className="sm:w-4 sm:h-4" /> Reposição
         </button>
         <button
           onClick={() => setTab('new-product')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all
             ${tab === 'new-product'
               ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-          <Sparkles size={16} /> Novo Produto + Compra
+          <Sparkles size={14} className="sm:w-4 sm:h-4" /> Novo + Compra
         </button>
       </div>
 
