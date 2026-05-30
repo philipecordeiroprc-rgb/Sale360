@@ -623,7 +623,7 @@ export default function InventoryPage() {
             <div className="flex items-center justify-center gap-2 mt-4">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
                 className="px-3 py-1.5 bg-slate-900 text-slate-400 rounded-lg text-sm disabled:opacity-40">Anterior</button>
-              <span className="text-slate-400 text-sm">Página {page}</span>
+              <span className="text-slate-400 text-sm">Página {page} de {Math.ceil(movTotal / 50)}</span>
               <button onClick={() => setPage(p => p + 1)} disabled={page * 50 >= movTotal}
                 className="px-3 py-1.5 bg-slate-900 text-slate-400 rounded-lg text-sm disabled:opacity-40">Próxima</button>
             </div>
