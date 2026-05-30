@@ -1029,11 +1029,13 @@ function VariationSelector({
   selectedId,
   onSelect,
   basePrice,
+  dimensionLabels,
 }: {
   variations: Array<{ id: string; name: string; price?: number | null; priceModifier?: number | string | null; stockQty: number | string }>;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   basePrice: number;
+  dimensionLabels?: string[];
 }) {
   // Parse variation name into dimensions.
   // Supports both "Cor / Tamanho" (new) and "Tamanho Cor" (legacy) formats.
