@@ -1217,7 +1217,18 @@ export default function OrdersPage() {
               <tbody>
                 {detailOrder.items?.map((item: any) => (
                   <tr key={item.id} className="border-b border-slate-800/50">
-                    <td className="py-1.5 text-white">{item.productName}</td>
+                    <td className="py-1.5 text-white">
+                      {(() => {
+                        const name = item.productName as string;
+                        const sepIdx = name.includes(' - ') ? name.indexOf(' - ') : -1;
+                        const baseName = sepIdx >= 0 ? name.slice(0, sepIdx) : name;
+                        const varName = sepIdx >= 0 ? name.slice(sepIdx + 3) : '';
+                        const dims = varName.includes(' / ') ? varName.split(' / ').map((s: string) => s.trim()) : (varName ? [varName] : []);
+                        return dims.length > 0 ? (
+                          <span>{baseName} <span className="text-slate-500">|</span> {dims.join(' ')}</span>
+                        ) : baseName;
+                      })()}
+                    </td>
                     <td className="py-1.5 text-right text-slate-400">{item.quantity}</td>
                     <td className="py-1.5 text-right text-slate-400">R$ {Number(item.unitPrice).toFixed(2)}</td>
                     <td className="py-1.5 text-right text-white">R$ {Number(item.total).toFixed(2)}</td>
