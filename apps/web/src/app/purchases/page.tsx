@@ -1154,19 +1154,27 @@ export default function PurchasesPage() {
                     <p className="text-xs text-slate-400 mb-2">Qtd comprada por variação</p>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {currentItem.variations.map((v, vi) => (
-                        <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
-                          <span className="text-sm text-white flex-1 truncate">{v.name}</span>
-                          <input type="number" value={v.stockQty || ''} onChange={(e) => {
-                            const updated = [...currentItem.variations];
-                            updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                            setCurrentItem({ ...currentItem, variations: updated });
-                          }}
-                            min="0" step="1" placeholder="0"
-                            className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                          <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
-                            setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
-                          }}
-                            className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none" />
+                        <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 sm:px-3 py-1.5">
+                          <span className="text-xs sm:text-sm text-white flex-1 truncate min-w-0">{v.name}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div>
+                              <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Qtd</label>
+                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                const updated = [...currentItem.variations];
+                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                setCurrentItem({ ...currentItem, variations: updated });
+                              }}
+                                min="0" step="1" placeholder="0"
+                                className="w-16 sm:w-20 px-1.5 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Validade</label>
+                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                              }}
+                                className="w-24 sm:w-28 px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                            </div>
+                          </div>
                           <button
                             onClick={() => {
                               const updated = currentItem.variations.filter((_, i) => i !== vi);
@@ -1185,31 +1193,35 @@ export default function PurchasesPage() {
                         value={newVarName}
                         onChange={(e) => setNewVarName(e.target.value)}
                         placeholder="Nova variação (ex: GG)"
-                        className="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                        className="flex-1 min-w-0 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
                       />
-                      <input
-                        type="number"
-                        value={newVarQty || ''}
-                        onChange={(e) => setNewVarQty(Number(e.target.value))}
-                        min="0" step="1" placeholder="0"
-                        className="w-16 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
-                      />
-                      <input
-                        type="date"
-                        value={newVarExpiryDate}
-                        onChange={(e) => setNewVarExpiryDate(e.target.value)}
-                        className="w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
-                      />
+                      <div className="shrink-0">
+                        <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Qtd</label>
+                        <input
+                          type="number"
+                          value={newVarQty || ''}
+                          onChange={(e) => setNewVarQty(Number(e.target.value))}
+                          min="0" step="1" placeholder="0"
+                          className="w-14 sm:w-16 px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+                      <div className="shrink-0">
+                        <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Validade</label>
+                        <input
+                          type="date"
+                          value={newVarExpiryDate}
+                          onChange={(e) => setNewVarExpiryDate(e.target.value)}
+                          className="w-24 sm:w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                        />
+                      </div>
                       <button
                         onClick={() => {
                           const name = newVarName.trim();
                           if (!name || newVarQty <= 0) return;
-                          // Check if variation already exists (avoid duplicate)
                           const existingIdx = currentItem.variations.findIndex(
                             (v: any) => v.name.toLowerCase() === name.toLowerCase()
                           );
                           if (existingIdx >= 0) {
-                            // Update quantity of existing variation
                             const updated = [...currentItem.variations];
                             updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
                             const expiryUpdate = newVarExpiryDate
@@ -1233,7 +1245,7 @@ export default function PurchasesPage() {
                           setNewVarExpiryDate('');
                         }}
                         disabled={!newVarName.trim() || newVarQty <= 0}
-                        className="px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
+                        className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
                         title="Adicionar variação">
                         <Plus size={14} />
                       </button>
