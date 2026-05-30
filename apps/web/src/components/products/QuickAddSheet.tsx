@@ -135,7 +135,7 @@ function VariationSelector({
   const dim1Values = sortValues([...new Set(parsed.map((p: any) => p.dims[0]))]);
   const dim2Values = sortValues([...new Set(parsed.map((p: any) => p.dims[1]))]);
 
-  // Detect dimension type from value patterns
+  // Use DB dimension labels when available, otherwise fall back to heuristics
   const detectLabel = (values: string[]): string => {
     if (values.every(v => /^\d+(\.\d+)?\s*(g|kg|mg)$/i.test(v.trim()))) return 'Peso';
     if (values.every(v => /^\d+(\.\d+)?\s*(ml|cl|l)$/i.test(v.trim()))) return 'Volume';
@@ -146,8 +146,8 @@ function VariationSelector({
     if (values.every(v => !/^\d/.test(v.trim()))) return 'Sabor';
     return 'Opção';
   };
-  const dim1Label = detectLabel(dim1Values);
-  const dim2Label = detectLabel(dim2Values);
+  const dim1Label = dimensionLabels?.[0] || detectLabel(dim1Values);
+  const dim2Label = dimensionLabels?.[1] || detectLabel(dim2Values);
 
   const selectedVar = selectedId ? parsed.find((p: any) => p.id === selectedId) : null;
   const selectedDims = selectedVar ? selectedVar.dims : null;
