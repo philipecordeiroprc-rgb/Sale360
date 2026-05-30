@@ -1070,6 +1070,7 @@ function VariationSelector({
         <div className="flex flex-wrap gap-2">
           {variations.map((v) => {
             const out = Number(v.stockQty) <= 0;
+            const d = parseDims(v.name);
             return (
               <button
                 key={v.id}
@@ -1083,7 +1084,11 @@ function VariationSelector({
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
-                {v.name}
+                {d.length > 1 ? d.map((dim: string, di: number) => (
+                  <span key={di} className={di > 0 ? 'ml-1' : ''}>
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-white/10">{dim}</span>
+                  </span>
+                )) : v.name}
               </button>
             );
           })}
