@@ -1046,95 +1046,97 @@ export default function PurchasesPage() {
 
                     {/* Linha para adicionar nova variação */}
                     <div className="bg-slate-800 rounded-lg p-2">
-                      <div className="grid gap-2 items-end"
-                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 48px 128px 36px` }}>
-                        {templateDims.map((d: any) => {
-                          const isCustom = rowDims[d.label] === '__custom__';
-                          return (
-                            <div key={d.id || d.label}>
-                              <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
-                              <select
-                                value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setRowDims({ ...rowDims, [d.label]: val });
-                                  if (val !== '__custom__') {
-                                    const next = { ...rowCustom };
-                                    delete next[d.label];
-                                    setRowCustom(next);
-                                  }
-                                }}
-                                className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
-                                <option value="">—</option>
-                                {d.options.map((opt: string) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                                <option value="__custom__">Outro...</option>
-                              </select>
-                              {isCustom && (
-                                <input
-                                  type="text"
-                                  value={rowCustom[d.label] || ''}
-                                  onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
-                                  placeholder="Digite..."
-                                  className="mt-1 w-full px-2 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-xs focus:border-indigo-500 outline-none"
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
-                          <input type="number" value={rowQty || ''}
-                            onChange={(e) => setRowQty(Number(e.target.value))}
-                            min="0" step="1" placeholder="0"
-                            className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
-                          <input type="date" value={rowExpiryDate}
-                            onChange={(e) => setRowExpiryDate(e.target.value)}
-                            className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
-                        </div>
-                        <button
-                          onClick={() => {
-                            const hasAtLeastOne = templateDims.some((d: any) => {
+                      <div className="overflow-x-auto -mx-1">
+                        <div className="min-w-[320px] grid gap-1.5 sm:gap-2 items-end"
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 48px 96px 32px` }}>
+                          {templateDims.map((d: any) => {
+                            const isCustom = rowDims[d.label] === '__custom__';
+                            return (
+                              <div key={d.id || d.label}>
+                                <label className="block text-[10px] text-slate-500 mb-0.5 truncate">{d.label}</label>
+                                <select
+                                  value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setRowDims({ ...rowDims, [d.label]: val });
+                                    if (val !== '__custom__') {
+                                      const next = { ...rowCustom };
+                                      delete next[d.label];
+                                      setRowCustom(next);
+                                    }
+                                  }}
+                                  className="w-full px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] focus:border-indigo-500 outline-none">
+                                  <option value="">—</option>
+                                  {d.options.map((opt: string) => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                  ))}
+                                  <option value="__custom__">Outro...</option>
+                                </select>
+                                {isCustom && (
+                                  <input
+                                    type="text"
+                                    value={rowCustom[d.label] || ''}
+                                    onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
+                                    placeholder="Digite..."
+                                    className="mt-1 w-full px-1.5 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-[11px] focus:border-indigo-500 outline-none"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
+                            <input type="number" value={rowQty || ''}
+                              onChange={(e) => setRowQty(Number(e.target.value))}
+                              min="0" step="1" placeholder="0"
+                              className="w-full px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] text-center focus:border-indigo-500 outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
+                            <input type="date" value={rowExpiryDate}
+                              onChange={(e) => setRowExpiryDate(e.target.value)}
+                              className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                          </div>
+                          <button
+                            onClick={() => {
+                              const hasAtLeastOne = templateDims.some((d: any) => {
+                                const val = rowDims[d.label];
+                                if (!val) return false;
+                                if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                                return true;
+                              });
+                              if (!hasAtLeastOne || rowQty <= 0) return;
+                              const name = templateDims.map((d: any) => {
+                                const val = rowDims[d.label];
+                                if (!val) return '';
+                                return val === '__custom__' ? rowCustom[d.label].trim() : val;
+                              }).filter(Boolean).join(' / ');
+                              setCurrentItem({
+                                ...currentItem,
+                                variations: [
+                                  ...currentItem.variations,
+                                  { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
+                                ],
+                                expiryDates: rowExpiryDate
+                                  ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
+                                  : currentItem.expiryDates,
+                              });
+                              setRowDims({});
+                              setRowCustom({});
+                              setRowQty(0);
+                              setRowExpiryDate('');
+                            }}
+                            disabled={!templateDims.some((d: any) => {
                               const val = rowDims[d.label];
                               if (!val) return false;
                               if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
                               return true;
-                            });
-                            if (!hasAtLeastOne || rowQty <= 0) return;
-                            const name = templateDims.map((d: any) => {
-                              const val = rowDims[d.label];
-                              if (!val) return '';
-                              return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).filter(Boolean).join(' / ');
-                            setCurrentItem({
-                              ...currentItem,
-                              variations: [
-                                ...currentItem.variations,
-                                { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
-                              ],
-                              expiryDates: rowExpiryDate
-                                ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
-                                : currentItem.expiryDates,
-                            });
-                            setRowDims({});
-                            setRowCustom({});
-                            setRowQty(0);
-                            setRowExpiryDate('');
-                          }}
-                          disabled={!templateDims.some((d: any) => {
-                            const val = rowDims[d.label];
-                            if (!val) return false;
-                            if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
-                            return true;
-                          }) || rowQty <= 0}
-                          className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
-                          title="Adicionar variação">
-                          <Plus size={16} />
-                        </button>
+                            }) || rowQty <= 0}
+                            className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
+                            title="Adicionar variação">
+                            <Plus size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
 
