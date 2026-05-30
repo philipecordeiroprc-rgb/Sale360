@@ -1384,11 +1384,20 @@ export default function OrdersPage() {
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {batchItems.map((entry) => {
               const key = batchModalMode === 'online' ? entry.orderItemId : entry.cartIndex;
-              const productName = batchModalMode === 'online' ? entry.productName : entry.cartItem?.productName;
+              const productName: string = batchModalMode === 'online' ? entry.productName : entry.cartItem?.productName;
+              const pSepIdx = productName.includes(' - ') ? productName.indexOf(' - ') : -1;
+              const pBase = pSepIdx >= 0 ? productName.slice(0, pSepIdx) : productName;
+              const pVar = pSepIdx >= 0 ? productName.slice(pSepIdx + 3) : '';
+              const pDims = pVar.includes(' / ') ? pVar.split(' / ').map((s: string) => s.trim()) : (pVar ? [pVar] : []);
               const batches = entry.batches;
               return (
                 <div key={key} className="bg-slate-800 rounded-lg p-3">
-                  <p className="text-sm text-white font-medium mb-2">{productName}</p>
+                  <p className="text-sm text-white font-medium mb-2">
+                    {pBase}
+                    {pDims.map((dim: string, di: number) => (
+                      <span key={di} className="text-[10px] px-1 py-0.5 rounded bg-slate-700 text-slate-300 ml-1">{dim}</span>
+                    ))}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {batches.map((b: any) => {
                       const isSelected = batchSelections[String(key)] === b.id;
