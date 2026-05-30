@@ -1116,8 +1116,8 @@ function VariationSelector({
     if (values.every(v => !/^\d/.test(v.trim()))) return 'Sabor';
     return 'Opção';
   };
-  const dim1Label = detectLabel(dim1Values);
-  const dim2Label = detectLabel(dim2Values);
+  const dim1Label = dimensionLabels?.[0] || detectLabel(dim1Values);
+  const dim2Label = dimensionLabels?.[1] || detectLabel(dim2Values);
 
   // Build lookup: id → variation
   const byId = new Map(variations.map((v) => [v.id, v]));
