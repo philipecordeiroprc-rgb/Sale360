@@ -64,7 +64,7 @@ export const publicRoutes: FastifyPluginAsync = async (app) => {
     const products = await prisma.product.findMany({
       where: { tenantId: tenant.id, active: true },
       include: {
-        category: { select: { id: true, name: true, color: true } },
+        category: { select: { id: true, name: true, color: true, variationTemplate: { include: { dimensions: { orderBy: { orderIndex: 'asc' } } } } } },
         variations: { orderBy: { name: 'asc' } },
       },
       orderBy: { name: 'asc' },
