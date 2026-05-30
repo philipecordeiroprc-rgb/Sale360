@@ -40,8 +40,14 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
     if (supplierId) where.supplierId = supplierId;
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const [y, m, d] = startDate.split('-').map(Number);
+        where.createdAt.gte = new Date(y, m - 1, d);
+      }
+      if (endDate) {
+        const [y, m, d] = endDate.split('-').map(Number);
+        where.createdAt.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
+      }
     }
 
     const [purchases, total] = await Promise.all([
