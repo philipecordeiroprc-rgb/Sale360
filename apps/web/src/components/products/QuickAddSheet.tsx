@@ -374,6 +374,7 @@ export function QuickAddSheet({ open, product, onClose, onAdd, cartItems }: Quic
             onSelect={(v) => setSelectedVariation(v)}
             cartItems={cartItems}
             productId={product.id}
+            dimensionLabels={product.category?.variationTemplate?.dimensions?.map((d: any) => d.label)}
           />
         )}
         {hasVariations && !selectedVariation && (
