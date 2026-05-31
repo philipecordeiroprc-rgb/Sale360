@@ -1031,6 +1031,20 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 />
               </div>
 
+              {/* Datas (opcionais) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Data da Compra</label>
+                  <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Data de Recebimento</label>
+                  <input type="date" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
+              </div>
+
               {/* Finalizar button */}
               <button
                 onClick={handleFinalize}
