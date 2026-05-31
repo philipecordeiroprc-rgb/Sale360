@@ -910,7 +910,7 @@ export default function OrdersPage() {
               <BarcodeScanner
                 isOpen={scannerOpen}
                 onClose={() => setScannerOpen(false)}
-                onDetected={(product) => {
+                onDetected={(product: any) => {
                   setScannerOpen(false);
                   setQuickAddProduct(product);
                   setQuickAddOpen(true);
