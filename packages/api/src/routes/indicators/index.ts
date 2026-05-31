@@ -79,7 +79,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
         select: { id: true, name: true, creditBalance: true },
         orderBy: { creditBalance: 'desc' },
       }),
-      // 7. Last sale per product (for encalhados)
+      // 6. Last sale per product (for encalhados)
       prisma.orderItem.findMany({
         where: {
           productId: { not: null },
