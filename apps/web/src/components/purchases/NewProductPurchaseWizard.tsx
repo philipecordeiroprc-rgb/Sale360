@@ -328,6 +328,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         try {
           // Build itemExpiryDates from variation dates and simple product date
           const expiryPayload: any = {};
+          if (receivedDate) expiryPayload.receivedDate = receivedDate;
           const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
           if (simpleExpiryDate) {
             dates.push([productName.trim(), simpleExpiryDate]);
