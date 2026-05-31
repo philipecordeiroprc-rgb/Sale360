@@ -238,7 +238,10 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
   // Receive purchase — PEPS core: creates InventoryBatches + Movements
   app.post('/:id/receive', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { itemExpiryDates } = (request.body || {}) as { itemExpiryDates?: Record<string, string | null> };
+    const { itemExpiryDates, receivedDate } = (request.body || {}) as {
+      itemExpiryDates?: Record<string, string | null>;
+      receivedDate?: string | null;
+    };
 
     // Quick existence check (status validation happens atomically inside transaction)
     const purchaseExists = await prisma.purchase.findFirst({
@@ -253,7 +256,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Compra já foi recebida' });
     }
 
-    const receivedAt = new Date();
+    const receivedAt = receivedDate ? new Date(receivedDate) : new Date();
 
     try {
       await prisma.$transaction(async (tx) => {
