@@ -106,8 +106,8 @@ export function ComprasTab({ data, loading }: { data: PurchasesIndicators | null
 
       <Legenda items={[
         { term: 'Total Gasto em Compras', definition: 'Soma de todas as compras com status Recebido no período.' },
-        { term: 'Prazo Médio de Entrega', definition: 'Média de dias entre a data do pedido e a data de recebimento da mercadoria.' },
-        { term: 'Compras Pendentes', definition: 'Pedidos em Rascunho (ainda não enviados) + Confirmados (enviados, aguardando entrega).' },
+        { term: 'Prazo Médio de Entrega', definition: 'Média de dias entre a data da compra e a data de recebimento. Calculado apenas para compras que têm ambas as datas preenchidas.' },
+        { term: 'Nº de Compras no Período', definition: 'Quantidade total de compras recebidas no período selecionado.' },
       ]} />
     </div>
   );
