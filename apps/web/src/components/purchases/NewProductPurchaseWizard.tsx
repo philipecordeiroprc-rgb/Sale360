@@ -315,11 +315,13 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         return;
       }
 
-      const createdPurchase = await api.purchases.create({
+      const payload: any = {
         supplierId,
         discount: Number(discount) || 0,
         items: purchaseItems,
-      });
+      };
+      if (purchaseDate) payload.purchaseDate = purchaseDate;
+      const createdPurchase = await api.purchases.create(payload);
 
       // 5. Auto-receive the purchase so stock is updated immediately
       if (createdPurchase?.id) {
