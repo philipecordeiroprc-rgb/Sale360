@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
+import { normalizePaymentMethod } from '../../lib/payment-utils.js';
 
 export const reportRoutes: FastifyPluginAsync = async (app) => {
   app.get('/financial', async (request) => {
