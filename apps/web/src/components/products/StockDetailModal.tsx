@@ -96,6 +96,11 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
     }
   };
 
+  const sortedVariations = useMemo(
+    () => sortVariations(product.variations, product.category?.variationTemplate?.dimensions),
+    [product.variations, product.category?.variationTemplate?.dimensions],
+  );
+
   const getEditValue = (v: any): string => {
     if (v.id && editValues[v.id] !== undefined) return editValues[v.id];
     return v.lowStockAt != null ? String(v.lowStockAt) : '';
