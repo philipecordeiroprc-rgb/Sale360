@@ -471,12 +471,13 @@ export default function PurchasesPage() {
         return;
       }
 
-      const payload = {
+      const payload: any = {
         supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItemsData,
       };
+      if (purchaseDate) payload.purchaseDate = purchaseDate;
 
       if (editingId) {
         await api.purchases.update(editingId, payload);
