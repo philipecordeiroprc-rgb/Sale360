@@ -113,6 +113,8 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
   const [marginPct, setMarginPct] = useState<number>(0);
   const [salePrice, setSalePrice] = useState<number>(0);
   const [discount, setDiscount] = useState('0');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [receivedDate, setReceivedDate] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
