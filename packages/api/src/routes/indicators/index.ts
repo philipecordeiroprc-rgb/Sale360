@@ -134,12 +134,12 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
     let fiadoSettledTotal = 0;
     let fiadoSettledCount = 0;
     for (const o of paidOrders) {
-      const hasCreditStore = o.payments?.some(p => p.paymentMethod === 'credit_store')
-        || o.paymentMethod === 'credit_store';
+      const hasCreditStore = o.payments?.some(p => normalizePaymentMethod(p.paymentMethod) === 'credit_store')
+        || normalizePaymentMethod(o.paymentMethod || '') === 'credit_store';
 
       if (hasCreditStore && (o as any).paidWithMethod) {
         // Fiado order that was settled — count under the actual settlement method
-        const method = (o as any).paidWithMethod;
+        const method = normalizePaymentMethod((o as any).paidWithMethod);
         const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
@@ -150,19 +150,19 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
         fiadoSettledCount++;
       } else if (o.payments && o.payments.length > 0) {
         for (const p of o.payments) {
-          const method = p.paymentMethod || 'outro';
+          const method = normalizePaymentMethod(p.paymentMethod || 'outro');
           const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
           entry.total += Number(p.amount);
           paymentMap.set(method, entry);
         }
         // Count the order once under its first payment method
-        const firstMethod = o.payments[0].paymentMethod || 'outro';
+        const firstMethod = normalizePaymentMethod(o.payments[0].paymentMethod || 'outro');
         const firstEntry = paymentMap.get(firstMethod) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         firstEntry.count++;
         paymentMap.set(firstMethod, firstEntry);
       } else {
         // Fallback for old orders without OrderPayment records
-        const method = o.paymentMethod || 'outro';
+        const method = normalizePaymentMethod(o.paymentMethod || 'outro');
         const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
