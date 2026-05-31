@@ -76,7 +76,7 @@ export interface PurchasesIndicators {
   totalGasto: number;
   porFornecedor: PurchaseBySupplier[];
   prazoMedioEntrega: number;
-  comprasPendentes: PendingPurchases;
+  numeroCompras: number;
 }
 
 export interface TopCustomer {
