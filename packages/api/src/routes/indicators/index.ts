@@ -73,13 +73,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
           supplier: { select: { id: true, name: true } },
         },
       }),
-      // 5. Pending purchase counts
-      prisma.purchase.groupBy({
-        by: ['status'],
-        where: { tenantId: request.tenantId, status: { in: ['DRAFT', 'CONFIRMED'] } },
-        _count: { _all: true },
-      }),
-      // 6. Customers with open credit
+      // 5. Customers with open credit
       prisma.customer.findMany({
         where: { tenantId: request.tenantId, creditBalance: { gt: 0 } },
         select: { id: true, name: true, creditBalance: true },
