@@ -192,7 +192,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
             <div className="flex items-center justify-between px-1 text-sm">
               <span className="text-slate-400">Total</span>
               <span className="text-white font-semibold">
-                {product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)} un
+                {sortedVariations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)} un
               </span>
             </div>
           </>
