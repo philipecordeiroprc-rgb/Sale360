@@ -865,7 +865,7 @@ export default function PurchasesPage() {
                 <BarcodeScanner
                   isOpen={scannerOpen}
                   onClose={() => setScannerOpen(false)}
-                  onDetected={(product) => {
+                  onDetected={(product: any) => {
                     setScannerOpen(false);
                     selectProduct(product);
                   }}
@@ -874,7 +874,7 @@ export default function PurchasesPage() {
                     setProductSearch(code);
                     show(`Código ${code} não cadastrado. Use "Novo Produto + Compra" para cadastrar.`, 'error');
                   }}
-                  onError={(msg) => show(msg, 'error')}
+                  onError={(msg: string) => show(msg, 'error')}
                 />
               </div>
             ) : (
