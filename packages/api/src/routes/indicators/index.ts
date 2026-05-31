@@ -334,8 +334,8 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       entry.count++;
       supplierMap.set(sid, entry);
 
-      if (p.receivedAt) {
-        totalDeliveryDays += (new Date(p.receivedAt).getTime() - new Date(p.createdAt).getTime()) / DAY;
+      if (p.receivedAt && p.purchaseDate) {
+        totalDeliveryDays += (new Date(p.receivedAt).getTime() - new Date(p.purchaseDate).getTime()) / DAY;
         deliveriesWithDates++;
       }
     }
