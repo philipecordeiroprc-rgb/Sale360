@@ -38,7 +38,6 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       products,
       batches,
       receivedPurchases,
-      pendingCounts,
       creditCustomers,
       lastSaleItems,
     ] = await Promise.all([
