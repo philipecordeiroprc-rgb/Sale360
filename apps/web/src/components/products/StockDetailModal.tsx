@@ -139,7 +139,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
                 <span className="col-span-4 text-center">Est. Mínimo</span>
                 <span className="col-span-2"></span>
               </div>
-              {product.variations.map((v: any) => {
+              {sortedVariations.map((v: any) => {
                 const vStock = Number(v.stockQty);
                 const effectiveLow = v.lowStockAt != null
                   ? Number(v.lowStockAt)
