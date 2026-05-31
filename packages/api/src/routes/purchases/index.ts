@@ -135,6 +135,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
         discount,
         total,
         notes,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
         items: {
           create: items.map((item) => ({
             productId: item.productId || undefined,
