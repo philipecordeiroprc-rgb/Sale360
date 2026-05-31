@@ -66,12 +66,12 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     let fiadoSettledTotal = 0;
     let fiadoSettledCount = 0;
     for (const o of paidOrders) {
-      const hasCreditStore = o.payments?.some(p => p.paymentMethod === 'credit_store')
-        || o.paymentMethod === 'credit_store';
+      const hasCreditStore = o.payments?.some(p => normalizePaymentMethod(p.paymentMethod) === 'credit_store')
+        || normalizePaymentMethod(o.paymentMethod || '') === 'credit_store';
 
       if (hasCreditStore && (o as any).paidWithMethod) {
         // Fiado order that was settled — count under the actual settlement method
-        const method = (o as any).paidWithMethod;
+        const method = normalizePaymentMethod((o as any).paidWithMethod);
         if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         paymentMap[method].count++;
         paymentMap[method].total += Number(o.total);
@@ -81,15 +81,15 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
         fiadoSettledCount++;
       } else if (o.payments && o.payments.length > 0) {
         for (const p of o.payments) {
-          const method = p.paymentMethod || 'Outro';
+          const method = normalizePaymentMethod(p.paymentMethod || 'Outro');
           if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
           paymentMap[method].total += Number(p.amount);
         }
-        const firstMethod = o.payments[0].paymentMethod || 'Outro';
+        const firstMethod = normalizePaymentMethod(o.payments[0].paymentMethod || 'Outro');
         if (!paymentMap[firstMethod]) paymentMap[firstMethod] = { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         paymentMap[firstMethod].count++;
       } else {
-        const method = o.paymentMethod || 'Outro';
+        const method = normalizePaymentMethod(o.paymentMethod || 'Outro');
         if (!paymentMap[method]) paymentMap[method] = { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         paymentMap[method].count++;
         paymentMap[method].total += Number(o.total);
