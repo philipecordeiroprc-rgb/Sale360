@@ -346,22 +346,13 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       .map(([id, v]) => ({ id: id === 'unknown' ? '' : id, ...v, total: r2(v.total) }))
       .sort((a, b) => b.total - a.total);
 
-    // Compras pendentes
-    let draftCount = 0, confirmedCount = 0;
-    for (const g of pendingCounts) {
-      if (g.status === 'DRAFT') draftCount = g._count._all;
-      if (g.status === 'CONFIRMED') confirmedCount = g._count._all;
-    }
+    const numeroCompras = receivedPurchases.length;
 
     const purchases = {
       totalGasto: r2(totalGasto),
       porFornecedor,
       prazoMedioEntrega: r2(prazoMedioEntrega),
-      comprasPendentes: {
-        draft: draftCount,
-        confirmed: confirmedCount,
-        total: draftCount + confirmedCount,
-      },
+      numeroCompras,
     };
 
     // ═══════════════════════════════════════════
