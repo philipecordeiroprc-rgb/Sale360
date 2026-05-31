@@ -196,6 +196,8 @@ export default function PurchasesPage() {
     setNewVarExpiryDate('');
     setNotes('');
     setDiscount('0');
+    setPurchaseDate('');
+    setReceivedDate('');
     setProductSearch('');
     setProductResults([]);
     setScannerOpen(false);
