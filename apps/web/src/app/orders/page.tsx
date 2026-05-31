@@ -915,11 +915,11 @@ export default function OrdersPage() {
                   setQuickAddProduct(product);
                   setQuickAddOpen(true);
                 }}
-                onError={(msg) => show(msg, 'error')}
+                onError={(msg: string) => show(msg, 'error')}
               />
             ) : (
               <ProductGrid
-                onProductClick={(product) => {
+                onProductClick={(product: any) => {
                   setQuickAddProduct(product);
                   setQuickAddOpen(true);
                 }}
