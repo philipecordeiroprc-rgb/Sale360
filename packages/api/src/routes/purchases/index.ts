@@ -21,6 +21,7 @@ const createPurchaseSchema = z.object({
   items: z.array(purchaseItemSchema).min(1, 'Pelo menos 1 item é obrigatório'),
   discount: z.number().default(0),
   notes: z.string().optional(),
+  purchaseDate: z.string().optional(), // data em que a compra foi feita ao fornecedor
 });
 
 export const purchaseRoutes: FastifyPluginAsync = async (app) => {
