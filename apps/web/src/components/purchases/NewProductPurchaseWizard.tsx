@@ -582,7 +582,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     setProductBarcode(code);
                     setScannerOpen(false);
                   }}
-                  onError={(msg) => show(msg, 'error')}
+                  onError={(msg: string) => show(msg, 'error')}
                 />
               )}
 
