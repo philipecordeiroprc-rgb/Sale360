@@ -64,31 +64,8 @@ export function ComprasTab({ data, loading }: { data: PurchasesIndicators | null
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard icon={ShoppingBag} label="Total Gasto em Compras" value={d.totalGasto} color="amber" />
         <StatCard icon={Clock} label="Prazo Médio de Entrega" value={d.prazoMedioEntrega} color="blue" isCurrency={false} suffix=" dias" />
-        <StatCard icon={AlertTriangle} label="Compras Pendentes" value={d.comprasPendentes.total} color="indigo" isCurrency={false} suffix="" />
+        <StatCard icon={Truck} label="Nº de Compras no Período" value={d.numeroCompras} color="indigo" isCurrency={false} suffix="" />
       </div>
-
-      {/* Pending purchases alert */}
-      {d.comprasPendentes.total > 0 && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle size={18} className="text-amber-400" />
-            <h4 className="text-sm font-semibold text-amber-300">Compras Pendentes</h4>
-          </div>
-          <div className="flex gap-4 text-sm">
-            <div>
-              <span className="text-slate-400">Rascunho: </span>
-              <span className="text-white font-medium">{d.comprasPendentes.draft}</span>
-            </div>
-            <div>
-              <span className="text-slate-400">Confirmadas: </span>
-              <span className="text-white font-medium">{d.comprasPendentes.confirmed}</span>
-            </div>
-          </div>
-          <Link href="/purchases" className="inline-block mt-3 text-xs text-indigo-400 hover:text-indigo-300">
-            Ir para Abastecimento →
-          </Link>
-        </div>
-      )}
 
       {/* Purchases by Supplier */}
       {d.porFornecedor.length > 0 && (
