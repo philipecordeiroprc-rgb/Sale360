@@ -39,21 +39,27 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           active: true,
           lowStockAt: { not: null, gt: 0 },
         },
-        select: { stockQty: true, lowStockAt: true },
+        select: { id: true, name: true, stockQty: true, lowStockAt: true },
       }),
     ]);
 
     let lowStockCount = 0;
     let atMinStockCount = 0;
+    const lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[] = [];
     for (const p of productsWithLowStock) {
       const stock = Number(p.stockQty);
       const min = Number(p.lowStockAt!);
-      if (stock < min) lowStockCount++;
-      else if (stock === min) atMinStockCount++;
+      if (stock < min) {
+        lowStockCount++;
+        lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
+      } else if (stock === min) {
+        atMinStockCount++;
+      }
     }
 
-    const hasCritical = expiredCount > 0 || lowStockCount > 0;
-    const hasWarning = expiringSoonCount > 0 || atMinStockCount > 0;
+    // Level based only on batch expiry (not low stock)
+    const hasCritical = expiredCount > 0;
+    const hasWarning = expiringSoonCount > 0;
 
     let level: 'critical' | 'warning' | 'ok';
     if (hasCritical) level = 'critical';
@@ -66,6 +72,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       expiringSoonCount,
       lowStockCount,
       atMinStockCount,
+      lowStockProducts,
     };
   });
 
@@ -88,7 +95,11 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           product: { select: { id: true, name: true, unit: true, sku: true, stockQty: true, lowStockAt: true } },
           variation: { select: { id: true, name: true, stockQty: true, lowStockAt: true } },
         },
-        orderBy: { receivedAt: 'asc' },
+        orderBy: [
+          { product: { name: 'asc' } },
+          { variation: { name: 'asc' } },
+          { receivedAt: 'asc' },
+        ],
         skip: (parseInt(page) - 1) * parseInt(limit),
         take: parseInt(limit),
       }),
@@ -155,8 +166,14 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
     if (type) where.type = type;
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) where.createdAt.gte = new Date(startDate);
-      if (endDate) where.createdAt.lte = new Date(endDate);
+      if (startDate) {
+        const [y, m, d] = startDate.split('-').map(Number);
+        where.createdAt.gte = new Date(y, m - 1, d);
+      }
+      if (endDate) {
+        const [y, m, d] = endDate.split('-').map(Number);
+        where.createdAt.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
+      }
     }
 
     const [movements, total] = await Promise.all([

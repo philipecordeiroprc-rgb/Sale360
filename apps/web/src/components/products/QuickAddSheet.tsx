@@ -37,12 +37,14 @@ function VariationSelector({
   onSelect,
   cartItems,
   productId,
+  dimensionLabels,
 }: {
   variations: any[];
   selectedId: string | null;
   onSelect: (v: any) => void;
   cartItems: any[];
   productId: string;
+  dimensionLabels?: string[];
 }) {
   // Parse variation name into dimensions (supports "Cor / Tamanho" and legacy "Tamanho Cor")
   const parseDims = (name: string): string[] => {
@@ -133,7 +135,7 @@ function VariationSelector({
   const dim1Values = sortValues([...new Set(parsed.map((p: any) => p.dims[0]))]);
   const dim2Values = sortValues([...new Set(parsed.map((p: any) => p.dims[1]))]);
 
-  // Detect dimension type from value patterns
+  // Use DB dimension labels when available, otherwise fall back to heuristics
   const detectLabel = (values: string[]): string => {
     if (values.every(v => /^\d+(\.\d+)?\s*(g|kg|mg)$/i.test(v.trim()))) return 'Peso';
     if (values.every(v => /^\d+(\.\d+)?\s*(ml|cl|l)$/i.test(v.trim()))) return 'Volume';
@@ -144,8 +146,8 @@ function VariationSelector({
     if (values.every(v => !/^\d/.test(v.trim()))) return 'Sabor';
     return 'Opção';
   };
-  const dim1Label = detectLabel(dim1Values);
-  const dim2Label = detectLabel(dim2Values);
+  const dim1Label = dimensionLabels?.[0] || detectLabel(dim1Values);
+  const dim2Label = dimensionLabels?.[1] || detectLabel(dim2Values);
 
   const selectedVar = selectedId ? parsed.find((p: any) => p.id === selectedId) : null;
   const selectedDims = selectedVar ? selectedVar.dims : null;
@@ -202,7 +204,35 @@ function VariationSelector({
             }
 
             const v = relevant[0];
-            return renderChip(v);
+            const vStock = Number(v.stockQty || 0);
+            const vInCart = getCartCount(v.id);
+            const vAvailable = vStock - vInCart;
+            const outOfStock = vAvailable <= 0;
+            const selected = selectedId === v.id;
+            const hasSelectedDim1 = selectedDims !== null && selectedDims[0] !== undefined;
+
+            return (
+              <button
+                key={d2}
+                onClick={() => !outOfStock && onSelect(selected ? null : v)}
+                disabled={outOfStock}
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  selected
+                    ? 'bg-indigo-500 text-white'
+                    : outOfStock
+                      ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed line-through'
+                      : hasSelectedDim1
+                        ? 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
+                        : 'bg-slate-800/50 text-slate-500'
+                }`}
+              >
+                {d2}
+                {Number(v.priceModifier || 0) > 0 && (
+                  <span className="ml-1 opacity-70">(+R$ {Number(v.priceModifier).toFixed(2)})</span>
+                )}
+                <span className="ml-1 text-[10px] opacity-50">({vStock})</span>
+              </button>
+            );
           })}
         </div>
       </div>
@@ -344,6 +374,7 @@ export function QuickAddSheet({ open, product, onClose, onAdd, cartItems }: Quic
             onSelect={(v) => setSelectedVariation(v)}
             cartItems={cartItems}
             productId={product.id}
+            dimensionLabels={product.category?.variationTemplate?.dimensions?.map((d: any) => d.label)}
           />
         )}
         {hasVariations && !selectedVariation && (

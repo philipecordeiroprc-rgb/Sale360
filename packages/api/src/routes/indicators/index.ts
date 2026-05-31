@@ -9,11 +9,13 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
 
     // ── Date filter ──
     const dateFilter: any = {};
-    if (startDate) dateFilter.gte = new Date(startDate);
+    if (startDate) {
+      const [y, m, d] = startDate.split('-').map(Number);
+      dateFilter.gte = new Date(y, m - 1, d);
+    }
     if (endDate) {
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      dateFilter.lte = end;
+      const [y, m, d] = endDate.split('-').map(Number);
+      dateFilter.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
     }
     const hasDateFilter = Object.keys(dateFilter).length > 0;
 

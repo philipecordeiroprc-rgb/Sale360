@@ -29,7 +29,7 @@ type Store = {
 };
 
 type Banner = { id: string; imagePath: string; linkUrl: string | null };
-type Category = { id: string; name: string; color: string | null };
+type Category = { id: string; name: string; color: string | null; variationTemplate?: { dimensions?: Array<{ label: string; type: string; orderIndex: number }> } | null };
 type PaymentMethod = {
   value: string;
   label: string;
@@ -872,6 +872,7 @@ export default function CatalogPageClient({ slug, store, banners, paymentMethods
                 selectedId={selectedVariation}
                 onSelect={setSelectedVariation}
                 basePrice={quickViewProduct.price}
+                dimensionLabels={quickViewProduct.category?.variationTemplate?.dimensions?.map((d: any) => d.label)}
               />
             )}
 
@@ -1029,11 +1030,13 @@ function VariationSelector({
   selectedId,
   onSelect,
   basePrice,
+  dimensionLabels,
 }: {
   variations: Array<{ id: string; name: string; price?: number | null; priceModifier?: number | string | null; stockQty: number | string }>;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   basePrice: number;
+  dimensionLabels?: string[];
 }) {
   // Parse variation name into dimensions.
   // Supports both "Cor / Tamanho" (new) and "Tamanho Cor" (legacy) formats.
@@ -1068,6 +1071,7 @@ function VariationSelector({
         <div className="flex flex-wrap gap-2">
           {variations.map((v) => {
             const out = Number(v.stockQty) <= 0;
+            const d = parseDims(v.name);
             return (
               <button
                 key={v.id}
@@ -1081,7 +1085,11 @@ function VariationSelector({
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
-                {v.name}
+                {d.length > 1 ? d.map((dim: string, di: number) => (
+                  <span key={di} className={di > 0 ? 'ml-1' : ''}>
+                    <span className="text-[10px] px-1 py-0.5 rounded bg-white/10">{dim}</span>
+                  </span>
+                )) : v.name}
               </button>
             );
           })}
@@ -1114,8 +1122,8 @@ function VariationSelector({
     if (values.every(v => !/^\d/.test(v.trim()))) return 'Sabor';
     return 'Opção';
   };
-  const dim1Label = detectLabel(dim1Values);
-  const dim2Label = detectLabel(dim2Values);
+  const dim1Label = dimensionLabels?.[0] || detectLabel(dim1Values);
+  const dim2Label = dimensionLabels?.[1] || detectLabel(dim2Values);
 
   // Build lookup: id → variation
   const byId = new Map(variations.map((v) => [v.id, v]));

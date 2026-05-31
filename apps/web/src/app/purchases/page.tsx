@@ -276,7 +276,7 @@ export default function PurchasesPage() {
       }
       combos = next;
     }
-    return combos.map((parts: string[]) => parts.join(' '));
+    return combos.map((parts: string[]) => parts.join(' / '));
   };
 
   const selectProduct = (p: any) => {
@@ -588,27 +588,27 @@ export default function PurchasesPage() {
   return (
     <div className="animate-slide-up">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Abastecimento</h1>
-          <p className="text-slate-400 text-sm mt-1">{total} compras registradas</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Abastecimento</h1>
+          <p className="text-slate-400 text-xs sm:text-sm mt-0.5">{total} compras registradas</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setImportOpen(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors"
           >
-            <Upload size={16} /> Importar
+            <Upload size={14} className="sm:w-4 sm:h-4" /> Importar
           </button>
           {tab === 'restock' ? (
             <button onClick={openForm}
-              className="flex items-center gap-2 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-sm transition-colors">
-              <Plus size={18} /> Nova Compra
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors shrink-0">
+              <Plus size={14} className="sm:w-[18px] sm:h-[18px]" /> Nova Compra
             </button>
           ) : (
             <button onClick={() => setWizardOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-sm transition-colors">
-              <Sparkles size={18} /> Novo Produto + Compra
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-medium text-xs sm:text-sm transition-colors shrink-0">
+              <Sparkles size={14} className="sm:w-[18px] sm:h-[18px]" /> Novo Produto + Compra
             </button>
           )}
         </div>
@@ -618,19 +618,19 @@ export default function PurchasesPage() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setTab('restock')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all
             ${tab === 'restock'
               ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-          <RefreshCw size={16} /> Reposição de Estoque
+          <RefreshCw size={14} className="sm:w-4 sm:h-4" /> Reposição
         </button>
         <button
           onClick={() => setTab('new-product')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-medium text-xs sm:text-sm transition-all
             ${tab === 'new-product'
               ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
               : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800'}`}>
-          <Sparkles size={16} /> Novo Produto + Compra
+          <Sparkles size={14} className="sm:w-4 sm:h-4" /> Novo + Compra
         </button>
       </div>
 
@@ -898,9 +898,9 @@ export default function PurchasesPage() {
 
                 {/* Precificacao: 5 campos — custo un, custo oper, taxa, margem, preco venda */}
                 <div className="bg-slate-900 rounded-lg p-3 mb-3">
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Un. (R$)</label>
                       <input type="number"
                         value={currentItem.costPrice || ''}
                         onChange={(e) => {
@@ -909,10 +909,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" step="0.01" placeholder="0,00"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Custo Oper. (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Oper. (R$)</label>
                       <input type="number"
                         value={currentItem.operationalCost || ''}
                         onChange={(e) => {
@@ -921,10 +921,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" step="0.01" placeholder="0,00"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Taxa %</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Taxa %</label>
                       <input type="number"
                         value={currentItem.taxRatePct || ''}
                         onChange={(e) => {
@@ -933,10 +933,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Margem %</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Margem %</label>
                       <input type="number"
                         value={currentItem.marginPct || ''}
                         onChange={(e) => {
@@ -945,10 +945,10 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, salePrice: calcSalePrice(updated) });
                         }}
                         min="0" max="100" step="0.1" placeholder="0"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Pr. Venda (R$)</label>
+                      <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Pr. Venda (R$)</label>
                       <input type="number"
                         value={currentItem.salePrice || ''}
                         onChange={(e) => {
@@ -958,7 +958,7 @@ export default function PurchasesPage() {
                           setCurrentItem({ ...updated, marginPct: calcMarginFromSale(updated) });
                         }}
                         min="0" step="0.01" placeholder="Auto"
-                        className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                        className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                     </div>
                   </div>
                   {/* Linha de resumo */}
@@ -997,140 +997,146 @@ export default function PurchasesPage() {
                     {/* Tabela de linhas já adicionadas */}
                     {currentItem.variations.length > 0 && (
                       <div className="mb-3 bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-40 overflow-y-auto">
-                        <div className="grid gap-2 px-3 py-1.5 text-xs text-slate-500 bg-slate-800/50"
-                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
-                          {templateDims.map((d: any) => (
-                            <span key={d.id || d.label}>{d.label}</span>
-                          ))}
-                          <span className="text-center">Qtd</span>
-                          <span className="text-center">Validade</span>
-                          <span />
-                        </div>
-                        {currentItem.variations.map((v, vi) => {
-                          const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
-                          return (
-                            <div key={vi}
-                              className="grid gap-2 px-3 py-1.5 items-center text-sm"
-                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 44px 128px 36px` }}>
-                              {parts.map((part: string, pi: number) => (
-                                <span key={pi} className="text-white truncate">{part}</span>
+                        <div className="overflow-x-auto -mx-1">
+                          <div className="min-w-[320px]">
+                            <div className="grid gap-1.5 sm:gap-2 px-3 py-1.5 text-[10px] sm:text-xs text-slate-500 bg-slate-800/50"
+                              style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 44px 96px 28px` }}>
+                              {templateDims.map((d: any) => (
+                                <span key={d.id || d.label} className="truncate">{d.label}</span>
                               ))}
-                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
-                                const updated = [...currentItem.variations];
-                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                                setCurrentItem({ ...currentItem, variations: updated });
-                              }}
-                                min="0" step="1" placeholder="0"
-                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
-                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
-                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
-                              }}
-                                className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
-                              <button
-                                onClick={() => {
-                                  const updated = currentItem.variations.filter((_, i) => i !== vi);
-                                  setCurrentItem({ ...currentItem, variations: updated });
-                                }}
-                                className="text-slate-500 hover:text-red-400 justify-self-center">
-                                <X size={14} />
-                              </button>
+                              <span className="text-center">Qtd</span>
+                              <span className="text-center">Validade</span>
+                              <span />
                             </div>
-                          );
-                        })}
+                            {currentItem.variations.map((v, vi) => {
+                              const parts = v.name.includes(' / ') ? v.name.split(' / ') : v.name.split(' ');
+                              return (
+                                <div key={vi}
+                                  className="grid gap-1.5 sm:gap-2 px-3 py-1.5 items-center text-xs sm:text-sm"
+                                  style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 44px 96px 28px` }}>
+                                  {parts.map((part: string, pi: number) => (
+                                    <span key={pi} className="text-white truncate">{part}</span>
+                                  ))}
+                                  <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                    const updated = [...currentItem.variations];
+                                    updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                    setCurrentItem({ ...currentItem, variations: updated });
+                                  }}
+                                    min="0" step="1" placeholder="0"
+                                    className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] text-center focus:border-indigo-500 outline-none" />
+                                  <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                    setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                                  }}
+                                    className="w-full px-1 py-0.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                                  <button
+                                    onClick={() => {
+                                      const updated = currentItem.variations.filter((_, i) => i !== vi);
+                                      setCurrentItem({ ...currentItem, variations: updated });
+                                    }}
+                                    className="text-slate-500 hover:text-red-400 justify-self-center">
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
                       </div>
                     )}
 
                     {/* Linha para adicionar nova variação */}
                     <div className="bg-slate-800 rounded-lg p-2">
-                      <div className="grid gap-2 items-end"
-                        style={{ gridTemplateColumns: `repeat(${templateDims.length}, 1fr) 48px 128px 36px` }}>
-                        {templateDims.map((d: any) => {
-                          const isCustom = rowDims[d.label] === '__custom__';
-                          return (
-                            <div key={d.id || d.label}>
-                              <label className="block text-[10px] text-slate-500 mb-0.5">{d.label}</label>
-                              <select
-                                value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  setRowDims({ ...rowDims, [d.label]: val });
-                                  if (val !== '__custom__') {
-                                    const next = { ...rowCustom };
-                                    delete next[d.label];
-                                    setRowCustom(next);
-                                  }
-                                }}
-                                className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none">
-                                <option value="">—</option>
-                                {d.options.map((opt: string) => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                                <option value="__custom__">Outro...</option>
-                              </select>
-                              {isCustom && (
-                                <input
-                                  type="text"
-                                  value={rowCustom[d.label] || ''}
-                                  onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
-                                  placeholder="Digite..."
-                                  className="mt-1 w-full px-2 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-xs focus:border-indigo-500 outline-none"
-                                />
-                              )}
-                            </div>
-                          );
-                        })}
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
-                          <input type="number" value={rowQty || ''}
-                            onChange={(e) => setRowQty(Number(e.target.value))}
-                            min="0" step="1" placeholder="0"
-                            className="w-full px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
-                          <input type="date" value={rowExpiryDate}
-                            onChange={(e) => setRowExpiryDate(e.target.value)}
-                            className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
-                        </div>
-                        <button
-                          onClick={() => {
-                            const hasAtLeastOne = templateDims.some((d: any) => {
+                      <div className="overflow-x-auto -mx-1">
+                        <div className="min-w-[320px] grid gap-1.5 sm:gap-2 items-end"
+                          style={{ gridTemplateColumns: `repeat(${templateDims.length}, minmax(56px,1fr)) 48px 96px 32px` }}>
+                          {templateDims.map((d: any) => {
+                            const isCustom = rowDims[d.label] === '__custom__';
+                            return (
+                              <div key={d.id || d.label}>
+                                <label className="block text-[10px] text-slate-500 mb-0.5 truncate">{d.label}</label>
+                                <select
+                                  value={isCustom ? '__custom__' : (rowDims[d.label] || '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    setRowDims({ ...rowDims, [d.label]: val });
+                                    if (val !== '__custom__') {
+                                      const next = { ...rowCustom };
+                                      delete next[d.label];
+                                      setRowCustom(next);
+                                    }
+                                  }}
+                                  className="w-full px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] focus:border-indigo-500 outline-none">
+                                  <option value="">—</option>
+                                  {d.options.map((opt: string) => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                  ))}
+                                  <option value="__custom__">Outro...</option>
+                                </select>
+                                {isCustom && (
+                                  <input
+                                    type="text"
+                                    value={rowCustom[d.label] || ''}
+                                    onChange={(e) => setRowCustom({ ...rowCustom, [d.label]: e.target.value })}
+                                    placeholder="Digite..."
+                                    className="mt-1 w-full px-1.5 py-1.5 bg-slate-700 border border-slate-500 rounded text-white text-[11px] focus:border-indigo-500 outline-none"
+                                  />
+                                )}
+                              </div>
+                            );
+                          })}
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">Qtd</label>
+                            <input type="number" value={rowQty || ''}
+                              onChange={(e) => setRowQty(Number(e.target.value))}
+                              min="0" step="1" placeholder="0"
+                              className="w-full px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[11px] text-center focus:border-indigo-500 outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-500 mb-0.5">Validade</label>
+                            <input type="date" value={rowExpiryDate}
+                              onChange={(e) => setRowExpiryDate(e.target.value)}
+                              className="w-full px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                          </div>
+                          <button
+                            onClick={() => {
+                              const hasAtLeastOne = templateDims.some((d: any) => {
+                                const val = rowDims[d.label];
+                                if (!val) return false;
+                                if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
+                                return true;
+                              });
+                              if (!hasAtLeastOne || rowQty <= 0) return;
+                              const name = templateDims.map((d: any) => {
+                                const val = rowDims[d.label];
+                                if (!val) return '';
+                                return val === '__custom__' ? rowCustom[d.label].trim() : val;
+                              }).filter(Boolean).join(' / ');
+                              setCurrentItem({
+                                ...currentItem,
+                                variations: [
+                                  ...currentItem.variations,
+                                  { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
+                                ],
+                                expiryDates: rowExpiryDate
+                                  ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
+                                  : currentItem.expiryDates,
+                              });
+                              setRowDims({});
+                              setRowCustom({});
+                              setRowQty(0);
+                              setRowExpiryDate('');
+                            }}
+                            disabled={!templateDims.some((d: any) => {
                               const val = rowDims[d.label];
                               if (!val) return false;
                               if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
                               return true;
-                            });
-                            if (!hasAtLeastOne || rowQty <= 0) return;
-                            const name = templateDims.map((d: any) => {
-                              const val = rowDims[d.label];
-                              if (!val) return '';
-                              return val === '__custom__' ? rowCustom[d.label].trim() : val;
-                            }).filter(Boolean).join(' / ');
-                            setCurrentItem({
-                              ...currentItem,
-                              variations: [
-                                ...currentItem.variations,
-                                { id: undefined, name, priceModifier: 0, stockQty: rowQty, lowStockAt: undefined },
-                              ],
-                              expiryDates: rowExpiryDate
-                                ? { ...currentItem.expiryDates, [name]: rowExpiryDate }
-                                : currentItem.expiryDates,
-                            });
-                            setRowDims({});
-                            setRowCustom({});
-                            setRowQty(0);
-                            setRowExpiryDate('');
-                          }}
-                          disabled={!templateDims.some((d: any) => {
-                            const val = rowDims[d.label];
-                            if (!val) return false;
-                            if (val === '__custom__') return (rowCustom[d.label] || '').trim().length > 0;
-                            return true;
-                          }) || rowQty <= 0}
-                          className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
-                          title="Adicionar variação">
-                          <Plus size={16} />
-                        </button>
+                            }) || rowQty <= 0}
+                            className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors"
+                            title="Adicionar variação">
+                            <Plus size={16} />
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -1148,19 +1154,27 @@ export default function PurchasesPage() {
                     <p className="text-xs text-slate-400 mb-2">Qtd comprada por variação</p>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       {currentItem.variations.map((v, vi) => (
-                        <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
-                          <span className="text-sm text-white flex-1 truncate">{v.name}</span>
-                          <input type="number" value={v.stockQty || ''} onChange={(e) => {
-                            const updated = [...currentItem.variations];
-                            updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                            setCurrentItem({ ...currentItem, variations: updated });
-                          }}
-                            min="0" step="1" placeholder="0"
-                            className="w-20 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
-                          <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
-                            setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
-                          }}
-                            className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none" />
+                        <div key={v.id || vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 sm:px-3 py-1.5">
+                          <span className="text-xs sm:text-sm text-white flex-1 truncate min-w-0">{v.name}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div>
+                              <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Qtd</label>
+                              <input type="number" value={v.stockQty || ''} onChange={(e) => {
+                                const updated = [...currentItem.variations];
+                                updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                                setCurrentItem({ ...currentItem, variations: updated });
+                              }}
+                                min="0" step="1" placeholder="0"
+                                className="w-16 sm:w-20 px-1.5 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Validade</label>
+                              <input type="date" value={currentItem.expiryDates[v.name] || ''} onChange={(e) => {
+                                setCurrentItem({ ...currentItem, expiryDates: { ...currentItem.expiryDates, [v.name]: e.target.value } });
+                              }}
+                                className="w-24 sm:w-28 px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none" />
+                            </div>
+                          </div>
                           <button
                             onClick={() => {
                               const updated = currentItem.variations.filter((_, i) => i !== vi);
@@ -1179,31 +1193,35 @@ export default function PurchasesPage() {
                         value={newVarName}
                         onChange={(e) => setNewVarName(e.target.value)}
                         placeholder="Nova variação (ex: GG)"
-                        className="flex-1 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
+                        className="flex-1 min-w-0 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
                       />
-                      <input
-                        type="number"
-                        value={newVarQty || ''}
-                        onChange={(e) => setNewVarQty(Number(e.target.value))}
-                        min="0" step="1" placeholder="0"
-                        className="w-16 px-2 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
-                      />
-                      <input
-                        type="date"
-                        value={newVarExpiryDate}
-                        onChange={(e) => setNewVarExpiryDate(e.target.value)}
-                        className="w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
-                      />
+                      <div className="shrink-0">
+                        <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Qtd</label>
+                        <input
+                          type="number"
+                          value={newVarQty || ''}
+                          onChange={(e) => setNewVarQty(Number(e.target.value))}
+                          min="0" step="1" placeholder="0"
+                          className="w-14 sm:w-16 px-1.5 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
+                        />
+                      </div>
+                      <div className="shrink-0">
+                        <label className="block text-[9px] text-slate-500 mb-0.5 text-center">Validade</label>
+                        <input
+                          type="date"
+                          value={newVarExpiryDate}
+                          onChange={(e) => setNewVarExpiryDate(e.target.value)}
+                          className="w-24 sm:w-28 px-1 py-1.5 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                        />
+                      </div>
                       <button
                         onClick={() => {
                           const name = newVarName.trim();
                           if (!name || newVarQty <= 0) return;
-                          // Check if variation already exists (avoid duplicate)
                           const existingIdx = currentItem.variations.findIndex(
                             (v: any) => v.name.toLowerCase() === name.toLowerCase()
                           );
                           if (existingIdx >= 0) {
-                            // Update quantity of existing variation
                             const updated = [...currentItem.variations];
                             updated[existingIdx] = { ...updated[existingIdx], stockQty: (updated[existingIdx].stockQty || 0) + newVarQty };
                             const expiryUpdate = newVarExpiryDate
@@ -1227,7 +1245,7 @@ export default function PurchasesPage() {
                           setNewVarExpiryDate('');
                         }}
                         disabled={!newVarName.trim() || newVarQty <= 0}
-                        className="px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
+                        className="self-end px-2 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded text-sm font-bold transition-colors shrink-0"
                         title="Adicionar variação">
                         <Plus size={14} />
                       </button>
@@ -1241,17 +1259,17 @@ export default function PurchasesPage() {
                 ) : (
                   /* ── Simple product: single quantity ── */
                   <div className="mb-3">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-end gap-3 sm:gap-4">
                       <div>
                         <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
                         <input type="number" value={currentItem.quantity || ''} onChange={(e) => setCurrentItem({ ...currentItem, quantity: Number(e.target.value) })}
                           min="0.001" step="any" placeholder="1"
-                          className="w-32 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                          className="w-24 sm:w-32 px-2 sm:px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none" />
                       </div>
                       <div>
                         <label className="block text-xs text-slate-400 mb-1">Data de Validade</label>
                         <input type="date" value={currentItem.simpleExpiryDate} onChange={(e) => setCurrentItem({ ...currentItem, simpleExpiryDate: e.target.value })}
-                          className="w-40 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                          className="w-32 sm:w-40 px-2 sm:px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
                       </div>
                     </div>
                   </div>

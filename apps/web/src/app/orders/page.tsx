@@ -951,7 +951,21 @@ export default function OrdersPage() {
                 {cart.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs text-white truncate">{item.productName}</p>
+                      {(() => {
+                        const name = item.productName as string;
+                        const sepIdx = name.includes(' - ') ? name.indexOf(' - ') : -1;
+                        const baseName = sepIdx >= 0 ? name.slice(0, sepIdx) : name;
+                        const varName = sepIdx >= 0 ? name.slice(sepIdx + 3) : '';
+                        const dims = varName.includes(' / ') ? varName.split(' / ').map((s: string) => s.trim()) : (varName ? [varName] : []);
+                        return (
+                          <div className="flex items-center gap-1 flex-wrap min-w-0">
+                            <span className="text-xs text-white truncate">{baseName}</span>
+                            {dims.map((dim: string, di: number) => (
+                              <span key={di} className="text-[10px] px-1 py-0.5 rounded bg-slate-700 text-slate-300 shrink-0">{dim}</span>
+                            ))}
+                          </div>
+                        );
+                      })()}
                       <p className="text-xs text-slate-500">R$ {item.unitPrice.toFixed(2)} x {item.quantity}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -1203,7 +1217,18 @@ export default function OrdersPage() {
               <tbody>
                 {detailOrder.items?.map((item: any) => (
                   <tr key={item.id} className="border-b border-slate-800/50">
-                    <td className="py-1.5 text-white">{item.productName}</td>
+                    <td className="py-1.5 text-white">
+                      {(() => {
+                        const name = item.productName as string;
+                        const sepIdx = name.includes(' - ') ? name.indexOf(' - ') : -1;
+                        const baseName = sepIdx >= 0 ? name.slice(0, sepIdx) : name;
+                        const varName = sepIdx >= 0 ? name.slice(sepIdx + 3) : '';
+                        const dims = varName.includes(' / ') ? varName.split(' / ').map((s: string) => s.trim()) : (varName ? [varName] : []);
+                        return dims.length > 0 ? (
+                          <span>{baseName} <span className="text-slate-500">|</span> {dims.join(' ')}</span>
+                        ) : baseName;
+                      })()}
+                    </td>
                     <td className="py-1.5 text-right text-slate-400">{item.quantity}</td>
                     <td className="py-1.5 text-right text-slate-400">R$ {Number(item.unitPrice).toFixed(2)}</td>
                     <td className="py-1.5 text-right text-white">R$ {Number(item.total).toFixed(2)}</td>
@@ -1359,11 +1384,20 @@ export default function OrdersPage() {
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {batchItems.map((entry) => {
               const key = batchModalMode === 'online' ? entry.orderItemId : entry.cartIndex;
-              const productName = batchModalMode === 'online' ? entry.productName : entry.cartItem?.productName;
+              const productName: string = batchModalMode === 'online' ? entry.productName : entry.cartItem?.productName;
+              const pSepIdx = productName.includes(' - ') ? productName.indexOf(' - ') : -1;
+              const pBase = pSepIdx >= 0 ? productName.slice(0, pSepIdx) : productName;
+              const pVar = pSepIdx >= 0 ? productName.slice(pSepIdx + 3) : '';
+              const pDims = pVar.includes(' / ') ? pVar.split(' / ').map((s: string) => s.trim()) : (pVar ? [pVar] : []);
               const batches = entry.batches;
               return (
                 <div key={key} className="bg-slate-800 rounded-lg p-3">
-                  <p className="text-sm text-white font-medium mb-2">{productName}</p>
+                  <p className="text-sm text-white font-medium mb-2">
+                    {pBase}
+                    {pDims.map((dim: string, di: number) => (
+                      <span key={di} className="text-[10px] px-1 py-0.5 rounded bg-slate-700 text-slate-300 ml-1">{dim}</span>
+                    ))}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {batches.map((b: any) => {
                       const isSelected = batchSelections[String(key)] === b.id;

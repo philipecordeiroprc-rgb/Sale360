@@ -834,9 +834,9 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
               {/* Pricing calculator — 5 fields (same as existing purchase) */}
               <div className="bg-slate-900 rounded-lg p-3">
                 <p className="text-xs text-slate-400 mb-3">Calculadora de Precificação</p>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Custo Un. (R$)</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Un. (R$)</label>
                     <input type="number"
                       value={costPrice || ''}
                       onChange={(e) => {
@@ -845,10 +845,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setSalePrice(calcSalePrice(c, operationalCost, taxRatePct, marginPct));
                       }}
                       min="0" step="0.01" placeholder="0,00"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Custo Oper. (R$)</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Custo Oper. (R$)</label>
                     <input type="number"
                       value={operationalCost || ''}
                       onChange={(e) => {
@@ -857,10 +857,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setSalePrice(calcSalePrice(costPrice, op, taxRatePct, marginPct));
                       }}
                       min="0" step="0.01" placeholder="0,00"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Taxa %</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Taxa %</label>
                     <input type="number"
                       value={taxRatePct || ''}
                       onChange={(e) => {
@@ -869,10 +869,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setSalePrice(calcSalePrice(costPrice, operationalCost, tax, marginPct));
                       }}
                       min="0" max="100" step="0.1" placeholder="0"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Margem %</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Margem %</label>
                     <input type="number"
                       value={marginPct || ''}
                       onChange={(e) => {
@@ -881,10 +881,10 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setSalePrice(calcSalePrice(costPrice, operationalCost, taxRatePct, margin));
                       }}
                       min="0" max="100" step="0.1" placeholder="0"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Pr. Venda (R$)</label>
+                    <label className="block text-[10px] sm:text-xs text-slate-400 mb-1 truncate">Pr. Venda (R$)</label>
                     <input type="number"
                       value={salePrice || ''}
                       onChange={(e) => {
@@ -893,7 +893,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         setMarginPct(calcMarginFromSale(costPrice, operationalCost, taxRatePct, price));
                       }}
                       min="0" step="0.01" placeholder="Auto"
-                      className="w-full px-2 py-2 bg-slate-800 border border-slate-700 rounded text-white text-sm text-center focus:border-indigo-500 outline-none" />
+                      className="w-full px-1.5 py-2 bg-slate-800 border border-slate-700 rounded text-white text-xs sm:text-sm text-center focus:border-indigo-500 outline-none" />
                   </div>
                 </div>
                 {/* Summary line */}
@@ -931,29 +931,33 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     {/* Header row */}
                     <div className="flex items-center gap-2 px-3 py-1 text-[10px] text-slate-500">
                       <span className="flex-1">Variação</span>
-                      <span className="w-16 text-center">Qtd</span>
-                      <span className="w-28 text-center">Validade</span>
+                      <span className="w-14 sm:w-16 text-center">Qtd</span>
+                      <span className="w-24 sm:w-28 text-center">Validade</span>
                     </div>
                     {variations.map((v, vi) => (
-                      <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-3 py-1.5">
-                        <span className="text-sm text-white flex-1 truncate">{v.name}</span>
-                        <input
-                          type="number"
-                          value={v.stockQty || ''}
-                          onChange={(e) => {
-                            const updated = [...variations];
-                            updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
-                            setVariations(updated);
-                          }}
-                          min="0" step="1" placeholder="0"
-                          className="w-16 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-sm text-center focus:border-indigo-500 outline-none"
-                        />
-                        <input
-                          type="date"
-                          value={variationExpiryDates[v.name] || ''}
-                          onChange={(e) => setVariationExpiryDates(prev => ({ ...prev, [v.name]: e.target.value }))}
-                          className="w-28 px-2 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs focus:border-indigo-500 outline-none"
-                        />
+                      <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 sm:px-3 py-1.5">
+                        <span className="text-xs sm:text-sm text-white flex-1 truncate min-w-0">{v.name}</span>
+                        <div className="shrink-0 w-14 sm:w-16">
+                          <input
+                            type="number"
+                            value={v.stockQty || ''}
+                            onChange={(e) => {
+                              const updated = [...variations];
+                              updated[vi] = { ...updated[vi], stockQty: Number(e.target.value) };
+                              setVariations(updated);
+                            }}
+                            min="0" step="1" placeholder="0"
+                            className="w-full px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-xs text-center focus:border-indigo-500 outline-none"
+                          />
+                        </div>
+                        <div className="shrink-0 w-24 sm:w-28">
+                          <input
+                            type="date"
+                            value={variationExpiryDates[v.name] || ''}
+                            onChange={(e) => setVariationExpiryDates(prev => ({ ...prev, [v.name]: e.target.value }))}
+                            className="w-full px-1 py-1 bg-slate-700 border border-slate-600 rounded text-white text-[10px] focus:border-indigo-500 outline-none"
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -979,7 +983,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     Quantidade e Validade
                     <span className="text-slate-500 ml-2">(validade é opcional — usada no rastreamento FEFO)</span>
                   </p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-end gap-3 sm:gap-4">
                     <div>
                       <label className="block text-xs text-slate-400 mb-1">Qtd Comprada</label>
                       <input
@@ -987,7 +991,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                         value={simpleQty || ''}
                         onChange={(e) => setSimpleQty(Number(e.target.value))}
                         min="1" step="1" placeholder="1"
-                        className="w-24 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none"
+                        className="w-20 sm:w-24 px-2 sm:px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm text-center focus:border-indigo-500 outline-none"
                       />
                     </div>
                     <div>
