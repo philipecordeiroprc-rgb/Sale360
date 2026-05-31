@@ -265,6 +265,7 @@ model Purchase {
   subtotal       Decimal        @db.Decimal(10, 2)
   discount       Decimal        @default(0) @db.Decimal(10, 2)
   total          Decimal        @db.Decimal(10, 2)
+  purchaseDate   DateTime?      // data em que a compra foi feita ao fornecedor (preenchido pelo usuário)
   receivedAt     DateTime?      // data que a mercadoria entrou no estoque (ordenação PEPS)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
