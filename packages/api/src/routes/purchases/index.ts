@@ -96,7 +96,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { items, supplierId, customerId, discount, notes } = parsed.data;
+    const { items, supplierId, customerId, discount, notes, purchaseDate } = parsed.data;
 
     // Validate supplier belongs to tenant
     const supplier = await prisma.supplier.findFirst({
