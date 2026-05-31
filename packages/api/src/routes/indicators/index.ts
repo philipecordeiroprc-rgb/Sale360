@@ -70,7 +70,7 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       prisma.purchase.findMany({
         where: purchaseWhere,
         select: {
-          total: true, createdAt: true, receivedAt: true,
+          total: true, createdAt: true, receivedAt: true, purchaseDate: true,
           supplier: { select: { id: true, name: true } },
         },
       }),
