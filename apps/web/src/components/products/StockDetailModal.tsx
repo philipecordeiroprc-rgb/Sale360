@@ -130,7 +130,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
           <span className="text-[10px] text-slate-500">(usado para variações sem mínimo próprio)</span>
         </div>
 
-        {product.hasVariations && product.variations?.length > 0 ? (
+        {product.hasVariations && sortedVariations.length > 0 ? (
           <>
             <div className="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800 overflow-hidden">
               <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs text-slate-500 bg-slate-900/50">
