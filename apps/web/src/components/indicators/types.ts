@@ -66,12 +66,6 @@ export interface PurchaseBySupplier {
   count: number;
 }
 
-export interface PendingPurchases {
-  draft: number;
-  confirmed: number;
-  total: number;
-}
-
 export interface PurchasesIndicators {
   totalGasto: number;
   porFornecedor: PurchaseBySupplier[];
