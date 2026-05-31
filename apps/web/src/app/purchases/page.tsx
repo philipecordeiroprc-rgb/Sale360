@@ -105,6 +105,8 @@ export default function PurchasesPage() {
   const [outroSupplierName, setOutroSupplierName] = useState('');
   const [notes, setNotes] = useState('');
   const [discount, setDiscount] = useState('0');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [receivedDate, setReceivedDate] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Product
