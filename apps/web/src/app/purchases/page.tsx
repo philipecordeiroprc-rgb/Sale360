@@ -517,6 +517,9 @@ export default function PurchasesPage() {
         if (Object.keys(itemExpiryDates).length > 0) {
           receivePayload.itemExpiryDates = itemExpiryDates;
         }
+        if (receivedDate) {
+          receivePayload.receivedDate = receivedDate;
+        }
 
         try {
           await api.purchases.receive(createdPurchase.id, receivePayload);
