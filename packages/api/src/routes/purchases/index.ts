@@ -422,7 +422,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       const parts = v.trim().split('/');
       if (parts.length === 3) {
         const [day, month, year] = parts.map(Number);
-        const d = new Date(year, month - 1, day);
+        const d = startOfDay(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
         if (!isNaN(d.getTime())) return d;
       }
       // Try ISO format
