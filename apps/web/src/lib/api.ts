@@ -338,8 +338,7 @@ export const api = {
         expiringSoonCount: number;
         lowStockCount: number;
         atMinStockCount: number;
-        lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[];
-        lowStockVariations: { id: string; name: string; productId: string; productName: string; stockQty: number; lowStockAt: number }[];
+        lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number; lowVariationCount: number; lowVariationNames: string[] }[];
       }>('/api/inventory/alerts');
     },
     adjust(data: { productId?: string; variationId?: string; quantity: number; unitCost?: number; reason?: string; notes?: string }) {
