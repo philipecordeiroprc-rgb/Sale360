@@ -19,12 +19,11 @@ export const financeRoutes: FastifyPluginAsync = async (app) => {
   app.get('/cash-flow', async (request) => {
     const { month, year, category } = request.query as Record<string, string>;
 
-    const now = new Date();
-    const targetYear = parseInt(year || String(now.getFullYear()));
-    const targetMonth = parseInt(month || String(now.getMonth() + 1));
+    const now = todayBRT();
+    const targetYear = parseInt(year || String(now.year));
+    const targetMonth = parseInt(month || String(now.month));
 
-    const startDate = new Date(targetYear, targetMonth - 1, 1);
-    const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59);
+    const { start: startDate, end: endDate } = monthRange(targetYear, targetMonth);
 
     const where: any = {
       tenantId: request.tenantId,
