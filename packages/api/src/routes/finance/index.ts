@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
+import { startOfDay, endOfDay, monthRange, todayBRT } from '../../lib/date-utils.js';
 
 const createCashFlowSchema = z.object({
   type: z.enum(['IN', 'OUT']),
