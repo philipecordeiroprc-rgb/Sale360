@@ -76,6 +76,8 @@ export default function InventoryPage() {
   const [tab, setTab] = useState<'batches' | 'movements'>('batches');
   const [batches, setBatches] = useState<any[]>([]);
   const [batchTotal, setBatchTotal] = useState(0);
+  const [zeroStockProducts, setZeroStockProducts] = useState<any[]>([]);
+  const [zeroStockVariations, setZeroStockVariations] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [movTotal, setMovTotal] = useState(0);
   const [loading, setLoading] = useState(true);
