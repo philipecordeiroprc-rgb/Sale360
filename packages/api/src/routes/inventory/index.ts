@@ -139,11 +139,12 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       }),
       prisma.inventoryBatch.count({ where }),
       // Products with zero total stock (still active, should appear in list)
-      !productId ? prisma.product.findMany({
+      prisma.product.findMany({
         where: {
           tenantId: request.tenantId,
           active: true,
           stockQty: { lte: 0 },
+          ...(productId ? { id: productId } : {}),
         },
         select: {
           id: true,
@@ -154,7 +155,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           lowStockAt: true,
         },
         orderBy: { name: 'asc' },
-      }) : Promise.resolve([]),
+      }),
       // Variations with zero stock (parent product active)
       prisma.productVariation.findMany({
         where: {
