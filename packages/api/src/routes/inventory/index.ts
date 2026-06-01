@@ -13,12 +13,12 @@ const adjustSchema = z.object({
 });
 
 export const inventoryRoutes: FastifyPluginAsync = async (app) => {
-  // Alerts summary: low stock + expiry warnings
+  // Alerts summary: low stock + expiry warnings (products + variations)
   app.get('/alerts', async (request) => {
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const [expiredCount, expiringSoonCount, productsWithLowStock] = await Promise.all([
+    const [expiredCount, expiringSoonCount, productsWithLowStock, variationsWithLowStock] = await Promise.all([
       prisma.inventoryBatch.count({
         where: {
           tenantId: request.tenantId,
@@ -41,6 +41,19 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
         },
         select: { id: true, name: true, stockQty: true, lowStockAt: true },
       }),
+      prisma.productVariation.findMany({
+        where: {
+          product: { tenantId: request.tenantId, active: true },
+          lowStockAt: { not: null, gt: 0 },
+        },
+        select: {
+          id: true,
+          name: true,
+          stockQty: true,
+          lowStockAt: true,
+          product: { select: { id: true, name: true } },
+        },
+      }),
     ]);
 
     let lowStockCount = 0;
@@ -52,6 +65,25 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       if (stock < min) {
         lowStockCount++;
         lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
+      } else if (stock === min) {
+        atMinStockCount++;
+      }
+    }
+
+    const lowStockVariations: { id: string; name: string; productId: string; productName: string; stockQty: number; lowStockAt: number }[] = [];
+    for (const v of variationsWithLowStock) {
+      const stock = Number(v.stockQty);
+      const min = Number(v.lowStockAt!);
+      if (stock < min) {
+        lowStockCount++;
+        lowStockVariations.push({
+          id: v.id,
+          name: v.name,
+          productId: v.product.id,
+          productName: v.product.name,
+          stockQty: stock,
+          lowStockAt: min,
+        });
       } else if (stock === min) {
         atMinStockCount++;
       }
@@ -73,6 +105,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       lowStockCount,
       atMinStockCount,
       lowStockProducts,
+      lowStockVariations,
     };
   });
 
