@@ -110,6 +110,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
   });
 
   // List batches (all products with remaining stock, or filter by product)
+  // Also returns zero-stock products/variations so they stay visible in the list
   app.get('/batches', async (request) => {
     const { productId, variationId, page = '1', limit = '50' } = request.query as Record<string, string>;
 
@@ -121,7 +122,7 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
     if (productId) where.productId = productId;
     if (variationId) where.variationId = variationId;
 
-    const [batches, total] = await Promise.all([
+    const [batches, total, zeroStockProducts, zeroStockVariations] = await Promise.all([
       prisma.inventoryBatch.findMany({
         where,
         include: {
@@ -137,9 +138,52 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
         take: parseInt(limit),
       }),
       prisma.inventoryBatch.count({ where }),
+      // Products with zero total stock (still active, should appear in list)
+      !productId ? prisma.product.findMany({
+        where: {
+          tenantId: request.tenantId,
+          active: true,
+          stockQty: { lte: 0 },
+        },
+        select: {
+          id: true,
+          name: true,
+          unit: true,
+          sku: true,
+          stockQty: true,
+          lowStockAt: true,
+        },
+        orderBy: { name: 'asc' },
+      }) : Promise.resolve([]),
+      // Variations with zero stock (parent product active)
+      prisma.productVariation.findMany({
+        where: {
+          product: { tenantId: request.tenantId, active: true },
+          stockQty: { lte: 0 },
+          ...(productId ? { productId } : {}),
+        },
+        select: {
+          id: true,
+          name: true,
+          stockQty: true,
+          lowStockAt: true,
+          product: { select: { id: true, name: true, unit: true, sku: true, stockQty: true, lowStockAt: true } },
+        },
+        orderBy: [
+          { product: { name: 'asc' } },
+          { name: 'asc' },
+        ],
+      }),
     ]);
 
-    return { batches, total, page: parseInt(page), totalPages: Math.ceil(total / parseInt(limit)) };
+    return {
+      batches,
+      total,
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      zeroStockProducts,
+      zeroStockVariations,
+    };
   });
 
   // Get batches for a specific product
