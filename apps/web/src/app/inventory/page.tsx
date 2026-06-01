@@ -292,6 +292,50 @@ export default function InventoryPage() {
         else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
       }
     }
+    // Add zero-stock products (no batches with remaining qty, but still active)
+    for (const p of zeroStockProducts) {
+      const key = `${p.id}__none`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productId: p.id,
+          productName: p.name || '—',
+          sku: p.sku || '',
+          unit: p.unit || '',
+          stockQty: Number(p.stockQty),
+          lowStockAt: Number(p.lowStockAt || 0),
+          variationId: null,
+          variationName: null,
+          batches: [],
+          totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
+        });
+      }
+    }
+
+    // Add zero-stock variations
+    for (const v of zeroStockVariations) {
+      const key = `${v.product.id}__${v.id}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productId: v.product.id,
+          productName: v.product.name || '—',
+          sku: v.product.sku || '',
+          unit: v.product.unit || '',
+          stockQty: Number(v.stockQty),
+          lowStockAt: Number(v.lowStockAt || v.product.lowStockAt || 0),
+          variationId: v.id,
+          variationName: v.name,
+          batches: [],
+          totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
+        });
+      }
+    }
+
     return Array.from(map.values()).sort((a, b) => {
       const nameCmp = a.productName.localeCompare(b.productName, 'pt-BR');
       if (nameCmp !== 0) return nameCmp;
