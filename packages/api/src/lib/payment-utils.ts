@@ -5,7 +5,9 @@ export const PAYMENT_METHOD_NORMALIZE: Record<string, string> = {
   Dinheiro: 'cash',
   Pix: 'pix',
   Debito: 'debit',
+  'Débito': 'debit',
   Credito: 'credit',
+  'Crédito': 'credit',
   Fiado: 'credit_store',
   'Voucher Refeição': 'meal_voucher',
   'Voucher Alimentação': 'food_voucher',
@@ -23,7 +25,25 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
 };
 
 export function normalizePaymentMethod(method: string): string {
-  return PAYMENT_METHOD_NORMALIZE[method] || method;
+  // 1. Exact match in normalize map
+  if (PAYMENT_METHOD_NORMALIZE[method]) return PAYMENT_METHOD_NORMALIZE[method];
+
+  // 2. Case-insensitive match against normalize keys
+  const lower = method.toLowerCase();
+  for (const [key, value] of Object.entries(PAYMENT_METHOD_NORMALIZE)) {
+    if (key.toLowerCase() === lower) return value;
+  }
+
+  // 3. Check if it's already a valid DB code (lowercase, matches a known label)
+  if (PAYMENT_METHOD_LABELS[method]) return method;
+
+  // 4. Case-insensitive match against known DB codes
+  for (const code of Object.keys(PAYMENT_METHOD_LABELS)) {
+    if (code.toLowerCase() === lower) return code;
+  }
+
+  // 5. Fallback: return as-is
+  return method;
 }
 
 export function paymentLabel(method: string): string {

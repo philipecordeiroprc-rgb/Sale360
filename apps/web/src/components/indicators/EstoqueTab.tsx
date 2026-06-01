@@ -115,7 +115,7 @@ export function EstoqueTab({ data, loading }: { data: InventoryIndicators | null
       {/* Top 10 Products */}
       {d.top10Produtos.length > 0 && (
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 sm:p-5">
-          <h4 className="text-sm font-semibold text-white mb-4">Top 10 Produtos Mais Vendidos</h4>
+          <h4 className="text-sm font-semibold text-white mb-4">Top 10 Produtos que Mais Faturaram</h4>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import api, { type Product } from '@/lib/api';
 
@@ -8,6 +8,63 @@ interface Props {
   product: Product;
   onClose: () => void;
   onUpdated: () => void;
+}
+
+const SIZE_LETTER_ORDER: Record<string, number> = {
+  'pp': 0, 'p': 1, 'm': 2, 'g': 3, 'gg': 4, 'xg': 5, 'xgg': 6,
+  'ppp': 0, 'ppplus': 0,
+};
+
+function sortVariations(variations: any[], dimensions?: any[]): any[] {
+  if (!variations?.length) return variations || [];
+
+  // Detect which dimension index is color and which is size
+  let colorIndex = -1;
+  let sizeIndex = -1;
+  let sizeType: 'numero' | 'letra' | null = null;
+
+  if (dimensions) {
+    for (let i = 0; i < dimensions.length; i++) {
+      if (dimensions[i].type === 'COR') colorIndex = i;
+      if (dimensions[i].type === 'TAMANHO_NUMERO') { sizeIndex = i; sizeType = 'numero'; }
+      if (dimensions[i].type === 'TAMANHO_LETRA') { sizeIndex = i; sizeType = 'letra'; }
+    }
+  }
+
+  // If no color/size dimensions found, fall back to alphabetical by name
+  if (colorIndex === -1 && sizeIndex === -1) {
+    return [...variations].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+  }
+
+  return [...variations].sort((a, b) => {
+    const aParts = a.name.split(' / ');
+    const bParts = b.name.split(' / ');
+
+    // Primary: color alphabetical
+    if (colorIndex >= 0 && aParts[colorIndex] != null && bParts[colorIndex] != null) {
+      const cmp = aParts[colorIndex].trim().localeCompare(bParts[colorIndex].trim(), 'pt-BR', { sensitivity: 'base' });
+      if (cmp !== 0) return cmp;
+    }
+
+    // Secondary: size (numeric or letter)
+    if (sizeIndex >= 0 && aParts[sizeIndex] != null && bParts[sizeIndex] != null) {
+      const aSize = aParts[sizeIndex].trim();
+      const bSize = bParts[sizeIndex].trim();
+
+      if (sizeType === 'numero') {
+        const aNum = parseInt(aSize.replace(/\D/g, ''), 10) || 0;
+        const bNum = parseInt(bSize.replace(/\D/g, ''), 10) || 0;
+        return aNum - bNum;
+      }
+      if (sizeType === 'letra') {
+        const aOrder = SIZE_LETTER_ORDER[aSize.toLowerCase()] ?? 999;
+        const bOrder = SIZE_LETTER_ORDER[bSize.toLowerCase()] ?? 999;
+        return aOrder - bOrder;
+      }
+    }
+
+    return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
+  });
 }
 
 export function StockDetailModal({ product, onClose, onUpdated }: Props) {
@@ -39,6 +96,11 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
     }
   };
 
+  const sortedVariations = useMemo(
+    () => sortVariations(product.variations, product.category?.variationTemplate?.dimensions),
+    [product.variations, product.category?.variationTemplate?.dimensions],
+  );
+
   const getEditValue = (v: any): string => {
     if (v.id && editValues[v.id] !== undefined) return editValues[v.id];
     return v.lowStockAt != null ? String(v.lowStockAt) : '';
@@ -68,7 +130,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
           <span className="text-[10px] text-slate-500">(usado para variações sem mínimo próprio)</span>
         </div>
 
-        {product.hasVariations && product.variations?.length > 0 ? (
+        {product.hasVariations && sortedVariations.length > 0 ? (
           <>
             <div className="bg-slate-950 border border-slate-800 rounded-xl divide-y divide-slate-800 overflow-hidden">
               <div className="grid grid-cols-12 gap-2 px-4 py-2 text-xs text-slate-500 bg-slate-900/50">
@@ -77,7 +139,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
                 <span className="col-span-4 text-center">Est. Mínimo</span>
                 <span className="col-span-2"></span>
               </div>
-              {product.variations.map((v: any) => {
+              {sortedVariations.map((v: any) => {
                 const vStock = Number(v.stockQty);
                 const effectiveLow = v.lowStockAt != null
                   ? Number(v.lowStockAt)
@@ -130,7 +192,7 @@ export function StockDetailModal({ product, onClose, onUpdated }: Props) {
             <div className="flex items-center justify-between px-1 text-sm">
               <span className="text-slate-400">Total</span>
               <span className="text-white font-semibold">
-                {product.variations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)} un
+                {sortedVariations.reduce((sum: number, v: any) => sum + Number(v.stockQty), 0)} un
               </span>
             </div>
           </>

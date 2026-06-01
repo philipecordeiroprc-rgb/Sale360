@@ -113,6 +113,8 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
   const [marginPct, setMarginPct] = useState<number>(0);
   const [salePrice, setSalePrice] = useState<number>(0);
   const [discount, setDiscount] = useState('0');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [receivedDate, setReceivedDate] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -313,17 +315,20 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         return;
       }
 
-      const createdPurchase = await api.purchases.create({
+      const payload: any = {
         supplierId,
         discount: Number(discount) || 0,
         items: purchaseItems,
-      });
+      };
+      if (purchaseDate) payload.purchaseDate = purchaseDate;
+      const createdPurchase = await api.purchases.create(payload);
 
       // 5. Auto-receive the purchase so stock is updated immediately
       if (createdPurchase?.id) {
         try {
           // Build itemExpiryDates from variation dates and simple product date
           const expiryPayload: any = {};
+          if (receivedDate) expiryPayload.receivedDate = receivedDate;
           const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
           if (simpleExpiryDate) {
             dates.push([productName.trim(), simpleExpiryDate]);
@@ -582,7 +587,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     setProductBarcode(code);
                     setScannerOpen(false);
                   }}
-                  onError={(msg) => show(msg, 'error')}
+                  onError={(msg: string) => show(msg, 'error')}
                 />
               )}
 
@@ -1024,6 +1029,20 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                   min="0" step="0.01" placeholder="0,00"
                   className="w-40 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none"
                 />
+              </div>
+
+              {/* Datas (opcionais) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Data da Compra</label>
+                  <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Data de Recebimento</label>
+                  <input type="date" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+                </div>
               </div>
 
               {/* Finalizar button */}

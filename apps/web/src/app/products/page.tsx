@@ -1143,7 +1143,7 @@ export default function ProductsPage() {
               onClose={() => setScannerOpen(false)}
               onDetected={scannerMode === 'search' ? handleBarcodeForSearch : handleBarcodeForForm}
               onCodeScanned={handleCodeScanned}
-              onError={(msg) => show(msg, 'error')}
+              onError={(msg: string) => show(msg, 'error')}
             />
           </div>
         </div>

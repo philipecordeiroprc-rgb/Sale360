@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
+import { normalizePaymentMethod } from '../../lib/payment-utils.js';
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -37,7 +38,6 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       products,
       batches,
       receivedPurchases,
-      pendingCounts,
       creditCustomers,
       lastSaleItems,
     ] = await Promise.all([
@@ -69,23 +69,17 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       prisma.purchase.findMany({
         where: purchaseWhere,
         select: {
-          total: true, createdAt: true, receivedAt: true,
+          total: true, createdAt: true, receivedAt: true, purchaseDate: true,
           supplier: { select: { id: true, name: true } },
         },
       }),
-      // 5. Pending purchase counts
-      prisma.purchase.groupBy({
-        by: ['status'],
-        where: { tenantId: request.tenantId, status: { in: ['DRAFT', 'CONFIRMED'] } },
-        _count: { _all: true },
-      }),
-      // 6. Customers with open credit
+      // 5. Customers with open credit
       prisma.customer.findMany({
         where: { tenantId: request.tenantId, creditBalance: { gt: 0 } },
         select: { id: true, name: true, creditBalance: true },
         orderBy: { creditBalance: 'desc' },
       }),
-      // 7. Last sale per product (for encalhados)
+      // 6. Last sale per product (for encalhados)
       prisma.orderItem.findMany({
         where: {
           productId: { not: null },
@@ -133,12 +127,12 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
     let fiadoSettledTotal = 0;
     let fiadoSettledCount = 0;
     for (const o of paidOrders) {
-      const hasCreditStore = o.payments?.some(p => p.paymentMethod === 'credit_store')
-        || o.paymentMethod === 'credit_store';
+      const hasCreditStore = o.payments?.some(p => normalizePaymentMethod(p.paymentMethod) === 'credit_store')
+        || normalizePaymentMethod(o.paymentMethod || '') === 'credit_store';
 
       if (hasCreditStore && (o as any).paidWithMethod) {
         // Fiado order that was settled — count under the actual settlement method
-        const method = (o as any).paidWithMethod;
+        const method = normalizePaymentMethod((o as any).paidWithMethod);
         const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
@@ -149,19 +143,19 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
         fiadoSettledCount++;
       } else if (o.payments && o.payments.length > 0) {
         for (const p of o.payments) {
-          const method = p.paymentMethod || 'outro';
+          const method = normalizePaymentMethod(p.paymentMethod || 'outro');
           const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
           entry.total += Number(p.amount);
           paymentMap.set(method, entry);
         }
         // Count the order once under its first payment method
-        const firstMethod = o.payments[0].paymentMethod || 'outro';
+        const firstMethod = normalizePaymentMethod(o.payments[0].paymentMethod || 'outro');
         const firstEntry = paymentMap.get(firstMethod) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         firstEntry.count++;
         paymentMap.set(firstMethod, firstEntry);
       } else {
         // Fallback for old orders without OrderPayment records
-        const method = o.paymentMethod || 'outro';
+        const method = normalizePaymentMethod(o.paymentMethod || 'outro');
         const entry = paymentMap.get(method) || { count: 0, total: 0, fiadoCount: 0, fiadoTotal: 0 };
         entry.count++;
         entry.total += Number(o.total);
@@ -333,8 +327,8 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       entry.count++;
       supplierMap.set(sid, entry);
 
-      if (p.receivedAt) {
-        totalDeliveryDays += (new Date(p.receivedAt).getTime() - new Date(p.createdAt).getTime()) / DAY;
+      if (p.receivedAt && p.purchaseDate) {
+        totalDeliveryDays += (new Date(p.receivedAt).getTime() - new Date(p.purchaseDate).getTime()) / DAY;
         deliveriesWithDates++;
       }
     }
@@ -345,22 +339,13 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
       .map(([id, v]) => ({ id: id === 'unknown' ? '' : id, ...v, total: r2(v.total) }))
       .sort((a, b) => b.total - a.total);
 
-    // Compras pendentes
-    let draftCount = 0, confirmedCount = 0;
-    for (const g of pendingCounts) {
-      if (g.status === 'DRAFT') draftCount = g._count._all;
-      if (g.status === 'CONFIRMED') confirmedCount = g._count._all;
-    }
+    const numeroCompras = receivedPurchases.length;
 
     const purchases = {
       totalGasto: r2(totalGasto),
       porFornecedor,
       prazoMedioEntrega: r2(prazoMedioEntrega),
-      comprasPendentes: {
-        draft: draftCount,
-        confirmed: confirmedCount,
-        total: draftCount + confirmedCount,
-      },
+      numeroCompras,
     };
 
     // ═══════════════════════════════════════════

@@ -105,6 +105,8 @@ export default function PurchasesPage() {
   const [outroSupplierName, setOutroSupplierName] = useState('');
   const [notes, setNotes] = useState('');
   const [discount, setDiscount] = useState('0');
+  const [purchaseDate, setPurchaseDate] = useState('');
+  const [receivedDate, setReceivedDate] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Product
@@ -194,6 +196,8 @@ export default function PurchasesPage() {
     setNewVarExpiryDate('');
     setNotes('');
     setDiscount('0');
+    setPurchaseDate('');
+    setReceivedDate('');
     setProductSearch('');
     setProductResults([]);
     setScannerOpen(false);
@@ -469,12 +473,13 @@ export default function PurchasesPage() {
         return;
       }
 
-      const payload = {
+      const payload: any = {
         supplierId,
         discount: Number(discount) || 0,
         notes: notes || undefined,
         items: purchaseItemsData,
       };
+      if (purchaseDate) payload.purchaseDate = purchaseDate;
 
       if (editingId) {
         await api.purchases.update(editingId, payload);
@@ -513,6 +518,9 @@ export default function PurchasesPage() {
         const receivePayload: any = {};
         if (Object.keys(itemExpiryDates).length > 0) {
           receivePayload.itemExpiryDates = itemExpiryDates;
+        }
+        if (receivedDate) {
+          receivePayload.receivedDate = receivedDate;
         }
 
         try {
@@ -833,6 +841,20 @@ export default function PurchasesPage() {
             </div>
           </div>
 
+          {/* Datas (opcionais) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Data da Compra</label>
+              <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-400 mb-1">Data de Recebimento</label>
+              <input type="date" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:border-indigo-500 outline-none" />
+            </div>
+          </div>
+
           {/* ── 2. Product ── */}
           <div className="bg-slate-800/50 rounded-xl p-4">
             <h3 className="text-sm font-semibold text-white mb-3">Produto</h3>
@@ -843,7 +865,7 @@ export default function PurchasesPage() {
                 <BarcodeScanner
                   isOpen={scannerOpen}
                   onClose={() => setScannerOpen(false)}
-                  onDetected={(product) => {
+                  onDetected={(product: any) => {
                     setScannerOpen(false);
                     selectProduct(product);
                   }}
@@ -852,7 +874,7 @@ export default function PurchasesPage() {
                     setProductSearch(code);
                     show(`Código ${code} não cadastrado. Use "Novo Produto + Compra" para cadastrar.`, 'error');
                   }}
-                  onError={(msg) => show(msg, 'error')}
+                  onError={(msg: string) => show(msg, 'error')}
                 />
               </div>
             ) : (

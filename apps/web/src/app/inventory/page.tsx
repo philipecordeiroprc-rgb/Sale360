@@ -76,6 +76,8 @@ export default function InventoryPage() {
   const [tab, setTab] = useState<'batches' | 'movements'>('batches');
   const [batches, setBatches] = useState<any[]>([]);
   const [batchTotal, setBatchTotal] = useState(0);
+  const [zeroStockProducts, setZeroStockProducts] = useState<any[]>([]);
+  const [zeroStockVariations, setZeroStockVariations] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [movTotal, setMovTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -106,7 +108,7 @@ export default function InventoryPage() {
 
   // Low stock alerts
   const [stockAlerts, setStockAlerts] = useState<{
-    lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[];
+    lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number; lowVariationCount: number; lowVariationNames: string[] }[];
   } | null>(null);
 
   const loadAlerts = useCallback(async () => {
@@ -127,6 +129,8 @@ export default function InventoryPage() {
       const data = await api.inventory.batches({ productId: selectedProductId || undefined, page });
       setBatches(data.batches);
       setBatchTotal(data.total);
+      setZeroStockProducts(data.zeroStockProducts || []);
+      setZeroStockVariations(data.zeroStockVariations || []);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar lotes');
     } finally {
@@ -287,6 +291,50 @@ export default function InventoryPage() {
         else if (daysUntilExpiry <= 7) group.expiringSoonCount++;
       }
     }
+    // Add zero-stock products (no batches with remaining qty, but still active)
+    for (const p of zeroStockProducts) {
+      const key = `${p.id}__none`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productId: p.id,
+          productName: p.name || '—',
+          sku: p.sku || '',
+          unit: p.unit || '',
+          stockQty: Number(p.stockQty),
+          lowStockAt: Number(p.lowStockAt || 0),
+          variationId: null,
+          variationName: null,
+          batches: [],
+          totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
+        });
+      }
+    }
+
+    // Add zero-stock variations
+    for (const v of zeroStockVariations) {
+      const key = `${v.product.id}__${v.id}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productId: v.product.id,
+          productName: v.product.name || '—',
+          sku: v.product.sku || '',
+          unit: v.product.unit || '',
+          stockQty: Number(v.stockQty),
+          lowStockAt: Number(v.lowStockAt || v.product.lowStockAt || 0),
+          variationId: v.id,
+          variationName: v.name,
+          batches: [],
+          totalRemaining: 0,
+          expiredCount: 0,
+          expiringSoonCount: 0,
+        });
+      }
+    }
+
     return Array.from(map.values()).sort((a, b) => {
       const nameCmp = a.productName.localeCompare(b.productName, 'pt-BR');
       if (nameCmp !== 0) return nameCmp;
@@ -321,7 +369,7 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Low stock alerts — only critical (stock < min) */}
+      {/* Low stock alerts — products grouped, variations counted */}
       {stockAlerts && stockAlerts.lowStockProducts.length > 0 && (
         <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-2xl p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
@@ -342,9 +390,17 @@ export default function InventoryPage() {
               <tbody>
                 {stockAlerts.lowStockProducts.map(p => {
                   const ratio = p.lowStockAt > 0 ? p.stockQty / p.lowStockAt : 0;
+                  const hasLowVars = p.lowVariationCount > 0;
                   return (
                     <tr key={p.id} className="border-b border-red-500/10">
-                      <td className="py-1.5 pr-2 text-white truncate max-w-[180px] sm:max-w-none">{p.name}</td>
+                      <td className="py-1.5 pr-2 text-white truncate max-w-[200px] sm:max-w-none">
+                        {p.name}
+                        {hasLowVars && (
+                          <span className="text-red-400/70 ml-1">
+                            ({p.lowVariationCount} var.)
+                          </span>
+                        )}
+                      </td>
                       <td className={`py-1.5 pr-2 text-right font-semibold w-16 ${ratio === 0 ? 'text-red-400' : 'text-red-300'}`}>
                         {p.stockQty}
                       </td>

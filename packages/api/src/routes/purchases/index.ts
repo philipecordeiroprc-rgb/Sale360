@@ -21,6 +21,7 @@ const createPurchaseSchema = z.object({
   items: z.array(purchaseItemSchema).min(1, 'Pelo menos 1 item é obrigatório'),
   discount: z.number().default(0),
   notes: z.string().optional(),
+  purchaseDate: z.string().optional(), // data em que a compra foi feita ao fornecedor
 });
 
 export const purchaseRoutes: FastifyPluginAsync = async (app) => {
@@ -95,7 +96,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Dados inválidos', details: parsed.error.flatten() });
     }
 
-    const { items, supplierId, customerId, discount, notes } = parsed.data;
+    const { items, supplierId, customerId, discount, notes, purchaseDate } = parsed.data;
 
     // Validate supplier belongs to tenant
     const supplier = await prisma.supplier.findFirst({
@@ -134,6 +135,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
         discount,
         total,
         notes,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined,
         items: {
           create: items.map((item) => ({
             productId: item.productId || undefined,
@@ -236,7 +238,10 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
   // Receive purchase — PEPS core: creates InventoryBatches + Movements
   app.post('/:id/receive', async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { itemExpiryDates } = (request.body || {}) as { itemExpiryDates?: Record<string, string | null> };
+    const { itemExpiryDates, receivedDate } = (request.body || {}) as {
+      itemExpiryDates?: Record<string, string | null>;
+      receivedDate?: string | null;
+    };
 
     // Quick existence check (status validation happens atomically inside transaction)
     const purchaseExists = await prisma.purchase.findFirst({
@@ -251,7 +256,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       return reply.status(400).send({ error: 'Compra já foi recebida' });
     }
 
-    const receivedAt = new Date();
+    const receivedAt = receivedDate ? new Date(receivedDate) : new Date();
 
     try {
       await prisma.$transaction(async (tx) => {
