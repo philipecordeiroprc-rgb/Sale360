@@ -108,8 +108,7 @@ export default function InventoryPage() {
 
   // Low stock alerts
   const [stockAlerts, setStockAlerts] = useState<{
-    lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[];
-    lowStockVariations: { id: string; name: string; productId: string; productName: string; stockQty: number; lowStockAt: number }[];
+    lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number; lowVariationCount: number; lowVariationNames: string[] }[];
   } | null>(null);
 
   const loadAlerts = useCallback(async () => {
