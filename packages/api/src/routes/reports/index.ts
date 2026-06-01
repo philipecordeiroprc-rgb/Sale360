@@ -8,14 +8,8 @@ export const reportRoutes: FastifyPluginAsync = async (app) => {
     const { startDate, endDate } = request.query as Record<string, string>;
 
     const dateFilter: any = {};
-    if (startDate) {
-      const [y, m, d] = startDate.split('-').map(Number);
-      dateFilter.gte = new Date(y, m - 1, d);
-    }
-    if (endDate) {
-      const [y, m, d] = endDate.split('-').map(Number);
-      dateFilter.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
-    }
+    if (startDate) dateFilter.gte = startOfDay(startDate);
+    if (endDate) dateFilter.lte = endOfDay(endDate);
 
     const orderWhere: any = {
       tenantId: request.tenantId,
