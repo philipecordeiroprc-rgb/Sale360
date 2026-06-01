@@ -13,7 +13,7 @@ const adjustSchema = z.object({
 });
 
 export const inventoryRoutes: FastifyPluginAsync = async (app) => {
-  // Alerts summary: low stock + expiry warnings (products + variations)
+  // Alerts summary: low stock + expiry warnings (products with variations aggregated)
   app.get('/alerts', async (request) => {
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -51,43 +51,73 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
           name: true,
           stockQty: true,
           lowStockAt: true,
-          product: { select: { id: true, name: true } },
+          product: { select: { id: true, name: true, stockQty: true, lowStockAt: true } },
         },
       }),
     ]);
 
     let lowStockCount = 0;
     let atMinStockCount = 0;
-    const lowStockProducts: { id: string; name: string; stockQty: number; lowStockAt: number }[] = [];
+
+    // Products with low stock (no variations, or product-level check)
+    const lowStockMap = new Map<string, {
+      id: string;
+      name: string;
+      stockQty: number;
+      lowStockAt: number;
+      lowVariationCount: number;
+      lowVariationNames: string[];
+    }>();
+
     for (const p of productsWithLowStock) {
       const stock = Number(p.stockQty);
       const min = Number(p.lowStockAt!);
       if (stock < min) {
         lowStockCount++;
-        lowStockProducts.push({ id: p.id, name: p.name, stockQty: stock, lowStockAt: min });
-      } else if (stock === min) {
-        atMinStockCount++;
-      }
-    }
-
-    const lowStockVariations: { id: string; name: string; productId: string; productName: string; stockQty: number; lowStockAt: number }[] = [];
-    for (const v of variationsWithLowStock) {
-      const stock = Number(v.stockQty);
-      const min = Number(v.lowStockAt!);
-      if (stock < min) {
-        lowStockCount++;
-        lowStockVariations.push({
-          id: v.id,
-          name: v.name,
-          productId: v.product.id,
-          productName: v.product.name,
+        lowStockMap.set(p.id, {
+          id: p.id,
+          name: p.name,
           stockQty: stock,
           lowStockAt: min,
+          lowVariationCount: 0,
+          lowVariationNames: [],
         });
       } else if (stock === min) {
         atMinStockCount++;
       }
     }
+
+    // Aggregate variations into their parent products
+    for (const v of variationsWithLowStock) {
+      const stock = Number(v.stockQty);
+      const min = Number(v.lowStockAt!);
+      if (stock < min) {
+        const productId = v.product.id;
+        const existing = lowStockMap.get(productId);
+        if (existing) {
+          // Product already flagged — add variation details
+          existing.lowVariationCount++;
+          existing.lowVariationNames.push(v.name);
+          // lowStockCount already incremented at product level, don't double-count
+        } else {
+          // Product not flagged yet — add it now (variation low, but product total may be OK)
+          lowStockCount++;
+          lowStockMap.set(productId, {
+            id: productId,
+            name: v.product.name,
+            stockQty: Number(v.product.stockQty),
+            lowStockAt: Number(v.product.lowStockAt || 0),
+            lowVariationCount: 1,
+            lowVariationNames: [v.name],
+          });
+        }
+      } else if (stock === min) {
+        atMinStockCount++;
+      }
+    }
+
+    const lowStockProducts = Array.from(lowStockMap.values())
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
     // Level based only on batch expiry (not low stock)
     const hasCritical = expiredCount > 0;
@@ -105,7 +135,6 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
       lowStockCount,
       atMinStockCount,
       lowStockProducts,
-      lowStockVariations,
     };
   });
 
