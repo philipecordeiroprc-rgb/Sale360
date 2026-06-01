@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma, MovementType } from '@sale360/db';
 import { z } from 'zod';
+import { startOfDay, endOfDay } from '../../lib/date-utils.js';
 
 const adjustSchema = z.object({
   productId: z.string().optional(),
