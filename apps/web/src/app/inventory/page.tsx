@@ -130,6 +130,8 @@ export default function InventoryPage() {
       const data = await api.inventory.batches({ productId: selectedProductId || undefined, page });
       setBatches(data.batches);
       setBatchTotal(data.total);
+      setZeroStockProducts(data.zeroStockProducts || []);
+      setZeroStockVariations(data.zeroStockVariations || []);
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar lotes');
     } finally {
