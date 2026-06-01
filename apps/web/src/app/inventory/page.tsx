@@ -369,20 +369,20 @@ export default function InventoryPage() {
         </button>
       </div>
 
-      {/* Low stock alerts — products + variations below minimum */}
-      {stockAlerts && (stockAlerts.lowStockProducts.length > 0 || stockAlerts.lowStockVariations.length > 0) && (
+      {/* Low stock alerts — products grouped, variations counted */}
+      {stockAlerts && stockAlerts.lowStockProducts.length > 0 && (
         <div className="mb-4 bg-red-500/10 border border-red-500/30 rounded-2xl p-3 sm:p-4">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <AlertTriangle size={18} className="text-red-400 shrink-0" />
             <h4 className="text-sm font-semibold text-red-300">
-              Abaixo do Mínimo ({stockAlerts.lowStockProducts.length + stockAlerts.lowStockVariations.length})
+              Abaixo do Mínimo ({stockAlerts.lowStockProducts.length})
             </h4>
           </div>
           <div className="overflow-x-auto -mx-1">
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-red-500/20 text-red-400/60">
-                  <th className="py-1.5 pr-2 font-medium">Produto / Variação</th>
+                  <th className="py-1.5 pr-2 font-medium">Produto</th>
                   <th className="py-1.5 pr-2 font-medium text-right w-16">Estoque</th>
                   <th className="py-1.5 font-medium text-right w-12">Mín</th>
                 </tr>
@@ -390,27 +390,21 @@ export default function InventoryPage() {
               <tbody>
                 {stockAlerts.lowStockProducts.map(p => {
                   const ratio = p.lowStockAt > 0 ? p.stockQty / p.lowStockAt : 0;
+                  const hasLowVars = p.lowVariationCount > 0;
                   return (
-                    <tr key={`p-${p.id}`} className="border-b border-red-500/10">
-                      <td className="py-1.5 pr-2 text-white truncate max-w-[180px] sm:max-w-none">{p.name}</td>
+                    <tr key={p.id} className="border-b border-red-500/10">
+                      <td className="py-1.5 pr-2 text-white truncate max-w-[200px] sm:max-w-none">
+                        {p.name}
+                        {hasLowVars && (
+                          <span className="text-red-400/70 ml-1">
+                            ({p.lowVariationCount} var.)
+                          </span>
+                        )}
+                      </td>
                       <td className={`py-1.5 pr-2 text-right font-semibold w-16 ${ratio === 0 ? 'text-red-400' : 'text-red-300'}`}>
                         {p.stockQty}
                       </td>
                       <td className="py-1.5 text-right text-red-400/50 w-12">{p.lowStockAt}</td>
-                    </tr>
-                  );
-                })}
-                {stockAlerts.lowStockVariations.map(v => {
-                  const ratio = v.lowStockAt > 0 ? v.stockQty / v.lowStockAt : 0;
-                  return (
-                    <tr key={`v-${v.id}`} className="border-b border-red-500/10">
-                      <td className="py-1.5 pr-2 text-white truncate max-w-[180px] sm:max-w-none">
-                        {v.productName} <span className="text-slate-400">· {v.name}</span>
-                      </td>
-                      <td className={`py-1.5 pr-2 text-right font-semibold w-16 ${ratio === 0 ? 'text-red-400' : 'text-red-300'}`}>
-                        {v.stockQty}
-                      </td>
-                      <td className="py-1.5 text-right text-red-400/50 w-12">{v.lowStockAt}</td>
                     </tr>
                   );
                 })}
