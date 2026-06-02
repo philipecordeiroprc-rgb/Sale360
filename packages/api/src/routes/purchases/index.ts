@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
+import { startOfDay, endOfDay } from '../../lib/date-utils.js';
 
 const purchaseItemSchema = z.object({
   productId: z.string().optional(),
@@ -41,14 +42,8 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
     if (supplierId) where.supplierId = supplierId;
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) {
-        const [y, m, d] = startDate.split('-').map(Number);
-        where.createdAt.gte = new Date(y, m - 1, d);
-      }
-      if (endDate) {
-        const [y, m, d] = endDate.split('-').map(Number);
-        where.createdAt.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
-      }
+      if (startDate) where.createdAt.gte = startOfDay(startDate);
+      if (endDate) where.createdAt.lte = endOfDay(endDate);
     }
 
     const [purchases, total] = await Promise.all([
@@ -427,7 +422,7 @@ export const purchaseRoutes: FastifyPluginAsync = async (app) => {
       const parts = v.trim().split('/');
       if (parts.length === 3) {
         const [day, month, year] = parts.map(Number);
-        const d = new Date(year, month - 1, day);
+        const d = startOfDay(`${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
         if (!isNaN(d.getTime())) return d;
       }
       // Try ISO format

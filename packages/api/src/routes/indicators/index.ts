@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { normalizePaymentMethod } from '../../lib/payment-utils.js';
+import { startOfDay, endOfDay } from '../../lib/date-utils.js';
 
 const r2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -10,14 +11,8 @@ export const indicatorRoutes: FastifyPluginAsync = async (app) => {
 
     // ── Date filter ──
     const dateFilter: any = {};
-    if (startDate) {
-      const [y, m, d] = startDate.split('-').map(Number);
-      dateFilter.gte = new Date(y, m - 1, d);
-    }
-    if (endDate) {
-      const [y, m, d] = endDate.split('-').map(Number);
-      dateFilter.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
-    }
+    if (startDate) dateFilter.gte = startOfDay(startDate);
+    if (endDate) dateFilter.lte = endOfDay(endDate);
     const hasDateFilter = Object.keys(dateFilter).length > 0;
 
     const orderWhere: any = {

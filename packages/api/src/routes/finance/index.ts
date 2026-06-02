@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma } from '@sale360/db';
 import { z } from 'zod';
+import { startOfDay, endOfDay, monthRange, todayBRT } from '../../lib/date-utils.js';
 
 const createCashFlowSchema = z.object({
   type: z.enum(['IN', 'OUT']),
@@ -18,12 +19,11 @@ export const financeRoutes: FastifyPluginAsync = async (app) => {
   app.get('/cash-flow', async (request) => {
     const { month, year, category } = request.query as Record<string, string>;
 
-    const now = new Date();
-    const targetYear = parseInt(year || String(now.getFullYear()));
-    const targetMonth = parseInt(month || String(now.getMonth() + 1));
+    const now = todayBRT();
+    const targetYear = parseInt(year || String(now.year));
+    const targetMonth = parseInt(month || String(now.month));
 
-    const startDate = new Date(targetYear, targetMonth - 1, 1);
-    const endDate = new Date(targetYear, targetMonth, 0, 23, 59, 59);
+    const { start: startDate, end: endDate } = monthRange(targetYear, targetMonth);
 
     const where: any = {
       tenantId: request.tenantId,
@@ -99,14 +99,8 @@ export const financeRoutes: FastifyPluginAsync = async (app) => {
     };
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) {
-        const [y, m, d] = startDate.split('-').map(Number);
-        where.createdAt.gte = new Date(y, m - 1, d);
-      }
-      if (endDate) {
-        const [y, m, d] = endDate.split('-').map(Number);
-        where.createdAt.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
-      }
+      if (startDate) where.createdAt.gte = startOfDay(startDate);
+      if (endDate) where.createdAt.lte = endOfDay(endDate);
     }
 
     const orders = await prisma.order.findMany({

@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { prisma, MovementType } from '@sale360/db';
 import { z } from 'zod';
+import { startOfDay, endOfDay } from '../../lib/date-utils.js';
 
 const adjustSchema = z.object({
   productId: z.string().optional(),
@@ -273,14 +274,8 @@ export const inventoryRoutes: FastifyPluginAsync = async (app) => {
     if (type) where.type = type;
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate) {
-        const [y, m, d] = startDate.split('-').map(Number);
-        where.createdAt.gte = new Date(y, m - 1, d);
-      }
-      if (endDate) {
-        const [y, m, d] = endDate.split('-').map(Number);
-        where.createdAt.lte = new Date(y, m - 1, d, 23, 59, 59, 999);
-      }
+      if (startDate) where.createdAt.gte = startOfDay(startDate);
+      if (endDate) where.createdAt.lte = endOfDay(endDate);
     }
 
     const [movements, total] = await Promise.all([
