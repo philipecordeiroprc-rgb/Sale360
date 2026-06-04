@@ -267,8 +267,11 @@ try:
     for i, obj in enumerate(data):
         if i >= ${RETENTION_DAYS} and obj.get("name", "") != "${BACKUP_NAME}.tar.gz":
             print(obj.get('name', ''))
-except: pass
-" 2>/dev/null)
+except Exception as e:
+            import sys, traceback
+            print(f"OCI cleanup parse error: {e}", file=sys.stderr)
+            traceback.print_exc(file=sys.stderr)
+" 2>> "$LOG_FILE")
 
     if [ -n "$OCI_OBJECTS" ]; then
         echo "$OCI_OBJECTS" | while read -r obj; do
