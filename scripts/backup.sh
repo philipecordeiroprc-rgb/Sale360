@@ -258,15 +258,14 @@ if [ "$OCI_UPLOAD_OK" = "1" ]; then
         --bucket-name "$OCI_BUCKET" \
         --region "$OCI_REGION" \
         --prefix "sale360-full-" \
-        --fields name,timeCreated \
         2>/dev/null | python3 -c "
 import sys, json
 try:
     data = json.load(sys.stdin).get('data', [])
-    # Sort by timeCreated desc
-    data.sort(key=lambda x: x.get('timeCreated', ''), reverse=True)
+    # Sort by name descending (names contain sortable ISO dates)
+    data.sort(key=lambda x: x.get("name", ""), reverse=True)
     for i, obj in enumerate(data):
-        if i >= ${RETENTION_DAYS}:
+        if i >= ${RETENTION_DAYS} and obj.get("name", "") != "${BACKUP_NAME}.tar.gz":
             print(obj.get('name', ''))
 except: pass
 " 2>/dev/null)
