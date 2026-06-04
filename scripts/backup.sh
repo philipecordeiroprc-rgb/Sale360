@@ -263,13 +263,13 @@ import sys, json
 try:
     data = json.load(sys.stdin).get('data', [])
     # Sort by name descending (names contain sortable ISO dates)
-    data.sort(key=lambda x: x.get("name", ""), reverse=True)
+    data.sort(key=lambda x: x.get(\"name\", \"\"), reverse=True)
     for i, obj in enumerate(data):
-        if i >= ${RETENTION_DAYS} and obj.get("name", "") != "${BACKUP_NAME}.tar.gz":
+        if i >= ${RETENTION_DAYS} and obj.get(\"name\", \"\") != \"${BACKUP_NAME}.tar.gz\":
             print(obj.get('name', ''))
 except Exception as e:
             import sys, traceback
-            print(f"OCI cleanup parse error: {e}", file=sys.stderr)
+            print(f\"OCI cleanup parse error: {e}\", file=sys.stderr)
             traceback.print_exc(file=sys.stderr)
 " 2>> "$LOG_FILE")
 
