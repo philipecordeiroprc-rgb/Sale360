@@ -354,9 +354,9 @@ export default function InventoryPage() {
     }
 
     return Array.from(map.values()).sort((a, b) => {
-      const nameCmp = a.productName.localeCompare(b.productName, 'pt-BR');
+      const nameCmp = naturalCompare(a.productName, b.productName);
       if (nameCmp !== 0) return nameCmp;
-      return (a.variationName || '').localeCompare(b.variationName || '', 'pt-BR');
+      return naturalCompare(a.variationName || '', b.variationName || '');
     });
   };
 
