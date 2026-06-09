@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de Uso — Sale360</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #263044;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #6366f1;
+    --accent2: #818cf8;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --sky: #0ea5e9;
+    --purple: #a855f7;
+    --red: #ef4444;
+    --cyan: #22d3ee;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+
+  #sidebar {
+    position: fixed; top: 0; left: 0; width: 270px; height: 100vh;
+    background: var(--surface); border-right: 1px solid var(--border);
+    overflow-y: auto; padding: 20px 0; z-index: 100;
+  }
+  #sidebar .logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px; text-align: center; }
+  #sidebar .logo svg { width: 48px; height: 48px; margin-bottom: 8px; }
+  #sidebar .logo h2 { color: #fff; font-size: 22px; font-weight: 900; }
+  #sidebar .logo p { color: var(--muted); font-size: 12px; }
+  #sidebar a {
+    display: block; padding: 7px 20px; color: var(--muted); text-decoration: none;
+    font-size: 13px; border-left: 3px solid transparent; transition: all .15s;
+  }
+  #sidebar a:hover, #sidebar a.active { color: var(--accent2); border-left-color: var(--accent2); background: rgba(99,102,241,.08); }
+  #sidebar .nav-group { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #475569; padding: 14px 20px 4px; }
+
+  main { margin-left: 270px; padding: 40px 60px; max-width: 1080px; }
+
+  h1 { font-size: 30px; color: #fff; margin-bottom: 8px; border-bottom: 2px solid var(--accent); padding-bottom: 10px; margin-top: 50px; }
+  h1:first-child { margin-top: 0; }
+  h2 { font-size: 21px; color: var(--accent2); margin: 36px 0 12px; }
+  h3 { font-size: 16px; color: #cbd5e1; margin: 24px 0 8px; }
+  p { color: var(--muted); margin-bottom: 12px; }
+  ul { padding-left: 22px; color: var(--muted); margin-bottom: 14px; }
+  ol { padding-left: 22px; color: var(--muted); margin-bottom: 14px; }
+  li { margin-bottom: 4px; }
+  strong { color: var(--text); }
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  section { padding-top: 20px; }
+  a { color: var(--accent2); }
+
+  .note { background: rgba(99,102,241,.12); border-left: 4px solid var(--accent2); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 14px; }
+  .tip  { background: rgba(34,197,94,.1); border-left: 4px solid var(--green); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 14px; }
+  .warn { background: rgba(245,158,11,.1); border-left: 4px solid var(--yellow); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 14px; }
+  .danger { background: rgba(239,68,68,.1); border-left: 4px solid var(--red); border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; color: var(--text); font-size: 14px; }
+
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px;
+    font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: .5px; margin: 2px;
+  }
+  .badge-starter { background: #475569; }
+  .badge-pro     { background: var(--sky); }
+  .badge-prime   { background: linear-gradient(135deg, var(--accent), var(--cyan)); }
+  .badge-admin   { background: var(--accent); }
+  .badge-owner   { background: var(--cyan); color: #000; }
+  .badge-staff   { background: var(--green); }
+
+  .role-table { width: 100%; border-collapse: collapse; margin: 16px 0 24px; }
+  .role-table th { background: var(--surface2); color: var(--text); padding: 10px 14px; text-align: left; font-size: 13px; border-bottom: 2px solid var(--border); }
+  .role-table td { padding: 9px 14px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+  .role-table tr:hover td { background: rgba(255,255,255,.02); }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 16px 0; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+  .cover {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #312e81 70%, #0f172a 100%);
+    border-radius: 16px; padding: 60px 40px; margin-bottom: 50px; text-align: center;
+    border: 1px solid rgba(99,102,241,.3);
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(99,102,241,.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(34,211,238,.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .cover h1 { border: none; font-size: 48px; margin: 0 0 8px; position: relative; }
+  .cover .sub { font-size: 20px; color: #a5b4fc; margin-bottom: 20px; position: relative; }
+  .cover .meta { font-size: 13px; color: #64748b; position: relative; }
+
+  .module-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .module-card .icon { font-size: 24px; }
+  .module-card .title { font-weight: 700; color: var(--text); font-size: 14px; }
+  .module-card .desc { font-size: 13px; color: var(--muted); }
+
+  .plan-card {
+    border-radius: 14px; padding: 24px; position: relative;
+  }
+  .plan-starter { background: var(--surface); border: 2px solid #475569; }
+  .plan-pro     { background: var(--surface); border: 2px solid var(--sky); }
+  .plan-prime   { background: linear-gradient(135deg,#0c1a2e,#0a0f1f); border: 2px solid var(--accent); box-shadow: 0 0 30px rgba(99,102,241,.15); }
+  .plan-card h3 { margin: 0 0 4px; }
+  .plan-card ul { margin-top: 12px; }
+
+  .step {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 16px; background: var(--surface); border-radius: 10px;
+    border-left: 4px solid var(--accent); margin-bottom: 12px;
+  }
+  .step .num { font-size: 20px; font-weight: 900; color: var(--accent); min-width: 36px; }
+  .step .body strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+  .screenshot {
+    margin: 20px 0 28px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 6px 32px rgba(0,0,0,.45);
+    display: block;
+  }
+  .screenshot img { width: 100%; display: block; }
+  .screenshot figcaption {
+    background: var(--surface2); padding: 8px 16px;
+    font-size: 12px; color: var(--muted); text-align: center; border-top: 1px solid var(--border);
+  }
+
+  .status-flow {
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 12px 0;
+    font-size: 13px;
+  }
+  .status-flow .step-badge {
+    padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 12px;
+  }
+  .status-flow .arrow { color: var(--muted); }
+
+  @media (max-width: 768px) {
+    #sidebar { display: none; }
+    main { margin-left: 0; padding: 20px; }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    .cover { padding: 30px 20px; }
+    .cover h1 { font-size: 32px; }
+  }
+
+  @media print {
+    #sidebar { display: none; }
+    main { margin-left: 0; padding: 20px; }
+    section { page-break-before: auto; }
+    .screenshot { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="logo">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" style="width:52px;height:52px">
+      <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#6366F1"/><stop offset="100%" stop-color="#A78BFA"/>
+      </linearGradient></defs>
+      <rect width="512" height="512" rx="112" fill="#0F172A"/>
+      <circle cx="256" cy="256" r="170" fill="none" stroke="#334155" stroke-width="12" stroke-dasharray="20 10"/>
+      <path d="M90 256 A166 166 0 0 1 422 256" fill="none" stroke="url(#g2)" stroke-width="22" stroke-linecap="round"/>
+      <polygon points="422,256 370,210 370,302" fill="url(#g2)"/>
+      <text x="256" y="300" text-anchor="middle" font-family="Inter, sans-serif" font-size="140" font-weight="800" fill="white">$</text>
+    </svg>
+    <h2>SALE<span style="color:#a78bfa">360</span></h2>
+    <p>Manual de Uso · v1.0 · Maio 2026</p>
+  </div>
+
+  <div class="nav-group">Introdução</div>
+  <a href="#intro">Visão Geral</a>
+  <a href="#acesso">Acesso ao Sistema</a>
+  <a href="#perfis">Perfis de Usuário</a>
+  <a href="#planos">Planos Disponíveis</a>
+
+  <a href="/manual/guias.html" style="color:var(--accent2);font-weight:600">📖 Guias Práticos →</a>
+
+  <div class="nav-group">Operação</div>
+  <a href="#dashboard">Dashboard</a>
+  <a href="#pdv">PDV (Ponto de Venda)</a>
+  <a href="#produtos">Produtos</a>
+  <a href="#estoque">Estoque</a>
+  <a href="#compras">Compras</a>
+  <a href="#fornecedores">Fornecedores</a>
+  <a href="#clientes">Clientes</a>
+  <a href="#cupons">Cupons de Desconto</a>
+  <a href="#financeiro">Financeiro</a>
+
+  <div class="nav-group">Análise</div>
+  <a href="#indicadores">Indicadores</a>
+
+  <div class="nav-group">Canais</div>
+  <a href="#catalogo">Catálogo Online</a>
+
+  <div class="nav-group">Configuração</div>
+  <a href="#configuracoes">Configurações da Loja</a>
+
+  <div class="nav-group">Super Admin</div>
+  <a href="#sa-tenants">Lojistas (Tenants)</a>
+  <a href="#sa-usuarios">Usuários Globais</a>
+  <a href="#sa-assinaturas">Assinaturas e Planos</a>
+
+  <div class="nav-group">Recursos Gerais</div>
+  <a href="#pwa">App Mobile (PWA)</a>
+  <a href="#suporte">Suporte</a>
+</nav>
+
+<main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- CAPA -->
+<div class="cover">
+  <div style="font-size:13px;font-weight:700;letter-spacing:3px;color:#818cf8;text-transform:uppercase;margin-bottom:12px">Manual de Uso</div>
+  <h1>SALE<span style="color:#a78bfa">360</span></h1>
+  <div class="sub">PDV Inteligente — O PDV que nunca para, mesmo sem internet</div>
+  <p style="max-width:600px;margin:0 auto 20px;font-size:15px;position:relative">
+    Este manual cobre todos os recursos e funcionalidades do Sale360 —
+    do primeiro login à operação diária de vendas, controle de estoque, compras e indicadores de performance.
+  </p>
+  <div class="meta">Versão 1.0 · Maio 2026 · <a href="https://www.jvptecnologia.com.br" style="color:#818cf8">www.jvptecnologia.com.br</a></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="intro">
+<h1>Visão Geral</h1>
+
+<p>O <strong>Sale360</strong> é uma plataforma SaaS completa para PDV (Ponto de Venda) e gestão de loja. Ela integra vendas presenciais, catálogo online, controle de estoque com rastreamento por lote (PEPS), compras com precificação automática, fornecedores, clientes, cupons e indicadores de performance — tudo em um único sistema acessível pelo navegador.</p>
+
+<div style="position:relative;margin:20px 0">
+  <div class="grid3" style="margin-top:20px">
+    <div class="module-card">
+      <div class="icon">🛒</div>
+      <div class="title">PDV Completo</div>
+      <div class="desc">Tela de vendas rápida com busca, carrinho e finalização em segundos. Modo balcão e tela cheia.</div>
+    </div>
+    <div class="module-card">
+      <div class="icon">📦</div>
+      <div class="title">Estoque Inteligente</div>
+      <div class="desc">Rastreamento por lote (PEPS), baixa automática na venda, alertas de estoque mínimo.</div>
+    </div>
+    <div class="module-card">
+      <div class="icon">💰</div>
+      <div class="title">Precificação Automática</div>
+      <div class="desc">Calculadora de preço de venda com 5 variáveis: custo, custo operacional, taxa cartão, margem e preço final.</div>
+    </div>
+    <div class="module-card">
+      <div class="icon">📱</div>
+      <div class="title">Responsive + PWA</div>
+      <div class="desc">Funciona em celular, tablet e desktop. Instalável como app pelo navegador.</div>
+    </div>
+    <div class="module-card">
+      <div class="icon">🌐</div>
+      <div class="title">Catálogo Online</div>
+      <div class="desc">Página pública personalizada para cada loja. Clientes navegam e compram pelo WhatsApp.</div>
+    </div>
+    <div class="module-card">
+      <div class="icon">📊</div>
+      <div class="title">Indicadores em Tempo Real</div>
+      <div class="desc">Dashboard de vendas, ticket médio, giro de estoque, margem por produto e muito mais.</div>
+    </div>
+  </div>
+</div>
+
+<h2>Arquitetura do Sistema</h2>
+<p>O Sale360 é composto por:</p>
+<ul>
+  <li><strong>Painel Web (Next.js 16)</strong> — Interface de administração e PDV acessível pelo navegador</li>
+  <li><strong>API (Fastify + TypeScript)</strong> — Backend único com rotas organizadas por domínio</li>
+  <li><strong>Banco de Dados (PostgreSQL 17)</strong> — Persistência de todos os dados com Prisma ORM</li>
+  <li><strong>Catálogo Online (Next.js)</strong> — Vitrine pública do lojista com link para WhatsApp</li>
+  <li><strong>Nginx</strong> — Proxy reverso com SSL automático</li>
+</ul>
+
+<h2>Princípios de Design</h2>
+<ul>
+  <li><strong>Mobile-First</strong> — Design pensado para celular, expandido para desktop</li>
+  <li><strong>Menos Cliques</strong> — Toda ação deve ser completada em até 2 toques</li>
+  <li><strong>Offline-First</strong> — O PDV nunca para, mesmo sem internet (modo offline com sincronização)</li>
+  <li><strong>Zero Surpresa</strong> — Preço fixo, sem comissão por transação, sem contrato de fidelidade</li>
+</ul>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="acesso">
+<h1>Acesso ao Sistema</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/01_login.png" alt="Tela de login do Sale360">
+  <figcaption>Tela de login — autenticação por e-mail e senha</figcaption>
+</figure>
+
+<h2>Login</h2>
+<p>Acesse o sistema pelo navegador na URL fornecida pelo administrador. A tela de login solicita:</p>
+<ul>
+  <li><strong>E-mail</strong> — cadastrado pelo administrador da plataforma</li>
+  <li><strong>Senha</strong> — definida no primeiro acesso</li>
+</ul>
+
+<div class="tip">
+  <strong>Primeiro acesso:</strong> Sua senha inicial é fornecida pelo administrador. Altere-a imediatamente após o primeiro login nas configurações de perfil.
+</div>
+
+<p>Após o login, se você tiver acesso a múltiplas lojas, o sistema exibe a tela de seleção de loja. Caso contrário, vai direto para o Dashboard da sua loja.</p>
+
+<figure class="screenshot">
+  <img src="screenshots/02_select_store.png" alt="Tela de seleção de loja">
+  <figcaption>Seleção de loja — disponível para usuários com acesso a múltiplos tenants</figcaption>
+</figure>
+
+<h2>Seleção de Loja</h2>
+<p>Usuários com acesso a mais de uma loja podem alternar entre elas sem precisar fazer novo login. Cada loja tem seu próprio:</p>
+<ul>
+  <li>Catálogo de produtos e variações</li>
+  <li>Estoque por lote (PEPS)</li>
+  <li>Histórico de vendas e compras</li>
+  <li>Base de clientes e fornecedores</li>
+  <li>Indicadores e configurações</li>
+</ul>
+
+<h2>Sessão e Segurança</h2>
+<ul>
+  <li>A sessão é mantida por <strong>7 dias</strong> via JWT com refresh token</li>
+  <li>Após expiração, o sistema redireciona para o login automaticamente</li>
+  <li>Senhas são armazenadas com hash criptografado (bcrypt)</li>
+  <li>Cada loja é isolada — um lojista não acessa dados de outro (multi-tenant com隔离 total)</li>
+</ul>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="perfis">
+<h1>Perfis de Usuário</h1>
+
+<p>O Sale360 implementa RBAC (Role-Based Access Control) com 4 perfis distintos:</p>
+
+<table class="role-table">
+  <thead>
+    <tr>
+      <th>Perfil</th>
+      <th>Acesso</th>
+      <th>Responsabilidades</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><span class="badge badge-admin">SUPER ADMIN</span></td>
+      <td>Todas as lojas</td>
+      <td>Gerencia a plataforma inteira: cria lojas, define planos, gerencia usuários globais e assinaturas</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-owner">OWNER</span></td>
+      <td>Sua loja</td>
+      <td>Dono da loja com controle total: produtos, vendas, compras, estoque, clientes, fornecedores, cupons, finanças, indicadores e configurações</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-staff">STAFF</span></td>
+      <td>Operação da loja</td>
+      <td>Operador de PDV: realiza vendas, consulta produtos e estoque. Não acessa configurações, finanças ou indicadores</td>
+    </tr>
+    <tr>
+      <td><span class="badge badge-pro">READONLY</span></td>
+      <td>Leitura apenas</td>
+      <td>Visualiza produtos, vendas, estoque e indicadores. Não pode criar, editar ou excluir nada. Ideal para contadores e auditores</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Isolamento por loja:</strong> O acesso entre lojas é bloqueado em dois níveis — no middleware de autenticação e nos endpoints de API. Um OWNER da loja A não consegue acessar dados da loja B mesmo conhecendo a URL.
+</div>
+
+<div class="tip">
+  <strong>Dica de segurança:</strong> Para operadores de caixa, use o perfil STAFF. Ele só acessa o PDV e a lista de produtos — não pode alterar preços, ver relatórios financeiros nem modificar configurações.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="planos">
+<h1>Planos Disponíveis</h1>
+
+<p>O Sale360 oferece três planos com funcionalidades progressivas. O plano é definido pelo Super Admin e pode ser alterado a qualquer momento sem perda de dados. Todos os planos incluem <strong>7 dias grátis</strong>, sem necessidade de cartão de crédito.</p>
+
+<div class="grid3">
+  <div class="plan-card plan-starter">
+    <span class="badge badge-starter">PRO</span>
+    <h3 style="margin-top:12px;color:#94a3b8">R$49,90/mês</h3>
+    <p style="font-size:13px">Ideal para quem está começando a informatizar a loja.</p>
+    <ul style="font-size:13px">
+      <li>✅ 1 usuário</li>
+      <li>✅ 1 dispositivo</li>
+      <li>✅ App PDV mobile</li>
+      <li>✅ Catálogo online</li>
+      <li>✅ Fiado e comandas</li>
+      <li>❌ Painel web admin</li>
+      <li>❌ Fornecedores</li>
+      <li>❌ Variações de produto</li>
+    </ul>
+  </div>
+
+  <div class="plan-card plan-pro">
+    <span class="badge badge-pro">GROW</span>
+    <span style="font-size:10px;background:linear-gradient(90deg,#0ea5e9,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;margin-left:6px">MAIS POPULAR</span>
+    <h3 style="margin-top:12px;color:#e2e8f0">R$69,90/mês</h3>
+    <p style="font-size:13px">Tudo do PRO, mais:</p>
+    <ul style="font-size:13px">
+      <li>✅ Até 10 usuários</li>
+      <li>✅ 5 dispositivos</li>
+      <li>✅ Painel web admin</li>
+      <li>✅ Fornecedores</li>
+      <li>✅ Variações de produto</li>
+      <li>✅ Importação em lote</li>
+      <li>✅ Despesas recorrentes</li>
+    </ul>
+  </div>
+
+  <div class="plan-card plan-prime">
+    <span class="badge badge-prime">PRIME</span>
+    <h3 style="margin-top:12px;color:#e2e8f0">R$99,90/mês</h3>
+    <p style="font-size:13px">Tudo do GROW, mais:</p>
+    <ul style="font-size:13px">
+      <li>✅ Usuários ilimitados</li>
+      <li>✅ Dispositivos ilimitados</li>
+      <li>✅ Suporte prioritário</li>
+      <li>✅ Suporte WhatsApp</li>
+      <li>✅ Suporte aos sábados</li>
+      <li>✅ Suporte por vídeo chamada</li>
+      <li>✅ API de integração</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tip" style="margin-top:20px">
+  <strong>Pagamento anual:</strong> Pague 10 meses e leve 12. Todos os planos têm teste grátis de 7 dias sem compromisso.
+</div>
+
+<figure class="screenshot">
+  <img src="screenshots/14b_admin_planos.png" alt="Painel de administração de planos">
+  <figcaption>Super Admin — gestão de planos e features por tenant</figcaption>
+</figure>
+
+<div class="warn" style="margin-top:20px">
+  <strong>Bloqueio por plano:</strong> Funcionalidades não incluídas no plano contratado ficam ocultas no menu lateral. O acesso via API também é bloqueado — não é possível contornar o limite pela URL.
+</div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="dashboard">
+<h1>Dashboard</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/03_dashboard.png" alt="Dashboard do Sale360">
+  <figcaption>Dashboard principal — KPIs de vendas, estoque e clientes</figcaption>
+</figure>
+
+<p>O <strong>Dashboard</strong> é a tela inicial do Sale360. Ele apresenta os principais indicadores de performance da sua loja em tempo real.</p>
+
+<h2>KPIs do Dashboard</h2>
+<ul>
+  <li><strong>Vendas Hoje</strong> — Total faturado no dia atual com comparação percentual vs semana anterior</li>
+  <li><strong>Vendas no Mês</strong> — Faturamento acumulado do mês corrente</li>
+  <li><strong>Ticket Médio</strong> — Valor médio por venda no período selecionado</li>
+  <li><strong>Produtos com Estoque Baixo</strong> — Itens abaixo do estoque mínimo configurado</li>
+  <li><strong>Clientes Ativos</strong> — Compradores únicos nos últimos 30 dias</li>
+  <li><strong>Compras Pendentes</strong> — Compras em rascunho aguardando recebimento</li>
+</ul>
+
+<h2>Gráficos</h2>
+<ul>
+  <li><strong>Vendas por Período</strong> — Gráfico de barras com faturamento diário/semanal/mensal</li>
+  <li><strong>Top 10 Produtos</strong> — Ranking de produtos mais vendidos por quantidade e receita</li>
+  <li><strong>Vendas por Categoria</strong> — Distribuição percentual do faturamento entre categorias</li>
+  <li><strong>Comparativo</strong> — Comparação lado a lado com período anterior (semana/mês/ano)</li>
+</ul>
+
+<div class="tip">
+  <strong>Filtro de período:</strong> Use o seletor no topo do dashboard para alternar entre Hoje, Ontem, Últimos 7 dias, Últimos 30 dias, Este mês, Mês passado ou período personalizado.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="pdv">
+<h1>PDV (Ponto de Venda)</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/04_orders.png" alt="Lista de vendas">
+  <figcaption>Histórico de vendas — lista com busca, filtros e detalhamento</figcaption>
+</figure>
+
+<p>O módulo de <strong>PDV</strong> é o coração do Sale360. Ele permite realizar vendas de forma rápida e gerenciar todo o histórico.</p>
+
+<h2>Histórico de Vendas</h2>
+<p>A tela principal de Vendas exibe todas as transações com:</p>
+<ul>
+  <li><strong>Número do pedido</strong> — Identificador sequencial único</li>
+  <li><strong>Cliente</strong> — Nome do cliente (opcional na venda rápida)</li>
+  <li><strong>Valor total</strong> — Com desconto aplicado</li>
+  <li><strong>Data e hora</strong> — Momento exato da venda</li>
+  <li><strong>Status</strong> — Concluído, Cancelado, Pendente</li>
+  <li><strong>Forma de pagamento</strong> — Dinheiro, Cartão, Pix, Misto</li>
+</ul>
+<p>Ao expandir uma venda, você visualiza todos os itens, quantidades, preços unitários e descontos aplicados.</p>
+
+<h2>Nova Venda — Modal Rápido</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/04b_new_sale_modal.png" alt="Modal de nova venda">
+  <figcaption>Modal de nova venda — busca rápida de produtos e finalização em segundos</figcaption>
+</figure>
+
+<p>Para abrir uma nova venda, clique no botão <strong>"Nova Venda"</strong>. O modal rápido permite:</p>
+<ol>
+  <li><strong>Buscar produto</strong> — Digite o nome ou código do produto. A busca é instantânea.</li>
+  <li><strong>Adicionar ao carrinho</strong> — Clique no produto, ajuste a quantidade se necessário</li>
+  <li><strong>Revisar carrinho</strong> — Itens, quantidades, subtotal e total são exibidos em tempo real</li>
+  <li><strong>Aplicar desconto</strong> — Desconto em reais (R$) ou porcentagem (%) sobre o total</li>
+  <li><strong>Selecionar pagamento</strong> — Escolha a forma de pagamento</li>
+  <li><strong>Finalizar</strong> — Um clique para concluir a venda</li>
+</ol>
+
+<div class="tip">
+  <strong>Venda rápida sem cliente:</strong> Não é obrigatório selecionar um cliente. Para vendas de balcão, basta adicionar os produtos e finalizar — o sistema registra como "Consumidor Final".
+</div>
+
+<h2>Tela de PDV Completa (Tela Cheia)</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/04b_pos_page.png" alt="Tela de PDV em modo tela cheia">
+  <figcaption>PDV em modo tela cheia — interface otimizada para operação contínua de caixa</figcaption>
+</figure>
+
+<p>O modo <strong>PDV Tela Cheia</strong> foi projetado para uso em caixa com monitor ou tablet. Ele oferece:</p>
+<ul>
+  <li><strong>Busca em destaque</strong> — Campo de busca grande e central para agilidade</li>
+  <li><strong>Grade de produtos</strong> — Visualização em grid com fotos para seleção rápida</li>
+  <li><strong>Carrinho lateral</strong> — Sempre visível com subtotal, desconto e total</li>
+  <li><strong>Atalhos de teclado</strong> — Navegação e finalização sem mouse</li>
+  <li><strong>Modo contínuo</strong> — Ao finalizar uma venda, o PDV já está pronto para a próxima</li>
+</ul>
+
+<h2>Cancelamento de Venda</h2>
+<p>Uma venda pode ser cancelada a qualquer momento. Ao cancelar:</p>
+<ul>
+  <li>O estoque é automaticamente <strong>revertido</strong> (itens voltam para os lotes originais)</li>
+  <li>O status muda para <strong>CANCELADO</strong></li>
+  <li>O motivo do cancelamento é registrado para auditoria</li>
+  <li>Vendas canceladas não aparecem nos indicadores de faturamento</li>
+</ul>
+
+<div class="warn">
+  <strong>Atenção:</strong> O cancelamento de venda é irreversível e restaura o estoque automaticamente. Certifique-se antes de confirmar.
+</div>
+
+<h2>Formas de Pagamento</h2>
+<p>O Sale360 suporta múltiplas formas de pagamento em uma mesma venda:</p>
+<table class="role-table">
+  <thead><tr><th>Forma</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Dinheiro</strong></td><td>Pagamento em espécie. Calcula troco automaticamente.</td></tr>
+    <tr><td><strong>Cartão de Crédito</strong></td><td>Registro da bandeira e últimos 4 dígitos (opcional).</td></tr>
+    <tr><td><strong>Cartão de Débito</strong></td><td>Similar ao crédito, sem parcelamento.</td></tr>
+    <tr><td><strong>Pix</strong></td><td>Pagamento instantâneo. Opcionalmente gera QR code.</td></tr>
+    <tr><td><strong>Misto</strong></td><td>Combinação de duas ou mais formas (ex: R$ 50 dinheiro + R$ 30 Pix).</td></tr>
+  </tbody>
+</table>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="produtos">
+<h1>Produtos</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/05_products.png" alt="Lista de produtos">
+  <figcaption>Lista de produtos — com busca, filtro por categoria e indicador de estoque</figcaption>
+</figure>
+
+<p>O módulo de <strong>Produtos</strong> centraliza o cadastro e gestão de todos os itens vendidos na loja.</p>
+
+<h2>Cadastro de Produto</h2>
+<p>Para cadastrar um novo produto, preencha:</p>
+<table class="role-table">
+  <thead><tr><th>Campo</th><th>Descrição</th><th>Obrigatório</th></tr></thead>
+  <tbody>
+    <tr><td>Nome</td><td>Nome do produto como aparece no PDV e catálogo</td><td>Sim</td></tr>
+    <tr><td>Código (SKU)</td><td>Código único de identificação. Gerado automaticamente se não informado</td><td>Não</td></tr>
+    <tr><td>Categoria</td><td>Categoria do produto (ex: Bebidas, Hortifruti, Laticínios)</td><td>Não</td></tr>
+    <tr><td>Preço de Venda</td><td>Preço base de venda ao consumidor</td><td>Sim</td></tr>
+    <tr><td>Custo</td><td>Custo de aquisição (atualizado automaticamente pela compra mais recente)</td><td>Não</td></tr>
+    <tr><td>Estoque Mínimo</td><td>Quantidade mínima para alerta de reposição</td><td>Não</td></tr>
+    <tr><td>Unidade</td><td>UN, KG, LT, CX, etc.</td><td>Sim</td></tr>
+    <tr><td>Imagem</td><td>Foto do produto para o PDV e catálogo online</td><td>Não</td></tr>
+    <tr><td>Ativo</td><td>Produto aparece no PDV e catálogo? (Sim/Não)</td><td>Sim</td></tr>
+  </tbody>
+</table>
+
+<h2>Variações de Produto</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/05b_product_detail.png" alt="Detalhes do produto com variações">
+  <figcaption>Detalhes do produto — múltiplas variações com preços e estoque independentes</figcaption>
+</figure>
+
+<p>Produtos podem ter <strong>variações</strong> (ex: tamanho, cor, sabor). Cada variação possui:</p>
+<ul>
+  <li><strong>Nome</strong> — Identificador da variação (ex: "500ml", "1L", "2L")</li>
+  <li><strong>SKU próprio</strong> — Código único por variação</li>
+  <li><strong>Preço independente</strong> — Cada variação pode ter preço diferente</li>
+  <li><strong>Estoque separado</strong> — Controle de quantidade por variação</li>
+  <li><strong>Código de barras</strong> — EAN-13 para leitura por scanner</li>
+</ul>
+
+<div class="note">
+  <strong>Produto sem variação:</strong> Se o produto não tiver variações, o sistema trata como uma variação padrão automaticamente. O fluxo de venda e estoque funciona da mesma forma.
+</div>
+
+<h2>Importação em Lote</h2>
+<p>É possível importar produtos via arquivo CSV. O formato esperado inclui: nome, SKU, categoria, preço de venda, custo, estoque inicial e unidade. O sistema valida cada linha e reporta erros antes de inserir.</p>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="estoque">
+<h1>Estoque</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/06_inventory.png" alt="Visão geral do estoque">
+  <figcaption>Estoque — visão geral com saldo atual, custo médio e valor total em estoque</figcaption>
+</figure>
+
+<p>O módulo de <strong>Estoque</strong> oferece controle completo do inventário com rastreamento por lote usando o método PEPS (Primeiro que Entra, Primeiro que Sai).</p>
+
+<h2>Visão Geral</h2>
+<p>A tela principal do estoque exibe:</p>
+<ul>
+  <li><strong>Produto</strong> — Nome, SKU e categoria</li>
+  <li><strong>Saldo Atual</strong> — Quantidade disponível para venda</li>
+  <li><strong>Custo Médio</strong> — Custo médio ponderado de todas as compras</li>
+  <li><strong>Último Custo</strong> — Custo da compra mais recente</li>
+  <li><strong>Valor Total</strong> — Saldo × Custo médio (valor do estoque em R$)</li>
+  <li><strong>Alerta</strong> — Indicador visual quando o estoque está abaixo do mínimo</li>
+</ul>
+
+<h2>Lotes de Estoque (PEPS)</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/06b_inventory_batches.png" alt="Lotes de estoque por produto">
+  <figcaption>Lotes de estoque — rastreamento por data de recebimento e custo unitário</figcaption>
+</figure>
+
+<p>Cada entrada de estoque (via Compra) gera um <strong>lote</strong> com:</p>
+<ul>
+  <li><strong>Data de recebimento</strong> — Quando a mercadoria entrou no estoque</li>
+  <li><strong>Quantidade original</strong> — Quantidade recebida na compra</li>
+  <li><strong>Saldo disponível</strong> — O que resta deste lote (diminui com as vendas)</li>
+  <li><strong>Custo unitário</strong> — Preço pago nesta compra específica</li>
+</ul>
+
+<p>Quando uma venda é realizada, o sistema automaticamente:</p>
+<ol>
+  <li>Consome primeiro os itens do <strong>lote mais antigo</strong> (PEPS)</li>
+  <li>Passa para o próximo lote se o primeiro não tiver saldo suficiente</li>
+  <li>Registra o custo real da mercadoria vendida (CMV) baseado no lote</li>
+</ol>
+
+<div class="tip">
+  <strong>Lucro real por venda:</strong> Como o Sale360 rastreia o custo exato de cada item vendido via PEPS, o indicador de margem de lucro reflete o valor real — não uma estimativa baseada em custo médio.
+</div>
+
+<h2>Entradas e Saídas</h2>
+<p>O estoque é movimentado de duas formas:</p>
+<ul>
+  <li><strong>Entrada:</strong> Ao <strong>Receber</strong> uma compra, os itens entram no estoque como novos lotes</li>
+  <li><strong>Saída:</strong> Ao <strong>Finalizar</strong> uma venda, os itens saem do estoque consumindo os lotes mais antigos</li>
+  <li><strong>Ajuste manual:</strong> Correções de inventário podem ser feitas diretamente na tela de estoque (com registro de motivo)</li>
+</ul>
+
+<div class="warn">
+  <strong>Compras em Rascunho NÃO afetam estoque:</strong> Uma compra só entra no estoque quando seu status é alterado para "Recebido". Enquanto estiver em Rascunho, não há movimentação de estoque.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="compras">
+<h1>Compras</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/07_purchases.png" alt="Tela de compras">
+  <figcaption>Compras — gestão de pedidos de compra com fornecedores e precificação</figcaption>
+</figure>
+
+<p>O módulo de <strong>Compras</strong> gerencia todo o processo de aquisição de mercadorias, desde o pedido até a entrada no estoque.</p>
+
+<h2>Fluxo da Compra</h2>
+<div class="status-flow">
+  <span class="step-badge" style="background:#475569">📝 Rascunho</span>
+  <span class="arrow">→</span>
+  <span class="step-badge" style="background:#0ea5e9">✅ Recebido</span>
+  <span class="arrow">ou</span>
+  <span class="step-badge" style="background:#ef4444">✕ Cancelado</span>
+</div>
+<p>Uma compra sempre começa como <strong>Rascunho</strong> (DRAFT). A partir daí, pode ser <strong>Recebida</strong> (entra no estoque) ou <strong>Cancelada</strong> (não afeta estoque).</p>
+
+<h2>Criar / Editar Compra</h2>
+<p>Para criar uma compra:</p>
+<ol>
+  <li>Selecione o <strong>Fornecedor</strong></li>
+  <li>Adicione os <strong>Itens</strong> (produtos, quantidades e custos unitários)</li>
+  <li>Opcional: Vincule um <strong>Cliente</strong> (para encomendas sob demanda)</li>
+  <li>Adicione <strong>Observações</strong> se necessário</li>
+  <li>Salve como <strong>Rascunho</strong></li>
+</ol>
+
+<h2>Calculadora de Precificação (5 Campos)</h2>
+<p>O Sale360 oferece uma calculadora de preço de venda com <strong>5 variáveis</strong> para cada item da compra:</p>
+<table class="role-table">
+  <thead><tr><th>Campo</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Custo Unitário</strong></td><td>Preço pago ao fornecedor por unidade</td></tr>
+    <tr><td><strong>Custo Operacional</strong></td><td>Embalagem, frete, armazenamento (R$ por unidade)</td></tr>
+    <tr><td><strong>Taxa Cartão (%)</strong></td><td>Percentual da taxa da máquina de cartão</td></tr>
+    <tr><td><strong>Margem (%)</strong></td><td>Margem de lucro desejada sobre o custo total</td></tr>
+    <tr><td><strong>Preço de Venda</strong></td><td>Calculado automaticamente ou definido manualmente</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Fórmula:</strong> Preço Venda = (Custo + Custo Operacional) ÷ (1 - Taxa Cartão/100) × (1 + Margem/100). Todos os campos são editáveis — alterar qualquer um recalcula os dependentes.
+</div>
+
+<h2>Recebimento de Compra</h2>
+<p>Ao receber uma compra:</p>
+<ul>
+  <li>O status muda de <strong>Rascunho → Recebido</strong></li>
+  <li>Novos <strong>lotes de estoque</strong> são criados para cada item</li>
+  <li>A <strong>data de recebimento</strong> é registrada (usada na ordenação PEPS)</li>
+  <li>Datas de <strong>validade</strong> podem ser informadas por lote (para produtos perecíveis)</li>
+  <li>O <strong>preço de venda</strong> do produto pode ser atualizado automaticamente com base na precificação</li>
+</ul>
+
+<h2>Importação de Compras via CSV</h2>
+<p>Compras podem ser importadas em lote via arquivo CSV. O template inclui: fornecedor, produto, quantidade, custo unitário, custo operacional, taxa cartão, margem e preço de venda sugerido.</p>
+
+<div class="warn">
+  <strong>Atenção:</strong> Uma compra Recebida <strong>não pode ser editada</strong>. Para corrigir um erro, cancele a compra e crie uma nova com os dados corretos.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="fornecedores">
+<h1>Fornecedores</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/08_suppliers.png" alt="Tela de fornecedores">
+  <figcaption>Fornecedores — cadastro e gestão de parceiros de fornecimento</figcaption>
+</figure>
+
+<p>O módulo de <strong>Fornecedores</strong> centraliza os dados de todos os parceiros de fornecimento da loja.</p>
+
+<h2>Cadastro de Fornecedor</h2>
+<table class="role-table">
+  <thead><tr><th>Campo</th><th>Descrição</th><th>Obrigatório</th></tr></thead>
+  <tbody>
+    <tr><td>Nome</td><td>Razão social ou nome fantasia</td><td>Sim</td></tr>
+    <tr><td>CNPJ/CPF</td><td>Documento fiscal do fornecedor</td><td>Não</td></tr>
+    <tr><td>Telefone</td><td>Contato principal para pedidos</td><td>Não</td></tr>
+    <tr><td>E-mail</td><td>E-mail de contato e envio de pedidos</td><td>Não</td></tr>
+    <tr><td>Endereço</td><td>Logradouro completo</td><td>Não</td></tr>
+    <tr><td>Observações</td><td>Informações internas sobre prazos, condições, etc.</td><td>Não</td></tr>
+    <tr><td>Ativo</td><td>Fornecedor aparece na lista de seleção? (Sim/Não)</td><td>Sim</td></tr>
+  </tbody>
+</table>
+
+<p>Ao criar uma compra, apenas fornecedores <strong>ativos</strong> aparecem na lista de seleção. Fornecedores inativos são ocultados mas mantêm o histórico de compras anteriores.</p>
+
+<div class="tip">
+  <strong>Vínculo com compras:</strong> Ao visualizar um fornecedor, você pode ver todas as compras já realizadas com ele — status, valor total e data de cada uma.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="clientes">
+<h1>Clientes</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/09_customers.png" alt="Tela de clientes">
+  <figcaption>Clientes — cadastro e histórico de compras</figcaption>
+</figure>
+
+<p>O módulo de <strong>Clientes</strong> gerencia a base de compradores da loja, com histórico completo de compras.</p>
+
+<h2>Cadastro de Cliente</h2>
+<table class="role-table">
+  <thead><tr><th>Campo</th><th>Descrição</th><th>Obrigatório</th></tr></thead>
+  <tbody>
+    <tr><td>Nome</td><td>Nome completo do cliente</td><td>Sim</td></tr>
+    <tr><td>Telefone</td><td>WhatsApp ou celular (usado no link do catálogo)</td><td>Não</td></tr>
+    <tr><td>E-mail</td><td>E-mail para comunicações e marketing</td><td>Não</td></tr>
+    <tr><td>CPF</td><td>Documento para identificação fiscal</td><td>Não</td></tr>
+    <tr><td>Endereço</td><td>Endereço de entrega</td><td>Não</td></tr>
+    <tr><td>Observações</td><td>Preferências, restrições, dados relevantes</td><td>Não</td></tr>
+  </tbody>
+</table>
+
+<h2>Histórico do Cliente</h2>
+<p>Ao acessar os detalhes de um cliente, você visualiza:</p>
+<ul>
+  <li><strong>Total gasto</strong> — Somatório de todas as compras</li>
+  <li><strong>Número de compras</strong> — Quantidade de transações</li>
+  <li><strong>Ticket médio</strong> — Valor médio por compra</li>
+  <li><strong>Última compra</strong> — Data da transação mais recente</li>
+  <li><strong>Lista de compras</strong> — Histórico completo com itens, valores e datas</li>
+  <li><strong>Produtos favoritos</strong> — Itens mais comprados pelo cliente</li>
+</ul>
+
+<div class="tip">
+  <strong>Venda com cliente:</strong> Associar um cliente à venda permite rastrear seu histórico e preferências. No futuro, esses dados alimentarão campanhas de marketing e programas de fidelidade.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="cupons">
+<h1>Cupons de Desconto</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/10_coupons.png" alt="Tela de cupons">
+  <figcaption>Cupons de desconto — criação e gestão de promoções</figcaption>
+</figure>
+
+<p>O módulo de <strong>Cupons</strong> permite criar códigos promocionais para aplicar descontos nas vendas.</p>
+
+<h2>Criação de Cupom</h2>
+<table class="role-table">
+  <thead><tr><th>Campo</th><th>Descrição</th><th>Obrigatório</th></tr></thead>
+  <tbody>
+    <tr><td>Código</td><td>Código do cupom (ex: "NATAL25", "BOASVINDAS10")</td><td>Sim</td></tr>
+    <tr><td>Tipo</td><td>Percentual (%) ou Valor fixo (R$)</td><td>Sim</td></tr>
+    <tr><td>Valor</td><td>Valor do desconto (ex: 10 para 10% ou R$ 10,00)</td><td>Sim</td></tr>
+    <tr><td>Valor Mínimo</td><td>Valor mínimo da compra para o cupom ser válido</td><td>Não</td></tr>
+    <tr><td>Data Início</td><td>Quando o cupom começa a valer</td><td>Não</td></tr>
+    <tr><td>Data Fim</td><td>Quando o cupom expira</td><td>Não</td></tr>
+    <tr><td>Limite de Uso</td><td>Quantas vezes o cupom pode ser usado (total)</td><td>Não</td></tr>
+    <tr><td>Ativo</td><td>Cupom está disponível para uso? (Sim/Não)</td><td>Sim</td></tr>
+  </tbody>
+</table>
+
+<h2>Aplicação na Venda</h2>
+<p>No PDV, o operador pode aplicar um cupom digitando o código. O sistema:</p>
+<ol>
+  <li>Valida se o cupom existe, está ativo e dentro do período</li>
+  <li>Verifica se a compra atinge o valor mínimo configurado</li>
+  <li>Aplica o desconto sobre o total</li>
+  <li>Registra o uso do cupom no histórico</li>
+</ol>
+
+<div class="note">
+  <strong>Cupons não acumulativos:</strong> Apenas um cupom pode ser aplicado por venda. Se um segundo código for inserido, ele substitui o anterior.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="financeiro">
+<h1>Financeiro</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/11_finance.png" alt="Tela financeira">
+  <figcaption>Financeiro — fluxo de caixa e contas a pagar/receber</figcaption>
+</figure>
+
+<p>O módulo <strong>Financeiro</strong> oferece uma visão consolidada das finanças da loja.</p>
+
+<h2>Fluxo de Caixa</h2>
+<ul>
+  <li><strong>Entradas</strong> — Vendas concluídas, agrupadas por forma de pagamento</li>
+  <li><strong>Saídas</strong> — Compras recebidas (custo das mercadorias)</li>
+  <li><strong>Saldo</strong> — Entradas menos saídas no período</li>
+</ul>
+
+<h2>Resumo do Período</h2>
+<p>Selecione o período (hoje, semana, mês ou personalizado) e visualize:</p>
+<ul>
+  <li>Faturamento bruto (total de vendas)</li>
+  <li>Descontos concedidos (cupons + descontos manuais)</li>
+  <li>Faturamento líquido</li>
+  <li>Custo das mercadorias vendidas (CMV)</li>
+  <li>Margem bruta (R$ e %)</li>
+  <li>Distribuição por forma de pagamento</li>
+</ul>
+
+<div class="tip">
+  <strong>Exportação:</strong> Os dados financeiros podem ser exportados em CSV para integração com sistemas contábeis.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="indicadores">
+<h1>Indicadores</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/12_indicators.png" alt="Tela de indicadores">
+  <figcaption>Indicadores — painel de métricas e análise de performance</figcaption>
+</figure>
+
+<p>O módulo de <strong>Indicadores</strong> oferece uma análise detalhada da performance da loja.</p>
+
+<h2>Indicadores de Vendas</h2>
+<ul>
+  <li><strong>Ticket Médio</strong> — Valor médio por venda no período</li>
+  <li><strong>Itens por Venda</strong> — Média de itens em cada transação</li>
+  <li><strong>Vendas por Hora</strong> — Horários de pico de movimento</li>
+  <li><strong>Vendas por Dia da Semana</strong> — Dias mais fortes e mais fracos</li>
+  <li><strong>Taxa de Conversão</strong> — Vendas concluídas vs canceladas</li>
+</ul>
+
+<h2>Indicadores de Produtos</h2>
+<ul>
+  <li><strong>Top 10 Produtos</strong> — Mais vendidos por quantidade e receita</li>
+  <li><strong>Giro de Estoque</strong> — Quantas vezes o estoque girou no período</li>
+  <li><strong>Margem por Produto</strong> — Lucro bruto unitário e total</li>
+  <li><strong>Produtos Parados</strong> — Itens sem venda nos últimos 30/60/90 dias</li>
+  <li><strong>Produtos com Estoque Baixo</strong> — Abaixo do mínimo configurado</li>
+</ul>
+
+<h2>Indicadores de Compras</h2>
+<ul>
+  <li><strong>Total Gasto</strong> — Soma de todas as compras recebidas no período</li>
+  <li><strong>Prazo Médio</strong> — Tempo entre criação do rascunho e recebimento</li>
+  <li><strong>Compras Pendentes</strong> — Em rascunho aguardando finalização</li>
+  <li><strong>Compras por Fornecedor</strong> — Distribuição de gastos entre fornecedores</li>
+</ul>
+
+<div class="note">
+  <strong>Filtro de período:</strong> Todos os indicadores podem ser filtrados por período (7, 15, 30, 60 ou 90 dias). O padrão é 30 dias.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="catalogo">
+<h1>Catálogo Online</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/16_catalog.png" alt="Catálogo online versão desktop">
+  <figcaption>Catálogo online — vitrine pública da loja no desktop</figcaption>
+</figure>
+
+<p>O <strong>Catálogo Online</strong> é a vitrine pública da sua loja. Clientes podem navegar pelos produtos sem precisar instalar nada.</p>
+
+<figure class="screenshot">
+  <img src="screenshots/16b_catalog_mobile.png" alt="Catálogo online versão mobile">
+  <figcaption>Catálogo online — experiência mobile otimizada para celular</figcaption>
+</figure>
+
+<h2>Funcionalidades do Catálogo</h2>
+<ul>
+  <li><strong>URL personalizada</strong> — Cada loja tem seu próprio link (ex: /catalogo/nome-da-loja)</li>
+  <li><strong>Grade de produtos</strong> — Fotos, nomes e preços em destaque</li>
+  <li><strong>Busca</strong> — Campo de busca por nome ou categoria</li>
+  <li><strong>Link WhatsApp</strong> — Botão "Comprar" que abre conversa direta no WhatsApp com o produto selecionado</li>
+  <li><strong>Responsivo</strong> — Design adaptado para celular, tablet e desktop</li>
+  <li><strong>Produtos ativos</strong> — Apenas produtos marcados como "Ativo" aparecem no catálogo</li>
+</ul>
+
+<h2>Integração WhatsApp</h2>
+<p>Quando o cliente clica em "Comprar" no catálogo:</p>
+<ol>
+  <li>Abre o WhatsApp com o número da loja (configurado em Configurações)</li>
+  <li>A mensagem já vem preenchida com o nome do produto e link</li>
+  <li>O lojista responde, combina o pagamento e registra a venda no PDV</li>
+</ol>
+
+<div class="tip">
+  <strong>Compartilhe seu catálogo:</strong> O link do catálogo pode ser compartilhado no Instagram, Facebook, WhatsApp Business e qualquer outra rede social. É a vitrine online mais simples para começar a vender.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="configuracoes">
+<h1>Configurações da Loja</h1>
+
+<figure class="screenshot">
+  <img src="screenshots/13_settings.png" alt="Tela de configurações">
+  <figcaption>Configurações — dados da loja, preferências e integrações</figcaption>
+</figure>
+
+<p>O módulo de <strong>Configurações</strong> centraliza as preferências da loja e os dados exibidos no catálogo.</p>
+
+<h2>Dados da Loja</h2>
+<table class="role-table">
+  <thead><tr><th>Configuração</th><th>Descrição</th></tr></thead>
+  <tbody>
+    <tr><td>Nome da Loja</td><td>Nome exibido no painel e no catálogo online</td></tr>
+    <tr><td>Slug</td><td>Identificador único na URL do catálogo (definido na criação, não editável)</td></tr>
+    <tr><td>Telefone</td><td>Número do WhatsApp para o botão "Comprar" do catálogo</td></tr>
+    <tr><td>Endereço</td><td>Endereço físico da loja</td></tr>
+    <tr><td>Logo</td><td>Imagem da marca exibida no painel e catálogo</td></tr>
+  </tbody>
+</table>
+
+<h2>Preferências</h2>
+<ul>
+  <li><strong>Moeda</strong> — Símbolo da moeda (padrão: R$)</li>
+  <li><strong>Fuso horário</strong> — Timezone para registro de vendas e relatórios</li>
+  <li><strong>Estoque mínimo padrão</strong> — Valor usado como alerta para novos produtos</li>
+  <li><strong>Desconto máximo</strong> — Limite de desconto que operadores podem aplicar sem aprovação</li>
+</ul>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- SUPER ADMIN -->
+<h1 style="color:#818cf8;border-color:#818cf8">Área do Super Admin</h1>
+<p style="color:var(--muted)">O Super Admin tem visão global de todas as lojas cadastradas na plataforma. Acesso exclusivo pelo painel administrativo.</p>
+
+<section id="sa-tenants">
+<h2>Lojistas (Tenants)</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/14_admin_tenants.png" alt="Painel Super Admin — Lojistas">
+  <figcaption>Super Admin — lista de lojas cadastradas na plataforma</figcaption>
+</figure>
+
+<p>O painel de lojistas permite:</p>
+<ul>
+  <li><strong>Criar nova loja</strong> — Nome, slug, plano, e-mail do proprietário</li>
+  <li><strong>Editar dados</strong> — Alterar informações da loja a qualquer momento</li>
+  <li><strong>Alterar plano</strong> — Upgrade ou downgrade instantâneo. Features são liberadas ou bloqueadas conforme o plano</li>
+  <li><strong>Ativar/Desativar</strong> — Suspender acesso de uma loja sem perder dados</li>
+  <li><strong>Visualizar métricas</strong> — Total de usuários, produtos, vendas e status da loja</li>
+</ul>
+
+<div class="note">
+  Ao criar uma loja, o sistema automaticamente cria o registro no banco e libera o acesso conforme o plano escolhido. O proprietário recebe um e-mail com as instruções de primeiro acesso.
+</div>
+</section>
+
+<section id="sa-usuarios">
+<h2>Usuários Globais</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/15_admin_users.png" alt="Super Admin — Usuários globais">
+  <figcaption>Super Admin — gestão de usuários em todas as lojas</figcaption>
+</figure>
+
+<figure class="screenshot">
+  <img src="screenshots/15c_admin_usuarios_detalhe.png" alt="Super Admin — Detalhes do usuário">
+  <figcaption>Super Admin — detalhes e edição de usuário</figcaption>
+</figure>
+
+<p>O Super Admin pode gerenciar todos os usuários da plataforma:</p>
+<ul>
+  <li>Listar todos os usuários com filtro por loja, perfil e status</li>
+  <li>Criar novos usuários e vinculá-los a lojas específicas</li>
+  <li>Ativar ou desativar usuários</li>
+  <li>Alterar perfil de acesso (OWNER, STAFF, READONLY)</li>
+  <li>Redefinir senha de qualquer usuário</li>
+  <li>Ver histórico de acessos</li>
+</ul>
+</section>
+
+<section id="sa-assinaturas">
+<h2>Assinaturas e Planos</h2>
+
+<figure class="screenshot">
+  <img src="screenshots/15b_admin_subscriptions.png" alt="Super Admin — Assinaturas">
+  <figcaption>Super Admin — gestão de assinaturas e planos por loja</figcaption>
+</figure>
+
+<p>O painel de assinaturas permite gerenciar os planos contratados:</p>
+<ul>
+  <li><strong>Visualizar assinatura atual</strong> — Plano, status, data de início e expiração</li>
+  <li><strong>Alterar plano</strong> — Upgrade ou downgrade com efeito imediato</li>
+  <li><strong>Renovar assinatura</strong> — Extensão do período contratado</li>
+  <li><strong>Histórico de planos</strong> — Todas as alterações de plano da loja</li>
+  <li><strong>Status da assinatura</strong> — Ativa, Suspensa, Expirada, Trial</li>
+</ul>
+
+<div class="warn">
+  <strong>Downgrade de plano:</strong> Ao reduzir o plano de uma loja, funcionalidades exclusivas do plano superior são imediatamente bloqueadas. Os dados não são perdidos — se o plano for reativado, tudo volta como estava.
+</div>
+</section>
+
+<hr>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<section id="pwa">
+<h1>App Mobile (PWA)</h1>
+
+<p>O Sale360 é uma <strong>PWA (Progressive Web App)</strong>, o que significa que pode ser instalado como um aplicativo nativo no celular sem precisar baixar da loja de apps.</p>
+
+<h2>Como Instalar</h2>
+<div class="step">
+  <div class="num">1</div>
+  <div class="body">
+    <strong>Acesse o Sale360 pelo navegador do celular</strong>
+    Abra o Chrome ou Safari e acesse a URL da sua loja.
+  </div>
+</div>
+<div class="step">
+  <div class="num">2</div>
+  <div class="body">
+    <strong>Toque em "Instalar app"</strong>
+    No Chrome: menu ⋮ → "Instalar aplicativo" ou "Adicionar à tela inicial".<br>
+    No Safari: ícone Compartilhar → "Adicionar à Tela de Início".
+  </div>
+</div>
+<div class="step">
+  <div class="num">3</div>
+  <div class="body">
+    <strong>Pronto!</strong>
+    O ícone do Sale360 aparece na tela inicial do celular. Toque para abrir como um app normal, em tela cheia e sem barra de endereço.
+  </div>
+</div>
+
+<h2>Vantagens do PWA</h2>
+<ul>
+  <li>Não ocupa espaço de armazenamento (menos de 1 MB)</li>
+  <li>Atualiza automaticamente — sempre a versão mais recente</li>
+  <li>Funciona offline — o PDV continua operando mesmo sem internet (sincroniza depois)</li>
+  <li>Ícone personalizado na tela inicial</li>
+  <li>Notificações push (em breve)</li>
+</ul>
+</section>
+
+<hr>
+
+<section id="suporte">
+<h1>Suporte</h1>
+
+<p>O Suporte do Sale360 está disponível para todos os planos:</p>
+
+<table class="role-table">
+  <thead><tr><th>Canal</th><th>Planos</th><th>Tempo de Resposta</th></tr></thead>
+  <tbody>
+    <tr><td>E-mail</td><td>Todos</td><td>Até 24h úteis</td></tr>
+    <tr><td>WhatsApp</td><td>Pro e Prime</td><td>Até 4h úteis</td></tr>
+    <tr><td>Telefone</td><td>Prime</td><td>24/7 com SLA de 1h</td></tr>
+  </tbody>
+</table>
+
+<div class="tip">
+  <strong>Antes de pedir ajuda:</strong> Verifique este manual, explore a seção de dúvidas frequentes e tenha em mãos o nome da loja e uma descrição clara do problema. Isso agiliza muito o atendimento.
+</div>
+
+<p style="margin-top:24px">
+  <strong>Contato:</strong> <a href="mailto:suporte@jvptecnologia.com.br">suporte@jvptecnologia.com.br</a><br>
+  <strong>Site:</strong> <a href="https://www.jvptecnologia.com.br">www.jvptecnologia.com.br</a>
+</p>
+</section>
+
+<hr>
+
+<p style="text-align:center;padding:40px 0;color:#475569;font-size:13px">
+  Sale360 — PDV Inteligente<br>
+  &copy; 2026 JVP Tecnologia. Todos os direitos reservados.<br>
+  Manual versão 1.0 · Maio 2026
+</p>
+
+</main>
+
+</body>
+</html>

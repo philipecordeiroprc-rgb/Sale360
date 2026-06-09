@@ -9,3 +9,13 @@ generated/
 *.tar.gz
 deploy-*.tar.gz
 Backup/
+
+# Sensitive
+*.key
+*.key.pub
+*_key.txt
+*senha*.txt
+*token*.txt
+*sale360.txt
+resend_key.txt
+.deploy-hashes/
