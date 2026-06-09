@@ -52,6 +52,24 @@ interface BatchGroup {
   expiringSoonCount: number;
 }
 
+// Natural sort: "Amarela 2" < "Amarela 10" (numeric parts compared as numbers)
+function naturalCompare(a: string, b: string): number {
+  const re = /(\d+)|(\D+)/g;
+  const aParts = a.match(re) || [];
+  const bParts = b.match(re) || [];
+  for (let i = 0; i < Math.min(aParts.length, bParts.length); i++) {
+    const aNum = parseInt(aParts[i], 10);
+    const bNum = parseInt(bParts[i], 10);
+    if (!isNaN(aNum) && !isNaN(bNum)) {
+      if (aNum !== bNum) return aNum - bNum;
+    } else {
+      const cmp = aParts[i].localeCompare(bParts[i], 'pt-BR');
+      if (cmp !== 0) return cmp;
+    }
+  }
+  return aParts.length - bParts.length;
+}
+
 function ExpiryBadge({ date }: { date: string | Date }) {
   const d = new Date(date);
   const now = new Date();
