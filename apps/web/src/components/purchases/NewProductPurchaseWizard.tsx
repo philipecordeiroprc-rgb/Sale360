@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Search, Scan, ChevronDown, Info, Upload, X, Check } from 'lucide-react';
+import { Plus, Search, Scan, ChevronDown, Info, Upload, X, Check, Package } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Modal } from '@/components/ui/Modal';
 import type { VariationData } from '@/components/products/VariationEditor';
@@ -69,11 +69,35 @@ function compressImage(file: File, maxWidth: number, quality: number): Promise<s
   });
 }
 
+// ─── Accumulated product data (for multi-product purchases) ───
+interface AccumulatedProduct {
+  productName: string;
+  productSku: string;
+  productBarcode: string;
+  productDescription: string;
+  categoryId: string;
+  productPrice: string;
+  lowStockAt: string;
+  productImage: string | null;
+  selectedTemplate: VariationTemplate | null;
+  variations: VariationData[];
+  variationExpiryDates: Record<string, string>;
+  costPrice: number;
+  operationalCost: number;
+  taxRatePct: number;
+  marginPct: number;
+  salePrice: number;
+  simpleQty: number;
+  simpleExpiryDate: string;
+}
+
 export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProductPurchaseWizardProps) {
   // ─── Accordion steps ───
-  const [expandedStep, setExpandedStep] = useState<'supplier' | 'product' | 'costs'>('supplier');
+  const [expandedStep, setExpandedStep] = useState<'supplier' | 'product' | 'review'>('supplier');
   const [supplierDone, setSupplierDone] = useState(false);
-  const [productDone, setProductDone] = useState(false);
+
+  // ─── Accumulated products ───
+  const [accumulatedProducts, setAccumulatedProducts] = useState<AccumulatedProduct[]>([]);
 
   // ─── Toast ───
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -106,24 +130,25 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
   const [scannerOpen, setScannerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // ─── Step 3: Costs ───
+  // ─── Step 2 inline costs ───
   const [costPrice, setCostPrice] = useState<number>(0);
   const [operationalCost, setOperationalCost] = useState<number>(0);
   const [taxRatePct, setTaxRatePct] = useState<number>(0);
   const [marginPct, setMarginPct] = useState<number>(0);
   const [salePrice, setSalePrice] = useState<number>(0);
+  // Simple product quantity + expiry
+  const [simpleQty, setSimpleQty] = useState<number>(1);
+  const [simpleExpiryDate, setSimpleExpiryDate] = useState('');
+  // Expiry dates per variation name
+  const [variationExpiryDates, setVariationExpiryDates] = useState<Record<string, string>>({});
+
+  // ─── Step 3: Review (discount + dates) ───
   const [discount, setDiscount] = useState('0');
   const [purchaseDate, setPurchaseDate] = useState('');
   const [receivedDate, setReceivedDate] = useState('');
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  // Quantity for simple product (no variations)
-  const [simpleQty, setSimpleQty] = useState<number>(1);
-  // Expiry date for simple product (no variations)
-  const [simpleExpiryDate, setSimpleExpiryDate] = useState('');
-  // Expiry dates per variation name (for auto-receive)
-  const [variationExpiryDates, setVariationExpiryDates] = useState<Record<string, string>>({});
 
   // Load data on open
   useEffect(() => {
@@ -174,21 +199,84 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
     setExpandedStep('product');
   };
 
-  const advanceToCosts = () => {
+  // Reset product form fields (keep supplier)
+  const resetProductForm = () => {
+    setProductName('');
+    setProductSku('');
+    setProductBarcode('');
+    setProductDescription('');
+    setCategoryId('');
+    setProductPrice('');
+    setLowStockAt('');
+    setProductImage(null);
+    setSelectedTemplate(null);
+    setVariations([]);
+    setRowDims({});
+    setRowCustom({});
+    setRowQty(0);
+    setCostPrice(0);
+    setOperationalCost(0);
+    setTaxRatePct(0);
+    setMarginPct(0);
+    setSalePrice(0);
+    setSimpleQty(1);
+    setSimpleExpiryDate('');
+    setVariationExpiryDates({});
+  };
+
+  // Add current product to the purchase accumulator
+  const addToPurchase = () => {
     if (!productName.trim()) {
       show('Informe o nome do produto', 'error');
       return;
     }
-    if (selectedTemplate && variations.filter(v => (v.stockQty || 0) > 0).length === 0) {
-      show('Adicione pelo menos uma variação com quantidade', 'error');
+    if (selectedTemplate) {
+      const varsWithQty = variations.filter(v => (v.stockQty || 0) > 0);
+      if (varsWithQty.length === 0) {
+        show('Adicione pelo menos uma variação com quantidade', 'error');
+        return;
+      }
+    }
+    if (costPrice <= 0) {
+      show('Informe o custo unitário', 'error');
       return;
     }
-    // Pre-fill pricing from product price
-    if (productPrice && salePrice === 0) {
-      setSalePrice(Number(productPrice));
+    const qty = selectedTemplate
+      ? variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)
+      : (simpleQty || 1);
+    if (qty <= 0) {
+      show('Quantidade deve ser maior que zero', 'error');
+      return;
     }
-    setProductDone(true);
-    setExpandedStep('costs');
+
+    const newProduct: AccumulatedProduct = {
+      productName: productName.trim(),
+      productSku: productSku.trim(),
+      productBarcode: productBarcode.trim(),
+      productDescription: productDescription.trim(),
+      categoryId,
+      productPrice,
+      lowStockAt,
+      productImage,
+      selectedTemplate,
+      variations: [...variations],
+      variationExpiryDates: { ...variationExpiryDates },
+      costPrice,
+      operationalCost,
+      taxRatePct,
+      marginPct,
+      salePrice,
+      simpleQty,
+      simpleExpiryDate,
+    };
+
+    setAccumulatedProducts(prev => [...prev, newProduct]);
+    resetProductForm();
+    show(`"${newProduct.productName}" adicionado à compra!`);
+  };
+
+  const removeFromPurchase = (index: number) => {
+    setAccumulatedProducts(prev => prev.filter((_, i) => i !== index));
   };
 
   // ─── Image upload ───
@@ -209,24 +297,16 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
     setScannerOpen(false);
   };
 
-  // ─── FINALIZE: Create product + purchase ───
+  // ─── FINALIZE: Create all products + one purchase ───
   const handleFinalize = async () => {
-    if (!productName.trim()) { show('Nome do produto é obrigatório', 'error'); return; }
+    if (accumulatedProducts.length === 0) {
+      show('Adicione pelo menos um produto à compra', 'error');
+      return;
+    }
+
     // Validate supplier
     if (!selectedSupplier && !(useNewSupplier && newSupplierName.trim())) {
       show('Selecione ou informe o fornecedor', 'error');
-      return;
-    }
-    // Validate variations if template
-    if (selectedTemplate) {
-      const varsWithQty = variations.filter(v => (v.stockQty || 0) > 0);
-      if (varsWithQty.length === 0) {
-        show('Adicione pelo menos uma variação com quantidade', 'error');
-        return;
-      }
-    }
-    if (costPrice <= 0) {
-      show('Informe o custo unitário', 'error');
       return;
     }
 
@@ -240,81 +320,86 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         supplierId = newSup.id;
       }
 
-      // 2. Create product
-      const productPayload: any = {
-        name: productName.trim(),
-        description: productDescription.trim() || undefined,
-        barcode: productBarcode.trim() || undefined,
-        sku: productSku.trim() || undefined,
-        categoryId: categoryId || undefined,
-        imageUrl: productImage || undefined,
-      };
-      if (productPrice) productPayload.price = parseFloat(productPrice);
-      if (lowStockAt) productPayload.lowStockAt = parseFloat(lowStockAt);
-
-      const created = await api.products.create(productPayload);
-      const productId = created.id;
-
-      // 3. Create variations if any (stockQty=0 — stock comes from purchase receive, not here)
-      if (variations.length > 0) {
-        for (const v of variations) {
-          await api.products.addVariation(productId, {
-            name: v.name,
-            stockQty: 0, // IMPORTANT: stock is created by purchase receive below, not here
-            lowStockAt: v.lowStockAt,
-            priceModifier: v.priceModifier,
-            sku: v.sku,
-            barcode: v.barcode,
-          });
-        }
-      }
-
-      // 4. Create purchase
+      // 2. Create all products and collect purchase items
       const purchaseItems: any[] = [];
+      const createdProductIds: string[] = [];
 
-      if (variations.filter(v => (v.stockQty || 0) > 0).length > 0) {
-        // Has variations with quantity
-        for (const v of variations) {
-          const varQty = v.stockQty || 0;
-          if (varQty <= 0) continue;
-          // Find the actual variation ID from the created product
+      for (const prod of accumulatedProducts) {
+        // Create product
+        const productPayload: any = {
+          name: prod.productName,
+          description: prod.productDescription || undefined,
+          barcode: prod.productBarcode || undefined,
+          sku: prod.productSku || undefined,
+          categoryId: prod.categoryId || undefined,
+          imageUrl: prod.productImage || undefined,
+        };
+        if (prod.productPrice) productPayload.price = parseFloat(prod.productPrice);
+        if (prod.lowStockAt) productPayload.lowStockAt = parseFloat(prod.lowStockAt);
+
+        const created = await api.products.create(productPayload);
+        const productId = created.id;
+        createdProductIds.push(productId);
+
+        // Create variations if any (stockQty=0 — stock comes from purchase receive)
+        if (prod.variations.length > 0) {
+          for (const v of prod.variations) {
+            await api.products.addVariation(productId, {
+              name: v.name,
+              stockQty: 0,
+              lowStockAt: v.lowStockAt,
+              priceModifier: v.priceModifier,
+              sku: v.sku,
+              barcode: v.barcode,
+            });
+          }
+        }
+
+        // Build purchase items for this product
+        if (prod.variations.filter(v => (v.stockQty || 0) > 0).length > 0) {
+          // Has variations with quantity
           const freshProduct = await api.products.get(productId);
-          const matchingVar = freshProduct.variations?.find((pv: any) => pv.name === v.name);
+          for (const v of prod.variations) {
+            const varQty = v.stockQty || 0;
+            if (varQty <= 0) continue;
+            const matchingVar = freshProduct.variations?.find((pv: any) => pv.name === v.name);
+            purchaseItems.push({
+              productId,
+              variationId: matchingVar?.id || undefined,
+              productName: `${prod.productName} - ${v.name}`,
+              quantity: varQty,
+              unitCost: prod.costPrice,
+              total: prod.costPrice * varQty,
+              salePrice: prod.salePrice || undefined,
+              operationalCost: prod.operationalCost || undefined,
+              taxRatePct: prod.taxRatePct || undefined,
+              marginPct: prod.marginPct || undefined,
+            });
+          }
+        } else {
+          // Simple product
+          const qty = prod.simpleQty || 1;
           purchaseItems.push({
             productId,
-            variationId: matchingVar?.id || undefined,
-            productName: `${productName.trim()} - ${v.name}`,
-            quantity: varQty,
-            unitCost: costPrice,
-            total: costPrice * varQty,
-            salePrice: salePrice || undefined,
-            operationalCost: operationalCost || undefined,
-            taxRatePct: taxRatePct || undefined,
-            marginPct: marginPct || undefined,
+            productName: prod.productName,
+            quantity: qty,
+            unitCost: prod.costPrice,
+            total: prod.costPrice * qty,
+            salePrice: prod.salePrice || undefined,
+            operationalCost: prod.operationalCost || undefined,
+            taxRatePct: prod.taxRatePct || undefined,
+            marginPct: prod.marginPct || undefined,
           });
         }
-      } else {
-        // Simple product — use quantity from Step 3
-        const qty = simpleQty || 1;
-        purchaseItems.push({
-          productId,
-          productName: productName.trim(),
-          quantity: qty,
-          unitCost: costPrice,
-          total: costPrice * qty,
-          salePrice: salePrice || undefined,
-          operationalCost: operationalCost || undefined,
-          taxRatePct: taxRatePct || undefined,
-          marginPct: marginPct || undefined,
-        });
       }
 
       if (purchaseItems.length === 0) {
-        show('Adicione pelo menos um item com quantidade > 0', 'error');
+        show('Nenhum item com quantidade > 0', 'error');
         setSaving(false);
         return;
       }
 
+      // 3. Create ONE purchase with all items
       const payload: any = {
         supplierId,
         discount: Number(discount) || 0,
@@ -323,42 +408,50 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       if (purchaseDate) payload.purchaseDate = purchaseDate;
       const createdPurchase = await api.purchases.create(payload);
 
-      // 5. Auto-receive the purchase so stock is updated immediately
+      // 4. Auto-receive the purchase
       if (createdPurchase?.id) {
         try {
-          // Build itemExpiryDates from variation dates and simple product date
           const expiryPayload: any = {};
           if (receivedDate) expiryPayload.receivedDate = receivedDate;
-          const dates = Object.entries(variationExpiryDates).filter(([, v]) => v);
-          if (simpleExpiryDate) {
-            dates.push([productName.trim(), simpleExpiryDate]);
-          }
-          if (dates.length > 0 && createdPurchase.items) {
-            const itemExpiryDates: Record<string, string> = {};
-            for (const [varName, dateStr] of dates) {
-              const matchingItem = createdPurchase.items.find((item: any) =>
-                item.productName?.endsWith(` - ${varName}`) || item.productName === varName
+
+          // Collect all expiry dates from accumulated products
+          const itemExpiryDates: Record<string, string> = {};
+          for (const prod of accumulatedProducts) {
+            for (const [varName, dateStr] of Object.entries(prod.variationExpiryDates)) {
+              if (!dateStr) continue;
+              const matchingItem = createdPurchase.items?.find((item: any) =>
+                item.productName?.endsWith(` - ${varName}`)
               );
               if (matchingItem) {
                 itemExpiryDates[matchingItem.id] = dateStr;
               }
             }
-            if (Object.keys(itemExpiryDates).length > 0) {
-              expiryPayload.itemExpiryDates = itemExpiryDates;
+            if (prod.simpleExpiryDate) {
+              const matchingItem = createdPurchase.items?.find((item: any) =>
+                item.productName === prod.productName
+              );
+              if (matchingItem) {
+                itemExpiryDates[matchingItem.id] = prod.simpleExpiryDate;
+              }
             }
           }
+          if (Object.keys(itemExpiryDates).length > 0) {
+            expiryPayload.itemExpiryDates = itemExpiryDates;
+          }
+
           await api.purchases.receive(createdPurchase.id, expiryPayload);
         } catch {
           // Non-critical: purchase was created, user can receive manually
         }
       }
 
-      show('Produto criado, compra recebida e estoque atualizado!');
+      const productCount = createdProductIds.length;
+      show(`${productCount} produto(s) criado(s), compra recebida e estoque atualizado!`);
       setTimeout(() => {
         onCreated();
         resetForm();
         onClose();
-      }, 800);
+      }, 1000);
     } catch (err: any) {
       const msg = err?.message || err?.error || 'Erro ao finalizar';
       setError(msg);
@@ -370,33 +463,15 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
 
   const resetForm = () => {
     setSupplierDone(false);
-    setProductDone(false);
     setExpandedStep('supplier');
     setSelectedSupplier('');
     setUseNewSupplier(false);
     setNewSupplierName('');
-    setProductName('');
-    setProductSku('');
-    setProductBarcode('');
-    setProductDescription('');
-    setCategoryId('');
-    setProductPrice('');
-    setLowStockAt('');
-    setProductImage(null);
-    setSelectedTemplate(null);
-    setVariations([]);
-    setRowDims({});
-    setRowCustom({});
-    setRowQty(0);
-    setCostPrice(0);
-    setOperationalCost(0);
-    setTaxRatePct(0);
-    setMarginPct(0);
-    setSalePrice(0);
+    resetProductForm();
+    setAccumulatedProducts([]);
     setDiscount('0');
-    setSimpleQty(1);
-    setSimpleExpiryDate('');
-    setVariationExpiryDates({});
+    setPurchaseDate('');
+    setReceivedDate('');
     setError('');
   };
 
@@ -406,8 +481,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
   };
 
   // ─── Render helpers ───
-
-  const stepIcon = (step: 'supplier' | 'product' | 'costs', done: boolean) => {
+  const stepIcon = (step: 'supplier' | 'product' | 'review', done: boolean) => {
     if (done) return <Check size={18} className="text-emerald-400" />;
     const isActive = expandedStep === step;
     const num = step === 'supplier' ? 1 : step === 'product' ? 2 : 3;
@@ -418,6 +492,16 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
       </span>
     );
   };
+
+  // Total cost of all accumulated products
+  const accumulatedTotalCost = accumulatedProducts.reduce((sum, p) => {
+    const qty = p.selectedTemplate
+      ? p.variations.reduce((s, v) => s + (v.stockQty || 0), 0)
+      : (p.simpleQty || 1);
+    return sum + p.costPrice * qty;
+  }, 0);
+
+  const isReviewReady = supplierDone && accumulatedProducts.length > 0;
 
   return (
     <Modal open={open} onClose={handleClose} title="Novo Produto + Compra" size="lg" closeOnOverlayClick={false}>
@@ -433,7 +517,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
         {/* ════ STEP 1: FORNECEDOR ════ */}
         <div className="bg-slate-800/50 rounded-xl overflow-hidden">
           <button
-            onClick={() => setExpandedStep(expandedStep === 'supplier' ? 'costs' : 'supplier')}
+            onClick={() => setExpandedStep(expandedStep === 'supplier' ? 'review' : 'supplier')}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors"
           >
             {stepIcon('supplier', supplierDone)}
@@ -496,20 +580,20 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
           )}
         </div>
 
-        {/* ════ STEP 2: PRODUTO ════ */}
+        {/* ════ STEP 2: PRODUTO + CUSTOS ════ */}
         <div className="bg-slate-800/50 rounded-xl overflow-hidden">
           <button
-            onClick={() => supplierDone && setExpandedStep(expandedStep === 'product' ? (productDone ? 'costs' : 'supplier') : 'product')}
+            onClick={() => supplierDone && setExpandedStep(expandedStep === 'product' ? 'review' : 'product')}
             disabled={!supplierDone}
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {stepIcon('product', productDone)}
-            <span className={`text-sm font-semibold flex-1 text-left ${productDone ? 'text-emerald-400' : 'text-white'}`}>
-              2. Produto
+            {stepIcon('product', false)}
+            <span className="text-sm font-semibold flex-1 text-left text-white">
+              2. Produto + Custos
             </span>
-            {productDone && (
-              <span className="text-[11px] text-slate-400 truncate max-w-[200px]">
-                {productName} {variations.length > 0 ? `(${variations.length} var.)` : ''}
+            {accumulatedProducts.length > 0 && (
+              <span className="text-[11px] text-indigo-400">
+                {accumulatedProducts.length} prod.
               </span>
             )}
             <ChevronDown size={16} className={`text-slate-500 transition-transform ${expandedStep === 'product' ? 'rotate-180' : ''}`} />
@@ -801,42 +885,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 );
               })()}
 
-              <button
-                onClick={advanceToCosts}
-                disabled={!productName.trim()}
-                className="w-full px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
-              >
-                Avançar → Custos e Variações
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* ════ STEP 3: CUSTOS E VARIAÇÕES ════ */}
-        <div className="bg-slate-800/50 rounded-xl overflow-hidden">
-          <button
-            onClick={() => productDone && setExpandedStep(expandedStep === 'costs' ? 'product' : 'costs')}
-            disabled={!productDone}
-            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[11px] font-bold
-              ${expandedStep === 'costs' ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-              3
-            </span>
-            <span className="text-sm font-semibold flex-1 text-left text-white">
-              3. Custos e Variações
-            </span>
-            {costPrice > 0 && (
-              <span className="text-[11px] text-slate-400">
-                Custo: R$ {costPrice.toFixed(2)} | Venda: R$ {salePrice.toFixed(2)}
-              </span>
-            )}
-            <ChevronDown size={16} className={`text-slate-500 transition-transform ${expandedStep === 'costs' ? 'rotate-180' : ''}`} />
-          </button>
-
-          {expandedStep === 'costs' && productDone && (
-            <div className="px-4 pb-4 space-y-4 border-t border-slate-700/50 pt-3">
-              {/* Pricing calculator — 5 fields (same as existing purchase) */}
+              {/* ─── Pricing calculator (inline in step 2) ─── */}
               <div className="bg-slate-900 rounded-lg p-3">
                 <p className="text-xs text-slate-400 mb-3">Calculadora de Precificação</p>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2">
@@ -925,20 +974,13 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 )}
               </div>
 
-              {/* Variation quantities (if category has template) */}
+              {/* Variation quantities + expiry (if template) */}
               {selectedTemplate && variations.length > 0 && (
                 <div className="bg-slate-900 rounded-lg p-3">
                   <p className="text-xs text-slate-400 mb-2">
-                    Quantidades por Variação
-                    <span className="text-slate-500 ml-2">(opcional: informe a data de validade para rastreamento FEFO)</span>
+                    Quantidades e Validade (opcional)
                   </p>
-                  <div className="space-y-1.5 max-h-52 overflow-y-auto">
-                    {/* Header row */}
-                    <div className="flex items-center gap-2 px-3 py-1 text-[10px] text-slate-500">
-                      <span className="flex-1">Variação</span>
-                      <span className="w-14 sm:w-16 text-center">Qtd</span>
-                      <span className="w-24 sm:w-28 text-center">Validade</span>
-                    </div>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
                     {variations.map((v, vi) => (
                       <div key={vi} className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 sm:px-3 py-1.5">
                         <span className="text-xs sm:text-sm text-white flex-1 truncate min-w-0">{v.name}</span>
@@ -966,16 +1008,12 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                       </div>
                     ))}
                   </div>
-                  <div className="mt-2 pt-2 border-t border-slate-700 flex justify-between items-center">
+                  <div className="mt-1 pt-1 border-t border-slate-700 flex justify-between items-center">
                     <span className="text-xs text-slate-400">
-                      Qtd total: <span className="text-white font-semibold">
-                        {variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)}
-                      </span>
+                      Qtd total: <span className="text-white font-semibold">{variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)}</span>
                     </span>
                     <span className="text-xs text-slate-400">
-                      Custo total: <span className="text-white font-semibold">
-                        R$ {(costPrice * variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)).toFixed(2)}
-                      </span>
+                      Custo total: <span className="text-white font-semibold">R$ {(costPrice * variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)).toFixed(2)}</span>
                     </span>
                   </div>
                 </div>
@@ -985,8 +1023,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
               {!selectedTemplate && (
                 <div className="bg-slate-900 rounded-lg p-3">
                   <p className="text-xs text-slate-400 mb-3">
-                    Quantidade e Validade
-                    <span className="text-slate-500 ml-2">(validade é opcional — usada no rastreamento FEFO)</span>
+                    Quantidade e Validade (opcional)
                   </p>
                   <div className="flex items-end gap-3 sm:gap-4">
                     <div>
@@ -1011,7 +1048,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                     {simpleQty > 0 && costPrice > 0 && (
                       <div className="self-end pb-1">
                         <span className="text-xs text-slate-400">
-                          Custo total: <span className="text-white font-medium">R$ {(costPrice * simpleQty).toFixed(2)}</span>
+                          Custo: <span className="text-white font-medium">R$ {(costPrice * simpleQty).toFixed(2)}</span>
                         </span>
                       </div>
                     )}
@@ -1019,7 +1056,149 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 </div>
               )}
 
-              {/* Desconto geral */}
+              {/* ─── Action buttons ─── */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={addToPurchase}
+                  disabled={!productName.trim() || costPrice <= 0}
+                  className="flex-1 px-4 py-2.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <Plus size={14} className="inline mr-1" /> Adicionar à Compra
+                </button>
+                {accumulatedProducts.length > 0 && (
+                  <button
+                    onClick={() => setExpandedStep('review')}
+                    className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Revisar <span className="opacity-80">({accumulatedProducts.length})</span> →
+                  </button>
+                )}
+              </div>
+
+              {/* ─── Accumulated products list ─── */}
+              {accumulatedProducts.length > 0 && (
+                <div className="bg-slate-900 rounded-xl p-3">
+                  <h4 className="text-xs font-semibold text-slate-400 mb-2 flex items-center gap-2">
+                    <Package size={14} className="text-indigo-400" />
+                    Produtos na Compra ({accumulatedProducts.length})
+                  </h4>
+                  <div className="bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-48 overflow-y-auto">
+                    {accumulatedProducts.map((prod, idx) => {
+                      const qty = prod.selectedTemplate
+                        ? prod.variations.reduce((s, v) => s + (v.stockQty || 0), 0)
+                        : (prod.simpleQty || 1);
+                      return (
+                        <div key={idx} className="px-3 py-2 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white truncate">{prod.productName}</p>
+                            {prod.variations.length > 0 && (
+                              <p className="text-[10px] text-slate-500">
+                                {prod.variations.filter(v => (v.stockQty || 0) > 0).map(v => `${v.name} (${v.stockQty})`).join(', ')}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-slate-500">
+                              Custo un: R$ {prod.costPrice.toFixed(2)}
+                              {prod.salePrice > 0 && ` | Venda: R$ ${prod.salePrice.toFixed(2)}`}
+                              {prod.taxRatePct > 0 && ` | Tx: ${prod.taxRatePct}%`}
+                              {prod.marginPct > 0 && ` | Mg: ${prod.marginPct}%`}
+                            </p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <p className="text-sm text-white font-medium">{qty}</p>
+                            <p className="text-[10px] text-slate-500">R$ {(prod.costPrice * qty).toFixed(2)}</p>
+                          </div>
+                          <button
+                            onClick={() => removeFromPurchase(idx)}
+                            className="p-1 text-slate-600 hover:text-red-400 transition-colors"
+                            title="Remover produto"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between mt-2 text-xs">
+                    <span className="text-slate-400">Total</span>
+                    <span className="text-white font-semibold">R$ {accumulatedTotalCost.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ════ STEP 3: REVISÃO E FINALIZAÇÃO ════ */}
+        <div className="bg-slate-800/50 rounded-xl overflow-hidden">
+          <button
+            onClick={() => isReviewReady && setExpandedStep(expandedStep === 'review' ? 'product' : 'review')}
+            disabled={!isReviewReady}
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-800/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span className={`w-[18px] h-[18px] rounded-full flex items-center justify-center text-[11px] font-bold
+              ${expandedStep === 'review' ? 'bg-indigo-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+              3
+            </span>
+            <span className="text-sm font-semibold flex-1 text-left text-white">
+              3. Revisão e Finalização
+            </span>
+            {accumulatedProducts.length > 0 && (
+              <span className="text-[11px] text-indigo-400">
+                {accumulatedProducts.length} prod. — R$ {accumulatedTotalCost.toFixed(2)}
+              </span>
+            )}
+            <ChevronDown size={16} className={`text-slate-500 transition-transform ${expandedStep === 'review' ? 'rotate-180' : ''}`} />
+          </button>
+
+          {expandedStep === 'review' && isReviewReady && (
+            <div className="px-4 pb-4 space-y-4 border-t border-slate-700/50 pt-3">
+              {/* Products summary */}
+              <div className="bg-slate-900 rounded-xl p-3">
+                <h4 className="text-xs font-semibold text-slate-400 mb-2">
+                  Resumo da Compra — {accumulatedProducts.length} produto(s)
+                </h4>
+                <div className="bg-slate-800 rounded-lg divide-y divide-slate-700 max-h-52 overflow-y-auto">
+                  {accumulatedProducts.map((prod, idx) => {
+                    const qty = prod.selectedTemplate
+                      ? prod.variations.reduce((s, v) => s + (v.stockQty || 0), 0)
+                      : (prod.simpleQty || 1);
+                    return (
+                      <div key={idx} className="px-3 py-2">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-white truncate">
+                              {prod.productName}
+                              {prod.productSku && <span className="text-[10px] text-slate-500 ml-2">SKU: {prod.productSku}</span>}
+                            </p>
+                            {prod.variations.length > 0 && (
+                              <p className="text-[10px] text-slate-500 mt-0.5">
+                                {prod.variations.filter(v => (v.stockQty || 0) > 0).map(v => `${v.name} (${v.stockQty})`).join(', ')}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-slate-600 mt-0.5">
+                              Custo un: R$ {prod.costPrice.toFixed(2)}
+                              {prod.operationalCost > 0 && ` + R$ ${prod.operationalCost.toFixed(2)} op.`}
+                              {prod.salePrice > 0 && ` → Venda: R$ ${prod.salePrice.toFixed(2)}`}
+                              {prod.taxRatePct > 0 && ` (Tx: ${prod.taxRatePct}%)`}
+                              {prod.marginPct > 0 && ` (Mg: ${prod.marginPct}%)`}
+                            </p>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-3">
+                            <p className="text-sm text-white font-semibold">{qty} un.</p>
+                            <p className="text-xs text-slate-400">R$ {(prod.costPrice * qty).toFixed(2)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex justify-between mt-2 text-sm font-semibold">
+                  <span className="text-white">Subtotal</span>
+                  <span className="text-white">R$ {accumulatedTotalCost.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Discount */}
               <div>
                 <label className="block text-xs text-slate-400 mb-1">Desconto na Compra (R$)</label>
                 <input
@@ -1031,7 +1210,7 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 />
               </div>
 
-              {/* Datas (opcionais) */}
+              {/* Dates */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 mb-1">Data da Compra</label>
@@ -1045,15 +1224,13 @@ export function NewProductPurchaseWizard({ open, onClose, onCreated }: NewProduc
                 </div>
               </div>
 
-              {/* Finalizar button */}
+              {/* Finalize button */}
               <button
                 onClick={handleFinalize}
-                disabled={saving || costPrice <= 0}
+                disabled={saving}
                 className="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-50 text-white rounded-lg text-sm font-bold transition-colors"
               >
-                {saving ? 'Criando produto e compra...' : `Finalizar Compra (R$ ${((costPrice * (selectedTemplate
-                  ? variations.reduce((sum, v) => sum + (v.stockQty || 0), 0)
-                  : (simpleQty || 1))) - (Number(discount) || 0)).toFixed(2)})`}
+                {saving ? 'Criando produtos e compra...' : `Finalizar Compra (R$ ${(accumulatedTotalCost - (Number(discount) || 0)).toFixed(2)})`}
               </button>
             </div>
           )}
